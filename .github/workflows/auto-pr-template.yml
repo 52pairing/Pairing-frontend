@@ -1,0 +1,47 @@
+name: Auto PR Template
+
+# PR이 열리면 브랜치 타입(docs/feature/fix 등)에 맞는 PR 템플릿을 본문에 자동 적용합니다.
+# 다중 PR 템플릿은 GitHub이 자동 선택하지 않으므로 이 워크플로우로 매핑합니다.
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  apply-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (템플릿 파일 접근용)
+        uses: actions/checkout@v4
+
+      - name: Apply template by branch type
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+
+          # 이미 본문이 작성돼 있으면 덮어쓰지 않음 (수동 작성 보호)
+          if [ -n "${PR_BODY//[[:space:]]/}" ]; then
+            echo "PR already has a body. Skip."
+            exit 0
+          fi
+
+          # 브랜치 접두사 추출: feature/auto-prtemplate#2 -> feature
+          type="${HEAD_REF%%/*}"
+          file=".github/PULL_REQUEST_TEMPLATE/${type}.md"
+
+          if [ ! -f "$file" ]; then
+            echo "No template for type '$type' ($file). Skip."
+            exit 0
+          fi
+
+          echo "Applying template: $file"
+          gh pr edit "$PR_NUMBER" --repo "$REPO" --body-file "$file"
