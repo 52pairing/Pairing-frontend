@@ -391,18 +391,18 @@ feature/freelancer-resume#15
 ### PR 제목
 
 ```text
-[TYPE][작업 영역] 작업 내용
+[TYPE] 작업 내용
 ```
 
 예시:
 
 ```text
-[FEATURE][로그인] 로그인 화면 구현
-[FIX][클라이언트] 프로젝트 등록 검증 오류 수정
-[REFACTOR][공통] API 요청 모듈 구조 개선
-[TEST][프리랜서] 이력서 폼 테스트 추가
-[DOCS][공통] GitHub 협업 규칙 수정
-[HOTFIX][로그인] Production 로그인 장애 수정
+[FEATURE] 로그인 화면 구현
+[FIX] 프로젝트 등록 검증 오류 수정
+[REFACTOR] API 요청 모듈 구조 개선
+[TEST] 이력서 폼 테스트 추가
+[DOCS] GitHub 협업 규칙 수정
+[HOTFIX] Production 로그인 장애 수정
 [RELEASE] v0.1.0 초기 기능 배포
 ```
 
@@ -535,10 +535,14 @@ src/
 - 특정 도메인에서만 사용하는 컴포넌트는 해당 도메인의 `components`에 둡니다.
 - 여러 도메인에서 사용하는 UI 컴포넌트는 `src/components/ui`에 둡니다.
 - 여러 도메인에서 사용하는 기능은 `src/features/common`에 둡니다.
-- 공통 API 인스턴스와 인증 설정은 `src/lib` 또는 `src/services`에 둡니다.
+- API 클라이언트 인스턴스, 인증·쿠키 설정 등 인프라는 `src/lib`에 둡니다.
+- 여러 도메인이 공유하는 API 호출은 `src/services`에 둡니다.
+- 특정 도메인 전용 API 호출은 해당 도메인의 `src/features/<도메인>/services`에 둡니다.
 - 프로젝트 전체에서 사용하는 타입은 `src/types`에 둡니다.
 - 프로젝트 전체에서 사용하는 순수 함수는 `src/utils`에 둡니다.
 - 폴더 위치가 애매한 경우 팀원과 먼저 논의합니다.
+
+> `lib`은 API 클라이언트를 **만드는** 인프라 계층, `services`는 그 클라이언트로 실제 API를 **호출하는** 계층입니다. 공통이면 `src/services`, 도메인 전용이면 `features/<도메인>/services`에 둡니다.
 
 현재 전역 상태 관리 라이브러리는 사용하지 않습니다. 도입이 필요할 경우 팀원과 논의한 후 결정합니다.
 
