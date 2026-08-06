@@ -1,8 +1,9 @@
+
 export default function Home() {
- 
   return (
     <div>
-      {/* 페이지 */}
+      비 로그인 메인페이지
     </div>
-  );
+
+  )
 }

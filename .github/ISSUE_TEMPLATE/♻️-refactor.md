@@ -107,11 +107,8 @@ assignees: ""
 
 > 이슈 생성 후 실제 이슈 번호와 작업명을 사용해 브랜치를 생성해 주세요
 
-`refactor/{역할}-{작업명}#이슈번호`
+`refactor/`
 
-예시:
-
-`refactor/common-api-client#123`
 
 ---
 
