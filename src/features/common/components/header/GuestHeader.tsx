@@ -8,7 +8,6 @@ const guestNavItems = [
 ];
 
 // 비로그인 사용자에게 보여주는 Header
-
 export function GuestHeader() {
   return (
     <HeaderShell

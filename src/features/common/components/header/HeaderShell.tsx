@@ -1,15 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface HeaderShellProps {
-    nav: ReactNode;
-    actions: ReactNode;
+  nav: ReactNode;
+  actions: ReactNode;
 }
 
 // 모든 Header가 공유하는 공통 레이아웃
-// 로고, 중앙 nav, 우측 영역의 배치만 담당
-
+// 높이 60px, 로고, 가운데 메뉴, 오른쪽 액션 영역 배치만 담당
 export function HeaderShell({ nav, actions }: HeaderShellProps) {
   return (
     <header className="top-0 z-40 h-[60px] border-b border-gray-200 bg-white">

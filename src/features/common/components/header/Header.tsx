@@ -1,24 +1,21 @@
-// import { ClientHeader } from "./ClientHeader";
-// import { FreelancerHeader } from "./FreelancerHeader";
+import { ClientHeader } from "./ClientHeader";
+import { FreelancerHeader } from "./FreelancerHeader";
 import { GuestHeader } from "./GuestHeader";
 
 export type HeaderRole = "guest" | "client" | "freelancer";
 
 interface HeaderProps {
-  role?: HeaderRole;
+  role: HeaderRole;
 }
 
-/**
- * 전역 Header 진입점입니다.
- * 실제 로그인 연동 전에는 기본값으로 guest Header를 보여줍니다.
- */
+// 역할에 맞는 Header를 선택해서 보여주는 진입점
 export function Header({ role = "guest" }: HeaderProps) {
   if (role === "client") {
-    // return <ClientHeader />;
+    return <ClientHeader />;
   }
 
   if (role === "freelancer") {
-    // return <FreelancerHeader />;
+    return <FreelancerHeader />;
   }
 
   return <GuestHeader />;
