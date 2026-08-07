@@ -1,5 +1,5 @@
+import { ClientProjects } from "@/features/client/myprojects/components/ClientProjects";
+
 export default function ClientProjectsPage() {
-    return (
-        <div>내 프로젝트</div>
-    );
+  return <ClientProjects />;
 }

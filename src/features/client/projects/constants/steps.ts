@@ -1,16 +1,12 @@
 /**
- * 클라이언트 프로젝트 등록 위저드의 단계 정의 (단일 소스).
- * 상단 Stepper 표시와 스텝 라우팅이 이 상수를 함께 사용합니다.
+ * 클라이언트 단계
  */
 
 export const PROJECT_REGISTER_BASE = "/client/projects/new";
 
 export interface ProjectRegisterStep {
-  /** 1부터 시작하는 단계 번호 */
   step: number;
-  /** Stepper에 표시되는 라벨 */
   label: string;
-  /** 해당 스텝의 라우트 경로 */
   path: string;
 }
 
