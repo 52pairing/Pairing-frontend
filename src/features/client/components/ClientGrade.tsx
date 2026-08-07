@@ -12,21 +12,32 @@ export function ClientGrade() {
       <div className="mx-auto w-full max-w-[820px] px-4 py-5">
         {/* 페이지 상단 */}
         <header>
-         <Link
-            href="/client"
-            className="flex w-fit items-center gap-1 text-[12px] text-[#8b95a5] transition hover:text-[#4b5563]"
-          >
-            <ChevronLeftIcon />
-            메인으로
-          </Link>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Link
+                href="/client"
+                className="flex w-fit items-center gap-1 text-[12px] text-[#8b95a5] transition hover:text-[#4b5563]"
+              >
+                <ChevronLeftIcon />
+                메인으로
+              </Link>
 
-          <h1 className="mt-2 text-[21px] font-extrabold tracking-[-0.04em] text-[#111827]">
-            클라이언트 등급 안내
-          </h1>
+              <h1 className="mt-2 text-[21px] font-extrabold tracking-[-0.04em] text-[#111827]">
+                클라이언트 등급 안내
+              </h1>
 
-          <p className="mt-1.5 text-[12px] text-[#8b95a5]">
-            프로젝트 완료 실적과 평점에 따라 등급이 자동으로 산정됩니다.
-          </p>
+              <p className="mt-1.5 text-[12px] text-[#8b95a5]">
+                프로젝트 완료 실적과 평점에 따라 등급이 자동으로 산정됩니다.
+              </p>
+            </div>
+
+            <div className="pt-6 text-right">
+              <p className="text-[10px] text-[#9ca3af]">등급 유지 기준</p>
+              <p className="mt-1 text-[11px] font-bold text-[#111827]">
+                12개월 내 프로젝트 경험 · 매월 체크
+              </p>
+            </div>
+          </div>
         </header>
 
         {/* 실버 등급 */}
@@ -43,12 +54,6 @@ export function ClientGrade() {
               </div>
             </div>
 
-            <div className="text-left sm:text-right">
-              <p className="text-[11px] text-[#9ca3af]">등급 유지 기준</p>
-              <p className="mt-1 text-[12px] font-bold text-[#111827]">
-                12개월 내 프로젝트 경험 · 매월 체크
-              </p>
-            </div>
           </div>
 
           <div className="grid md:grid-cols-2">
@@ -114,12 +119,6 @@ export function ClientGrade() {
               </div>
             </div>
 
-            <div className="text-left sm:text-right">
-              <p className="text-[11px] text-[#9ca3af]">등급 유지 기준</p>
-              <p className="mt-1 text-[12px] font-bold text-[#111827]">
-                12개월 내 프로젝트 경험 · 매월 체크
-              </p>
-            </div>
           </div>
 
           <div className="grid md:grid-cols-2">
@@ -185,12 +184,6 @@ export function ClientGrade() {
               </div>
             </div>
 
-            <div className="text-left sm:text-right">
-              <p className="text-[11px] text-[#9ca3af]">등급 유지 기준</p>
-              <p className="mt-1 text-[12px] font-bold text-[#111827]">
-                12개월 내 프로젝트 경험 · 매월 체크
-              </p>
-            </div>
           </div>
 
           <div className="grid md:grid-cols-2">

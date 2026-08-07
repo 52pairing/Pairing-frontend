@@ -331,12 +331,6 @@ export function ClientMain() {
               </div>
             </article>
           </div>
-
-          <p className="mt-2 text-[8px] text-[#929bab]">
-            * 현재 등급:{" "}
-            <strong className="font-bold text-[#596579]">골드</strong> · 다이아
-            등급까지 완료 프로젝트 20건 남음
-          </p>
         </section>
       </section>
     </main>
