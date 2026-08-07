@@ -1,5 +1,5 @@
-export default function ClientNewProjectsPage() {
-    return (
-        <div>프로젝트 등록</div>
-    );
+import { ProjectRegisterIntro } from "@/features/client/projects/components/ProjectRegisterIntro";
+
+export default function ProjectRegisterIntroPage() {
+  return <ProjectRegisterIntro />;
 }

@@ -2,18 +2,13 @@
  * 프리랜서·클라이언트 "메인" 페이지와 "등급 안내" 페이지에서
  * 공통으로 반복되던 UI 조각을 모아 둔 파일입니다.
  *
- * - 각 페이지에 복붙되어 있던 동일한 아이콘/행 컴포넌트를 여기로 통합했습니다.
- * - 페이지 고유 UI(Hero, 등급표, 수수료 발생 기준 등)는 각 page.tsx에 그대로 둡니다.
- * - 색상·크기 등 페이지마다 달랐던 부분은 props로 받아 기존 화면을 그대로 유지합니다.
- *
+ * - 각 페이지에 복붙되어 있던 동일한 아이콘/행 컴포넌트를 여기로 통합
+
  * 상호작용이 없는 순수 표시용이므로 서버 컴포넌트로 둡니다("use client" 미사용).
  */
 
-/* =========================================================
-   등급 안내 페이지 공통
-========================================================= */
+/* 등급 안내 페이지 공통*/
 
-/** 등급 카드의 "혜택 항목" 한 줄 (좌: 아이콘+라벨 / 우: 값) */
 export function BenefitRow({
   label,
   value,
@@ -45,9 +40,7 @@ export function BenefitRow({
   );
 }
 
-/* =========================================================
-   메인 페이지 공통
-========================================================= */
+/* 메인 페이지 공통 */
 
 /** HOW IT WORKS 단계 카드 사이에 놓는 화살표 (데스크톱에서만 표시) */
 export function StepArrow() {
@@ -96,9 +89,7 @@ export function StepCheckIcon({
   );
 }
 
-/* =========================================================
-   공통 아이콘
-========================================================= */
+/*  공통 아이콘 */
 
 /** "메인으로" 등에 쓰는 왼쪽 방향 화살표 */
 export function ChevronLeftIcon({ size = 14 }: { size?: number }) {
@@ -112,6 +103,27 @@ export function ChevronLeftIcon({ size = 14 }: { size?: number }) {
     >
       <path
         d="M8.5 3.5L5 7L8.5 10.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** "다음" 등에 쓰는 오른쪽 방향 화살표 */
+export function ChevronRightIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 14 14"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M5 3.5L8.5 7L5 10.5"
         stroke="currentColor"
         strokeWidth="1.4"
         strokeLinecap="round"
