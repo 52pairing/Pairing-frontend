@@ -4,14 +4,6 @@ import { PROJECT_REGISTER_STEP_LABELS } from "@/features/client/projects/constan
 
 /**
  * 클라이언트 프로젝트 등록 플로우의 상단 진행 스텝 표시.
- * 등록 안내 → 기본 정보 → 직군 모집 → 상세정보 → 검수 → 최종 확인 순서로,
- * 플로우의 여러 페이지에서 `currentStep`만 바꿔 공통으로 사용합니다.
- *
- * - 완료된 단계(currentStep 이전): 체크 표시 + 진한 원 + 진한 연결선
- * - 현재 단계: 진한 원 + 번호 강조
- * - 예정 단계: 옅은 테두리 원
- *
- * 스텝 라벨은 constants/steps.ts를 단일 소스로 사용합니다.
  */
 
 type StepState = "completed" | "active" | "upcoming";

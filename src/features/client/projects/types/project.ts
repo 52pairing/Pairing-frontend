@@ -56,7 +56,17 @@ export interface ProjectRegisterForm {
   /** 직군별 모집 목록 */
   recruits?: ProjectRecruit[];
 
-  // ── Step4 상세정보 ... ──
+  // ── Step4 상세정보 ──
+  /** 현재 프로젝트 진행 상황 */
+  projectStatus?: string;
+  /** 주요 담당 업무 */
+  mainTasks?: string;
+  /** 세부 업무 범위 */
+  scope?: string;
+  /** 기타 전달사항 및 우대사항 (선택) */
+  additionalInfo?: string;
+
+  // ── Step5 검수 / Step6 최종 확인 ... ──
   // TODO: 각 스텝 UI 확정 시 필드 추가
 }
 
