@@ -1,0 +1,26 @@
+export const PROJECT_DETAIL_TABS = ["프로젝트 정보", "추천 후보", "협상", "계약", "진행 현황"] as const;
+
+export type ProjectDetailTab = (typeof PROJECT_DETAIL_TABS)[number];
+
+interface ProjectDetailTabsProps {
+  activeTab: ProjectDetailTab;
+  onTabChange: (tab: ProjectDetailTab) => void;
+}
+
+export function ProjectDetailTabs({ activeTab, onTabChange }: ProjectDetailTabsProps) {
+  return (
+    <div className="mt-10 border-b border-[#dfe4ea]">
+      <div className="flex h-[48px] items-end gap-3">
+        {PROJECT_DETAIL_TABS.map((tab) => {
+          const isActive = activeTab === tab;
+          return (
+            <button key={tab} type="button" onClick={() => onTabChange(tab)} className={`relative flex h-full min-w-[90px] cursor-pointer items-center justify-center px-3 text-[13px] font-bold transition ${isActive ? "text-[#17365d]" : "text-[#7b8797] hover:text-[#475467]"}`}>
+              {tab}
+              {isActive ? <span className="absolute bottom-[-1px] h-[2px] w-full bg-[#17365d]" /> : null}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

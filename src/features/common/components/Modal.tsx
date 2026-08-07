@@ -8,9 +8,11 @@ import { useHydrated } from "@/features/common/hooks/useHydrated";
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
-// 모든 모달이 공유하는 카드 크기 (여기 한 곳에서만 관리)
-// - 너비: 384px 고정 / - 최소 높이: 230px (경고 모달은 내용이 더 커서 자연히 넘음)
-const MODAL_SIZE = "w-full max-w-sm min-h-[230px]";
+// 모든 모달이 공유하는 카드 크기 (기본 sm, 넓은 콘텐츠는 lg)
+const MODAL_SIZE = {
+  sm: "w-full max-w-sm min-h-[230px]",
+  lg: "w-full max-w-[596px]",
+} as const;
 
 /* -------------------------------------------------------------------------- */
 /* Modal — 공통 껍데기 (Portal / 오버레이 / ESC / 포커스 트랩 / 스크롤 잠금)   */
@@ -26,6 +28,8 @@ interface ModalProps {
   labelledBy?: string;
   /** 설명 요소 id (aria-describedby) */
   describedBy?: string;
+  /** 모달 카드 크기 (기본 sm) */
+  size?: keyof typeof MODAL_SIZE;
 }
 
 /**
@@ -39,6 +43,7 @@ export const Modal = ({
   closeOnOverlayClick = true,
   labelledBy,
   describedBy,
+  size = "sm",
 }: ModalProps) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const hydrated = useHydrated();
@@ -127,7 +132,7 @@ export const Modal = ({
         aria-labelledby={labelledBy}
         aria-describedby={describedBy}
         tabIndex={-1}
-        className={`relative z-10 flex flex-col ${MODAL_SIZE} rounded-2xl bg-white p-6 shadow-xl outline-none`}
+        className={`relative z-10 flex flex-col ${MODAL_SIZE[size]} rounded-2xl bg-white p-6 shadow-xl outline-none`}
       >
         {children}
       </div>
