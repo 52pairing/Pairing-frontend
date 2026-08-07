@@ -91,13 +91,19 @@ export const Modal = ({
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    // 배경 스크롤 잠금
+    // 배경 스크롤 잠금 (스크롤바가 사라지며 생기는 배경 흔들림 방지를 위해 그만큼 padding 보정)
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
     document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = originalOverflow;
+      document.body.style.paddingRight = originalPaddingRight;
       // 닫힐 때 이전 포커스 위치로 복귀
       previouslyFocused?.focus();
     };
