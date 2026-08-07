@@ -1,8 +1,5 @@
-export default function FreelancerPage() {
-   return (
-    <div>
-    페이지
-    </div>
+import { FreelancerMain } from "@/features/freelancer/components/FreelancerMain";
 
-  )
+export default function FreelancerMainPage() {
+  return <FreelancerMain />;
 }
