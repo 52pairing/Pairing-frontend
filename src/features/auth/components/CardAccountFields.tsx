@@ -1,0 +1,132 @@
+// 카드/계좌 등록 스텝
+// 클라이언트/프리랜서 일반/프리랜서 소셜 3개 플로우가 동일하게 재사용합니다.
+// 카드사(cardBrand)는 별도 meta 엔드포인트가 없어 자유 입력으로 받습니다.
+"use client";
+
+import { BANK_OPTIONS } from "@/features/auth/constants/signupOptions";
+
+export interface CardAccountValues {
+  cardNumber: string;
+  cardBrand: string;
+  bankCode: string;
+  accountNumber: string;
+  accountHolder: string;
+}
+
+interface CardAccountFieldsProps {
+  values: CardAccountValues;
+  onChange: (partial: Partial<CardAccountValues>) => void;
+}
+
+export const CardAccountFields = ({
+  values,
+  onChange,
+}: CardAccountFieldsProps) => {
+  const bankOptions = BANK_OPTIONS;
+
+  return (
+    <div className="space-y-8">
+      <p className="rounded-md bg-[#F7F8FA] px-4 py-3 text-xs text-gray-500">
+        등록한 결제 수단은 착수금 및 성공보수 수수료 결제에 사용됩니다. 카드
+        정보는 안전하게 암호화되어 처리됩니다.
+      </p>
+
+      <section>
+        <h2 className="mb-4 text-sm font-bold text-[#111827]">카드 등록</h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#374151]">
+              카드사 <span className="text-[#356DF3]">*</span>
+            </label>
+            <input
+              type="text"
+              value={values.cardBrand}
+              onChange={(e) => onChange({ cardBrand: e.target.value })}
+              placeholder="예) 신한카드"
+              className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#374151]">
+              카드번호 <span className="text-[#356DF3]">*</span>
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={values.cardNumber}
+              onChange={(e) =>
+                onChange({ cardNumber: e.target.value.replace(/[^\d-]/g, "") })
+              }
+              placeholder="1234-1234-1234-1234"
+              className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-sm font-bold text-[#111827]">계좌 등록</h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#374151]">
+              은행 <span className="text-[#356DF3]">*</span>
+            </label>
+            <select
+              value={values.bankCode}
+              onChange={(e) => onChange({ bankCode: e.target.value })}
+              className="h-11 w-full rounded-md border border-gray-200 px-3 text-sm text-gray-900 outline-none focus:border-[#142B4A] disabled:cursor-not-allowed disabled:text-gray-300"
+            >
+              <option value="" disabled>
+                은행 선택
+              </option>
+              {bankOptions.map((bank) => (
+                <option key={bank.code} value={bank.code}>
+                  {bank.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#374151]">
+              계좌번호 <span className="text-[#356DF3]">*</span>
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={values.accountNumber}
+              onChange={(e) =>
+                onChange({ accountNumber: e.target.value.replace(/\D/g, "") })
+              }
+              placeholder="'-' 없이 숫자만 입력해 주세요."
+              className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-[#374151]">
+              예금주 <span className="text-[#356DF3]">*</span>
+            </label>
+            <input
+              type="text"
+              value={values.accountHolder}
+              onChange={(e) => onChange({ accountHolder: e.target.value })}
+              placeholder="예금주 입력"
+              className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export const isCardAccountValid = (values: CardAccountValues) =>
+  values.cardBrand.length > 0 &&
+  values.cardNumber.length > 0 &&
+  values.bankCode.length > 0 &&
+  values.accountNumber.length > 0 &&
+  values.accountHolder.length > 0;

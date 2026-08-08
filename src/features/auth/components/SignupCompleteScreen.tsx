@@ -1,0 +1,32 @@
+import { AuthHeader } from "@/features/auth/components/AuthHeader";
+import { SignupComplete } from "@/features/auth/components/SignupComplete";
+
+interface SignupCompleteScreenProps {
+  title: string;
+  description: string;
+  primaryLabel: string;
+}
+
+export function SignupCompleteScreen({
+  title,
+  description,
+  primaryLabel,
+}: SignupCompleteScreenProps) {
+  return (
+    <div className="min-h-screen bg-white">
+      <AuthHeader />
+      <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-5 py-16">
+        <section className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white px-8 py-9 shadow-sm">
+          <SignupComplete
+            title={title}
+            description={description}
+            primaryHref="/login"
+            primaryLabel={primaryLabel}
+            secondaryHref="/"
+            secondaryLabel="홈으로 이동"
+          />
+        </section>
+      </main>
+    </div>
+  );
+}
