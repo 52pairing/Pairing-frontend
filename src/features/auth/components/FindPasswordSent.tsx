@@ -8,13 +8,13 @@ import { useEffect, useState } from "react";
 const RESEND_COOLDOWN_SECONDS = 180;
 
 interface FindPasswordSentProps {
-  /** 백엔드가 마스킹까지 처리해서 내려주는 값 (예: "te***@test.com") */
-  maskedEmail: string;
+  // 서버가 실제 발송 여부를 확인해주지 않아 사용자가 입력한 값을 그대로 참고용으로 표시
+  email: string;
   onResend: () => void;
 }
 
 export const FindPasswordSent = ({
-  maskedEmail,
+  email,
   onResend,
 }: FindPasswordSentProps) => {
   const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN_SECONDS);
@@ -29,6 +29,7 @@ export const FindPasswordSent = ({
     return () => window.clearInterval(timer);
   }, [secondsLeft]);
 
+  // 재발송도 별도 엔드포인트 없이 같은 요청을 다시 보내는 것
   const handleResend = () => {
     if (secondsLeft > 0) return;
     onResend();
@@ -42,13 +43,15 @@ export const FindPasswordSent = ({
       <h1 className="mt-5 text-lg font-bold text-[#111827]">
         인증 링크를 보냈습니다.
       </h1>
+      {/* 입력값이 실제로 일치하는지는 서버가 알려주지 않아 확정 문구를 쓰지 않음 */}
       <p className="mt-2 text-sm font-medium text-gray-500">
-        가입한 이메일로 전송된 인증 링크를 확인해 주세요.
+        입력하신 정보가 일치하면 가입한 이메일로 인증 링크를 보내드렸습니다.
+        메일함을 확인해 주세요.
       </p>
 
       <div className="mt-6 w-full rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
-        <p className="text-xs text-gray-400">인증 링크 발송 이메일</p>
-        <p className="mt-1 text-sm font-bold text-[#0b1f3a]">{maskedEmail}</p>
+        <p className="text-xs text-gray-400">입력하신 이메일</p>
+        <p className="mt-1 text-sm font-bold text-[#0b1f3a]">{email}</p>
       </div>
 
       <ul className="mt-5 list-disc space-y-1 pl-4 text-left text-xs text-gray-500">
@@ -57,7 +60,8 @@ export const FindPasswordSent = ({
           발급됩니다.
         </li>
         <li>이메일이 보이지 않는 경우 스팸 메일함을 확인해 주세요.</li>
-        <li>인증 링크는 발송 후 30분 동안 유효합니다.</li>
+        {/* 링크 유효시간 3분 (문서 7-3절 기준) */}
+        <li>인증 링크는 발송 후 3분 동안 유효합니다.</li>
       </ul>
 
       <button
@@ -81,6 +85,7 @@ export const FindPasswordSent = ({
   );
 };
 
+// 발송 완료 화면 상단 봉투 아이콘
 const MailIcon = () => (
   <span className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
     <svg

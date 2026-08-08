@@ -9,6 +9,8 @@ interface FindEmailFormProps {
   name: string;
   phone: string;
   isFormValid: boolean;
+  isSubmitting: boolean;
+  error?: string;
   onNameChange: (value: string) => void;
   onPhoneChange: (value: string) => void;
   onSubmit: (event: React.FormEvent) => void;
@@ -18,6 +20,8 @@ export const FindEmailForm = ({
   name,
   phone,
   isFormValid,
+  isSubmitting,
+  error,
   onNameChange,
   onPhoneChange,
   onSubmit,
@@ -80,12 +84,16 @@ export const FindEmailForm = ({
         />
       </div>
 
+      {error ? (
+        <p className="text-xs font-medium text-red-500">{error}</p>
+      ) : null}
+
       <button
         type="submit"
-        disabled={!isFormValid}
+        disabled={!isFormValid || isSubmitting}
         className="h-11 w-full rounded-md bg-[#0b1f3a] text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 enabled:hover:bg-[#102b50]"
       >
-        아이디 찾기
+        {isSubmitting ? "확인 중..." : "아이디 찾기"}
       </button>
     </form>
   </>
