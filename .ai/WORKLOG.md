@@ -7,6 +7,85 @@
 
 ---
 
+## 2026-08-07 — 로그인 · 계정 찾기 · 로그인 상태 알림 화면 구현 (UI, PR 제출)
+
+### 작업 목적
+
+- 로그인 화면과 아이디·비밀번호 찾기 플로우, 로그인 상태 관련 알림(중복 로그인/세션 만료/계정 잠금/로그인 시도 제한) UI를 구현했습니다.
+- 이 시점에는 실제 API 연동 전이라 화면은 전부 mock 값으로 동작합니다.
+
+### 작업 요약
+
+- 로그인 페이지 UI, 아이디 찾기(입력→결과), 비밀번호 찾기 4단계(입력→발송완료→임시비밀번호 발급→새 비밀번호 등록→완료) 화면을 만들었습니다.
+- 공용 `ConfirmModal`을 재사용해 중복 로그인 모달·세션 만료 모달을 만들고, 확인 시 `/login`으로 이동하도록 했습니다.
+- 계정 잠금 배너·로그인 시도 제한 배너 컴포넌트를 만들었습니다 (아직 로그인 폼에는 연결 안 함).
+- 공용 `Modal`이 열릴 때 스크롤바가 사라지며 배경이 밀리는 버그를 스크롤바 너비만큼 `padding-right`를 보정하는 방식으로 수정했습니다.
+
+### 관련 Issue 및 브랜치
+
+- Issue: `#18`
+- 브랜치: `feature/common-login#18`
+- Pull Request: 생성 완료 (`Closes #18`)
+
+### 수정 파일
+
+#### 신규
+
+- `src/app/login/findemail/page.tsx`, `src/app/login/findpassword/page.tsx`, `src/app/login/findpassword/verify/page.tsx`, `src/app/login/findpassword/reset/page.tsx`
+- `src/app/signup/page.tsx` (플레이스홀더만)
+- `src/features/auth/components/AuthHeader.tsx`, `BackLink.tsx`, `FindEmailForm.tsx`, `FindEmailResult.tsx`, `FindPasswordForm.tsx`, `FindPasswordSent.tsx`, `TempPasswordIssued.tsx`, `NewPasswordForm.tsx`, `NewPasswordDone.tsx`, `OtherDeviceLoginModal.tsx`, `LoginSessionExpiredModal.tsx`, `AccountLockedAlert.tsx`, `LoginRestrictedAlert.tsx`
+- `src/features/auth/utils/formatPhoneNumber.ts`
+- `public/icons/CheckIcon-green.svg`, `EmailIcon-green.svg`, `LeftAngleBracketIcon.svg`
+
+#### 수정
+
+- `src/app/login/page.tsx` — 로그인 페이지 UI 구현
+- `src/features/common/components/Modal.tsx` — 스크롤 잠금 시 배경 흔들림 버그 수정
+
+### API 변경
+
+- 없음 (전부 mock, 실제 연동은 다음 작업(`#28`)에서 진행)
+
+### 문제와 해결
+
+- 문제: `findemail/page.tsx`가 `FindEmailResult`에 더 이상 없는 `onBack` prop을 넘겨 `npm run build`가 타입 에러로 실패.
+- 원인: `FindEmailResult`를 뒤로가기 버튼 없는 형태로 리팩터링하면서 호출부를 같이 안 고침.
+- 해결: 미해결 — PR은 이 상태로 제출했고, 정리는 다음 브랜치(`#28`)에서 진행하기로 함 (사용자 결정).
+- 남은 위험: 이 상태로는 CI 빌드가 실패할 수 있음.
+
+### 실행한 검증
+
+- [x] lint — 통과
+- [x] build — 실패 (`findemail/page.tsx` 타입 에러)
+- [ ] 단위 테스트 (도구 미도입)
+- [ ] E2E 테스트 (도구 미도입)
+- [x] 브라우저 확인 — 아이디 찾기, 비밀번호 찾기 4단계, 모달 2종 클릭 테스트
+- [ ] 실제 API 정상 응답 확인 — 연동 전
+- [ ] API 에러 응답 확인 — 연동 전
+- [ ] 반응형 확인
+
+### 검증 결과
+
+- 통과: lint, 브라우저 클릭 테스트
+- 실패: build (타입 에러 1건)
+- 미실행: 단위/E2E 테스트, 반응형 확인, 실제 API 확인
+- 미실행 이유: 테스트 도구 미도입, 반응형은 시간상 생략, API는 연동 전
+
+### 확인하지 못한 내용
+
+- 실제 로그인/계정찾기 API 응답 (연동 전)
+
+### 다음 참고사항
+
+- PR(`Closes #18`)에 아래 정리 항목이 남아있는 상태로 제출됨. 후속 브랜치(`feature/common-login-api#28`)에서 처리 필요:
+  - `findemail/page.tsx`의 `onBack` prop 제거 (빌드 실패 해결)
+  - `login/page.tsx`의 모달 확인용 임시 테스트 버튼 제거
+  - `TempPasswordIssued.tsx`의 "(테스트) 새 비밀번호 등록 화면 보기" 임시 링크 정리 여부 결정
+  - 빈 스캐폴딩 파일 3개(`FindPasswordVerified.tsx`, `ResetPasswordComplete.tsx`, `ResetPasswordForm.tsx`) 삭제 여부 결정
+- 이어지는 작업은 `.ai/STATE.md`에 새 작업(`#28` 로그인 API 연동)으로 기록함.
+
+---
+
 <!--
 아래 블록을 복사해 최신 기록을 맨 위에 추가합니다.
 

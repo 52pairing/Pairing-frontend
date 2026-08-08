@@ -4,6 +4,9 @@ import { useState } from "react";
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { FindEmailForm } from "@/features/auth/components/FindEmailForm";
 import { FindEmailResult } from "@/features/auth/components/FindEmailResult";
+import { findEmail } from "@/features/auth/services/findEmail";
+import { ApiException } from "@/lib/api";
+import { FindEmailAccount } from "@/features/auth/types";
 
 type FindEmailStep = "form" | "result";
 
@@ -11,7 +14,9 @@ export default function FindEmailPage() {
   const [step, setStep] = useState<FindEmailStep>("form");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [maskedEmail, setMaskedEmail] = useState("");
+  const [accounts, setAccounts] = useState<FindEmailAccount[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const isFormValid = name.trim() !== "" && phone.length === 13;
 
@@ -32,14 +37,28 @@ export default function FindEmailPage() {
     setPhone(formattedPhone);
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!isFormValid) return;
+    if (!isFormValid || isSubmitting) return;
 
-    // TODO: 아이디 찾기 API 연동 (확인 필요: 요청/응답 필드)
-    // mock데이터
-    setMaskedEmail("ju****@gmail.com");
-    setStep("result");
+    setIsSubmitting(true);
+    setFormError("");
+
+    try {
+      const result = await findEmail({ name, phone });
+      setAccounts(result.accounts);
+      setStep("result");
+    } catch (error) {
+      if (error instanceof ApiException) {
+        setFormError(error.message);
+      } else {
+        setFormError(
+          "아이디 찾기 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -53,15 +72,14 @@ export default function FindEmailPage() {
               name={name}
               phone={phone}
               isFormValid={isFormValid}
+              isSubmitting={isSubmitting}
+              error={formError}
               onNameChange={setName}
               onPhoneChange={handlePhoneChange}
               onSubmit={handleSubmit}
             />
           ) : (
-            <FindEmailResult
-              maskedEmail={maskedEmail}
-              onBack={() => setStep("form")}
-            />
+            <FindEmailResult accounts={accounts} />
           )}
         </section>
       </main>

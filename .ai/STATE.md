@@ -6,73 +6,38 @@
 
 ## 현재 작업
 
-- 작업명: AI 협업 문서 구조 설정
-- 관련 Issue: `#1`
-- 관련 브랜치: `docs/ai-setup#1`
-- 작업 목적: AI가 프로젝트 규칙과 현재 작업 상태를 일관되게 확인할 수 있도록 문서 구조를 설정합니다.
+- 작업명: 로그인 · 아이디 찾기 · 비밀번호 찾기 실제 API 연동
+- 관련 Issue: `#28`
+- 관련 브랜치: `feature/common-login-api#28`
+- 작업 목적: 백엔드 연동 가이드(`frontend-auth-integration.md`)를 기준으로 로그인/아이디 찾기/비밀번호 찾기(전체 흐름)와 계정 잠금 해제를 실제 API에 연동합니다.
 
 ## 작업 범위
 
-- 프로젝트 루트 `AGENTS.md`
-- `docs/ai/frontend-convention.md`
-- `docs/ai/git-issue-pr-guide.md`
-- `docs/ai/security-guide.md`
-- `docs/ai/testing-guide.md`
-- `.ai/STATE.md`
-- `.ai/HANDOFF.md`
-- `.ai/WORKLOG.md`
-- `.ai/API.md`
-- 초기 폴더 세팅(`src/features`, `tests`, `unit-tests`) 및 `.env.example`
+- `src/lib/api.ts` (공통 API 클라이언트)
+- `src/features/auth/types.ts`, `src/features/auth/services/**` (로그인/아이디 찾기/비밀번호 찾기/이메일 인증/잠금 해제 타입·서비스 함수)
+- `src/app/login/**`, `src/app/reset-password/**` (관련 화면)
 
 ## 진행 상황
 
-- [x] 루트 `AGENTS.md` 참조 문서 정리
-- [x] `docs/ai/frontend-convention.md` 정리 (묻혀 있던 3개 문서 분리)
-- [x] `docs/ai/git-issue-pr-guide.md` 신규 작성
-- [x] `docs/ai/security-guide.md` 신규 작성
-- [x] `docs/ai/testing-guide.md` 신규 작성 (실제 `package.json` 스크립트 기준)
-- [x] `.ai/STATE.md` 작성
-- [x] `.ai/HANDOFF.md` 코드펜스 잔여물 정리
-- [x] `.ai/WORKLOG.md` 코드펜스 잔여물 정리
-- [x] `.ai/API.md` 실제 API 템플릿으로 재작성
-- [x] 폴더 구조 `features`(복수)로 확정, `src/feature` → `src/features`
-- [x] `lib` / `services` 역할 구분 정의 및 README·컨벤션 문서 정렬
-- [x] `.env.example` 생성 및 `.gitignore` 예외 처리
-- [x] 문서 내부 상대 경로 및 민감 정보 확인
-- [ ] Pull Request 작성 (사용자가 직접 진행)
-
-## 현재까지 변경한 파일
-
-### 신규
-
-- `docs/ai/frontend-convention.md`
-- `docs/ai/git-issue-pr-guide.md`
-- `docs/ai/security-guide.md`
-- `docs/ai/testing-guide.md`
-- `.ai/STATE.md`
-- `.ai/HANDOFF.md`
-- `.ai/WORKLOG.md`
-- `.ai/API.md`
-- `.env.example`
-- `src/features/.gitkeep`
-- `tests/.gitkeep`
-- `unit-tests/.gitkeep`
-
-### 수정
-
-- `AGENTS.md` — 참조 문서 및 작업 원칙 정리
-- `README.md` — 폴더 작성 규칙에서 `lib`/`services` 역할 명확화
-- `.gitignore` — `!.env.example` 예외 추가
-
-### 삭제
-
-- `src/feature/` (빈 단수 폴더 → `src/features/`로 대체)
+- [x] 로그인(`POST /auth/login`) 연동 — `AU_002`→계정잠금 배너, `AU_014`→로그인제한 배너, `tempPassword` 분기, `returnUrl` 복귀
+- [x] 아이디 찾기(`POST /auth/find-email`) 연동 — `accounts` 배열(0~2건) 처리
+- [x] 비밀번호 찾기 1~3단계 연동 완료
+  - 1~2단계: `POST /auth/password/reset-requests` (역할 탭 추가, 항상 200이라 일반 안내 문구)
+  - 3단계: `/reset-password?token=...` — 버튼 클릭으로만 `POST /auth/password/reset-confirm` 호출
+- [x] 새 비밀번호 등록 화면(`/login/findpassword/reset`) — 실제 `PATCH /auth/password { newPassword, newPasswordConfirm }` 연동 완료. `NewPasswordForm`이 검증된 비밀번호 값을 상위로 전달하도록 변경, 로딩/에러 상태 추가
+- [x] 계정 잠금 해제 — `UnlockAccountModal` 신규 구현
+  - `POST /auth/email-verifications { purpose: "UNLOCK" }` → `POST /auth/unlock { email, role, code }` (`/email-verifications/confirm`은 거치지 않음)
+  - 로그인 페이지의 `AccountLockedAlert`에서 모달 오픈, 해제 성공 시 토스트 안내
+  - (참고) 모달 열릴 때 인증코드 자동 발송을 시도했으나 프로젝트 lint 규칙(`react-hooks/set-state-in-effect`)에 걸려 "인증코드 받기" 버튼 클릭 방식으로 변경함
+- [x] 실제 API 흐름과 안 맞았던 화면·빈 스캐폴딩 파일 정리 삭제 (`TempPasswordIssued.tsx` 등 5개, 이전 기록 참고)
+- [ ] `GLOBAL_009`(refresh 재시도)/`GLOBAL_011`(다른 기기 로그인 모달) 공통 인터셉터 — 인증된 화면(마이페이지 등)을 만들 때 필요, 아직 없음
+- [ ] 소셜 로그인 실제 연동 (버튼만 있고 동작 없음)
+- [ ] 마이페이지 비밀번호 변경(인증코드 3단계 방식) — 이번 작업 범위 밖, 별도 화면 필요
 
 ## 다음 할 일
 
-1. 변경 내용을 `develop` 대상으로 커밋합니다.
-2. `docs/ai-setup#1` 브랜치를 push합니다.
-3. `develop` 대상 Pull Request를 생성하고 `Closes #1`을 연결합니다.
+1. 백엔드 서버 켜고 전체 흐름(로그인 성공/실패, 아이디·비밀번호 찾기, 계정 잠금 해제) 실제 테스트
+2. 이후 마이페이지 등 인증된 화면을 만들 때 `GLOBAL_009`/`GLOBAL_011` 공통 인터셉터 추가
 
 ## 막힌 점
 
@@ -80,28 +45,21 @@
 
 ## 확인이 필요한 내용
 
-- 공통 API 클라이언트 실제 경로 (`src/lib`)
-- 폼 라이브러리
-- 서버·전역 상태 관리 방식
-- 테스트 도구(Jest·Playwright) 실제 도입 시점
-- PR 필수 승인 인원 및 merge 방식
+- 백엔드 서버가 계속 꺼져 있어 실제 성공/실패 응답을 아직 못 봄 (지금까지는 코드 흐름과 네트워크 에러 처리만 확인)
+- `/reset-password` 실제 이메일 링크로 끝까지(토큰 발급~임시비밀번호 메일 수신) 테스트 필요
+- `UnlockAccountModal`은 실제 `AU_002` 응답이 있어야 열려서, 백엔드 없이는 끝까지 클릭 테스트 못 함 (타입체크·린트만 확인)
+- `APP_FRONT_BASE_URL`이 실제로 `http://localhost:17000`으로 설정돼 있는지 — 문서 기본값 기준으로만 가정 중, 확인 안 됨
 
 ## 실행한 검증
 
-- [x] 문서 상대 경로 확인
-- [x] 이전 프로젝트 키워드 검색
-- [x] 민감 정보 포함 여부 확인
-- [x] `package.json`과 테스트 명령 비교 (test 스크립트·Jest·Playwright 미설치 확인)
-- [x] 실제 폴더 구조와 프론트 컨벤션 비교
-- [ ] `npm run lint` — 문서·폴더 변경만 포함되어 미실행
-- [ ] `npm run build` — 문서·폴더 변경만 포함되어 미실행
+- [x] 매 단계마다 `npx tsc --noEmit`, `npm run lint` 통과 확인
+- [x] 브라우저로 로그인 / 아이디 찾기 / 비밀번호 찾기 1~3단계 / 새 비밀번호 등록 화면 렌더링·입력·버튼 클릭 확인 (네트워크 오류 처리 포함)
+- [ ] 백엔드 서버 실제 기동 후 성공/실패 응답 확인 — 서버가 계속 꺼져 있어 미실행
+- [ ] `UnlockAccountModal` 실제 동작 확인 — `AU_002` 응답 필요, 미실행
 
 ## 주의사항
 
 - main과 develop에 직접 push하지 않습니다.
-- 작업 브랜치는 최신 develop에서 생성합니다.
-- 실제로 확인하지 못한 프로젝트 설정을 확정된 규칙처럼 작성하지 않습니다.
-- 환경변수 실제 값과 테스트 계정 정보는 문서에 작성하지 않습니다.
 - commit, push, Pull Request 생성은 사용자가 직접 진행합니다.
 
 작업이 완료되면 이 내용을 WORKLOG.md로 옮기고, STATE.md는 다음 작업 내용으로 교체합니다.

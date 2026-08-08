@@ -1,71 +1,99 @@
 "use client";
 
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
-import { DuplicateLoginModal } from "@/features/auth/components/OtherDeviceLoginModal";
-import { SessionExpiredModal } from "@/features/auth/components/LoginSessionExpiredModal";
+import { AccountLockedAlert } from "@/features/auth/components/AccountLockedAlert";
+import { LoginRestrictedAlert } from "@/features/auth/components/LoginRestrictedAlert";
+import { UnlockAccountModal } from "@/features/auth/components/UnlockAccountModal";
+import { login } from "@/features/auth/services/login";
+import type { LoginRole } from "@/features/auth/types";
+import { useToast } from "@/features/common/hooks/useToast";
+import { ApiException } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-type LoginRole = "client" | "freelancer";
+type LoginAlert =
+  | { type: "locked" }
+  | { type: "restricted"; message: string }
+  | null;
+
+// 로그인 후 이동할 역할별 기본 페이지. returnUrl이 없을 때만 사용.
+const ROLE_HOME_PATH: Record<LoginRole, string> = {
+  CLIENT: "/client",
+  FREELANCER: "/freelancer",
+};
 
 export default function LoginPage() {
-  const [role, setRole] = useState<LoginRole>("client");
-  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
+  const toast = useToast();
 
-  // TODO: 모달 확인용 임시 상태 — 확인 끝나면 아래 두 줄과 테스트 버튼, 모달 렌더링 부분을 지워주세요.
-  const [showDuplicateLogin, setShowDuplicateLogin] = useState(false);
-  const [showSessionExpired, setShowSessionExpired] = useState(false);
+  const [role, setRole] = useState<LoginRole>("CLIENT");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [alert, setAlert] = useState<LoginAlert>(null);
+  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setFormError("");
+    setAlert(null);
+
+    try {
+      const result = await login({ email, password, role });
+
+      if (result.tempPassword) {
+        router.push("/login/findpassword/reset");
+        return;
+      }
+
+      router.push(returnUrl || ROLE_HOME_PATH[role]);
+    } catch (error) {
+      if (error instanceof ApiException) {
+        if (error.errorCode === "AU_002") {
+          setAlert({ type: "locked" });
+        } else if (error.errorCode === "AU_014") {
+          setAlert({ type: "restricted", message: error.message });
+        } else {
+          setFormError(error.message);
+        }
+      } else {
+        setFormError(
+          "로그인 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen">
-      {/* TODO: 모달 확인용 임시 버튼 */}
-      <div className="fixed top-4 right-4 z-40 flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => setShowDuplicateLogin(true)}
-          className="rounded-md bg-[#0b1f3a] px-3 py-2 text-xs font-semibold text-white shadow"
-        >
-          중복 로그인 모달
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowSessionExpired(true)}
-          className="rounded-md bg-[#0b1f3a] px-3 py-2 text-xs font-semibold text-white shadow"
-        >
-          세션 만료 모달
-        </button>
-      </div>
-
-      <DuplicateLoginModal
-        open={showDuplicateLogin}
-        onConfirm={() => setShowDuplicateLogin(false)}
-      />
-      <SessionExpiredModal
-        open={showSessionExpired}
-        onConfirm={() => setShowSessionExpired(false)}
-      />
-
       <AuthHeader />
 
-      {/* 아이디 찾기 */}
       <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-5 py-16">
         <section className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white px-8 py-9 shadow-sm">
           <div className="mb-6 text-center">
             <h1 className="text-xl font-bold text-[#111827]">로그인</h1>
-
             <p className="mt-2 text-sm font-medium text-gray-500">
               서비스 이용을 위해 로그인해 주세요.
             </p>
           </div>
 
-          {/* 사용자 유형 선택 탭 */}
           <div className="mb-6 grid grid-cols-2 rounded-md border border-gray-200 bg-white p-1">
             <button
               type="button"
-              onClick={() => setRole("client")}
+              onClick={() => setRole("CLIENT")}
               className={`h-9 rounded-md text-sm font-semibold ${
-                role === "client"
+                role === "CLIENT"
                   ? "bg-[#0b1f3a] text-white"
                   : "text-gray-500 hover:bg-gray-50"
               }`}
@@ -75,9 +103,9 @@ export default function LoginPage() {
 
             <button
               type="button"
-              onClick={() => setRole("freelancer")}
+              onClick={() => setRole("FREELANCER")}
               className={`h-9 rounded-md text-sm font-semibold ${
-                role === "freelancer"
+                role === "FREELANCER"
                   ? "bg-[#0b1f3a] text-white"
                   : "text-gray-500 hover:bg-gray-50"
               }`}
@@ -86,13 +114,17 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <form
-            className="space-y-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-            }}
-          >
-            {/* 이메일 */}
+          {alert?.type === "locked" ? (
+            <AccountLockedAlert
+              onVerifyEmail={() => setUnlockModalOpen(true)}
+            />
+          ) : null}
+
+          {alert?.type === "restricted" ? (
+            <LoginRestrictedAlert message={alert.message} />
+          ) : null}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label
                 htmlFor="email"
@@ -104,12 +136,13 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="이메일 주소를 입력해 주세요."
                 className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b1f3a]"
               />
             </div>
 
-            {/* 비밀번호 */}
             <div>
               <label
                 htmlFor="password"
@@ -122,6 +155,8 @@ export default function LoginPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="비밀번호를 입력해 주세요."
                   className="h-11 w-full rounded-md border border-gray-200 px-4 pr-12 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b1f3a]"
                 />
@@ -136,7 +171,10 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* 계정 정보 찾기 */}
+            {formError ? (
+              <p className="text-xs font-medium text-red-500">{formError}</p>
+            ) : null}
+
             <div className="flex justify-end gap-3 text-xs font-medium text-gray-500">
               <Link href="/login/findemail" className="hover:text-gray-900">
                 아이디 찾기
@@ -149,25 +187,26 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {/* 로그인 버튼 */}
             <button
               type="submit"
-              className="h-11 w-full rounded-md bg-[#0b1f3a] text-sm font-bold text-white hover:bg-[#102b50]"
+              disabled={isSubmitting}
+              className="h-11 w-full rounded-md bg-[#0b1f3a] text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 enabled:hover:bg-[#102b50]"
             >
-              {role === "client" ? "클라이언트 로그인" : "프리랜서 로그인"}
+              {isSubmitting
+                ? "로그인 중..."
+                : role === "CLIENT"
+                  ? "클라이언트 로그인"
+                  : "프리랜서 로그인"}
             </button>
           </form>
 
-          {/* 프리랜서만 소셜 로그인 노출 */}
-          {role === "freelancer" ? (
+          {role === "FREELANCER" ? (
             <>
               <div className="mt-7 flex items-center gap-3">
                 <div className="h-px flex-1 bg-gray-200" />
-
                 <span className="text-xs font-medium text-gray-400">
                   또는 소셜 계정으로 로그인
                 </span>
-
                 <div className="h-px flex-1 bg-gray-200" />
               </div>
 
@@ -203,7 +242,6 @@ export default function LoginPage() {
             </>
           ) : null}
 
-          {/* 회원가입 */}
           <p className="mt-6 text-center text-xs font-medium text-gray-500">
             아직 회원이 아니신가요?{" "}
             <Link href="/signup" className="font-bold text-[#0b1f3a]">
@@ -212,6 +250,18 @@ export default function LoginPage() {
           </p>
         </section>
       </main>
+
+      <UnlockAccountModal
+        open={unlockModalOpen}
+        email={email}
+        role={role}
+        onClose={() => setUnlockModalOpen(false)}
+        onUnlocked={() => {
+          setUnlockModalOpen(false);
+          setAlert(null);
+          toast.success("계정 잠금이 해제되었습니다. 다시 로그인해 주세요.");
+        }}
+      />
     </div>
   );
 }

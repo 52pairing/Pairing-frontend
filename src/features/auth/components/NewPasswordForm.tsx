@@ -28,10 +28,17 @@ const PASSWORD_RULES: PasswordRule[] = [
 ];
 
 interface NewPasswordFormProps {
-  onSubmit: () => void;
+  isSubmitting: boolean;
+  error?: string;
+  // 검증을 통과한 새 비밀번호 값을 그대로 전달 (API 호출은 부모 페이지 책임)
+  onSubmit: (newPassword: string) => void;
 }
 
-export const NewPasswordForm = ({ onSubmit }: NewPasswordFormProps) => {
+export const NewPasswordForm = ({
+  isSubmitting,
+  error,
+  onSubmit,
+}: NewPasswordFormProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -44,8 +51,8 @@ export const NewPasswordForm = ({ onSubmit }: NewPasswordFormProps) => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!isFormValid) return;
-    onSubmit();
+    if (!isFormValid || isSubmitting) return;
+    onSubmit(password);
   };
 
   return (
@@ -164,12 +171,16 @@ export const NewPasswordForm = ({ onSubmit }: NewPasswordFormProps) => {
           ) : null}
         </div>
 
+        {error ? (
+          <p className="text-xs font-medium text-red-500">{error}</p>
+        ) : null}
+
         <button
           type="submit"
-          disabled={!isFormValid}
+          disabled={!isFormValid || isSubmitting}
           className="h-11 w-full rounded-md bg-[#0b1f3a] text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 enabled:hover:bg-[#102b50]"
         >
-          새 비밀번호 등록
+          {isSubmitting ? "등록 중..." : "새 비밀번호 등록"}
         </button>
       </form>
     </>
