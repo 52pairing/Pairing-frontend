@@ -1,3 +1,8 @@
+"use client";
+
+import Link from "next/link";
+import { useParams } from "next/navigation";
+
 const FREELANCERS = [
   { name: "김개발", role: "프론트엔드", initial: "김", color: "bg-[#3975ef]", status: "협상 중" },
   { name: "이서연", role: "프론트엔드", initial: "이", color: "bg-[#7c3aed]", status: "요청 대기" },
@@ -5,6 +10,9 @@ const FREELANCERS = [
 ];
 
 export function ProjectFreelancerStatus() {
+  const params = useParams();
+  const projectId = String(params.projectId ?? "");
+
   return (
     <section className="mt-4 rounded-[14px] border border-[#dfe4ea] bg-white px-6 py-5">
       <h2 className="text-[14px] font-extrabold text-[#172033]">프리랜서 현황</h2>
@@ -18,7 +26,10 @@ export function ProjectFreelancerStatus() {
                 <p className="mt-0.5 text-[10px] text-[#98a2b3]">{freelancer.role}</p>
               </div>
             </div>
-            <FreelancerAction status={freelancer.status} />
+            <FreelancerAction
+              status={freelancer.status}
+              negotiationHref={`/client/projects/${projectId}/negotiation`}
+            />
           </article>
         ))}
       </div>
@@ -26,12 +37,23 @@ export function ProjectFreelancerStatus() {
   );
 }
 
-function FreelancerAction({ status }: { status: string }) {
+function FreelancerAction({
+  status,
+  negotiationHref,
+}: {
+  status: string;
+  negotiationHref: string;
+}) {
   if (status === "협상 중") {
     return (
       <div className="flex items-center gap-2">
         <span className="rounded-full border border-[#f5d9a6] bg-[#fff8e9] px-3 py-1 text-[10px] font-bold text-[#d97706]">협상 중</span>
-        <button type="button" className="h-[34px] cursor-pointer rounded-[8px] bg-[#17365d] px-4 text-[11px] font-bold text-white hover:bg-[#102a49]">협상 하기</button>
+        <Link
+          href={negotiationHref}
+          className="flex h-[34px] cursor-pointer items-center rounded-[8px] bg-[#17365d] px-4 text-[11px] font-bold text-white hover:bg-[#102a49]"
+        >
+          협상 하기
+        </Link>
       </div>
     );
   }
