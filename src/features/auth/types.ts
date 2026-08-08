@@ -73,3 +73,119 @@ export interface ChangePasswordRequest {
   newPasswordConfirm: string;
 }
 
+// ============================================================
+// 회원가입 위저드에서 단계별 입력값을 유지하기 위한 UI 상태 타입
+// ============================================================
+
+export type SignupRole = "client" | "freelancer";
+
+export type SocialProvider = "kakao" | "google";
+
+export interface ClientSignupForm {
+  // ── Step1 기업 정보 ──
+  companyName?: string;
+  businessRegistrationNumber?: string;
+  /** "중복 확인" 버튼으로 사용 가능 여부를 확인했는지 */
+  businessRegistrationChecked?: boolean;
+  /** 사업 분야 선택값 */
+  businessField?: string;
+  /** 직원 수 선택값 */
+  employeeCount?: string;
+
+  // ── Step2 담당자 정보 ──
+  representativeName?: string;
+  phone?: string;
+  password?: string;
+  confirmPassword?: string;
+
+  // ── Step3 이메일 인증 ──
+  emailLocalPart?: string;
+  emailDomain?: string;
+  otpVerified?: boolean;
+
+  // ── Step4 카드/계좌 등록 ──
+  cardNumber?: string;
+  cardBrand?: string;
+  /** 은행 선택값 */
+  bankCode?: string;
+  accountNumber?: string;
+  accountHolder?: string;
+
+  // ── Step5 약관 동의 (key: termsId) ──
+  agreedTerms?: Record<number, boolean>;
+}
+
+export interface FreelancerSignupForm {
+  // ── Step1 기본 정보 ──
+  name?: string;
+  birthYear?: string;
+  birthMonth?: string;
+  birthDay?: string;
+  phone?: string;
+
+  // ── Step2 이메일 인증 + 비밀번호 ──
+  emailLocalPart?: string;
+  emailDomain?: string;
+  otpVerified?: boolean;
+  password?: string;
+  confirmPassword?: string;
+
+  // ── Step3 카드/계좌 등록 ──
+  cardNumber?: string;
+  cardBrand?: string;
+  bankCode?: string;
+  accountNumber?: string;
+  accountHolder?: string;
+
+  // ── Step4 약관 동의 (key: termsId) ──
+  agreedTerms?: Record<number, boolean>;
+}
+
+export interface FreelancerSocialSignupForm {
+  // ── Step1 추가 정보 입력 ──
+  provider?: SocialProvider;
+  /** 소셜 콜백에서 받은 가입 티켓 (POST 회원가입 요청에 그대로 전달) */
+  signUpTicket?: string;
+  name?: string;
+  /** 소셜 제공자가 내려준 값, 화면에서 readonly로 표시 */
+  email?: string;
+  birthYear?: string;
+  birthMonth?: string;
+  birthDay?: string;
+  phone?: string;
+
+  // ── Step2 카드/계좌 등록 ──
+  cardNumber?: string;
+  cardBrand?: string;
+  bankCode?: string;
+  accountNumber?: string;
+  accountHolder?: string;
+
+  // ── Step3 약관 동의 (key: termsId) ──
+  agreedTerms?: Record<number, boolean>;
+}
+
+// ============================================================
+// 회원가입 UI 공통 표시 타입
+// ============================================================
+
+/** 회원가입 UI 선택지의 저장용 code와 화면 표시용 label */
+export interface CodeLabel {
+  code: string;
+  label: string;
+}
+
+/** 회원가입 UI에서 사용하는 약관 항목 */
+export interface TermsItem {
+  termsId: number;
+  code: string;
+  /** AGREEMENT만 동의 대상, POLICY(개인정보 처리방침)는 체크박스로 노출하지 않음 */
+  type: "AGREEMENT" | "POLICY";
+  title: string;
+  version: string;
+  required: boolean;
+  effectiveAt: string;
+  content: string;
+}
+
+
