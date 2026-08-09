@@ -52,12 +52,26 @@ export function ProjectNegotiation() {
   const projectId = String(params.projectId ?? "");
   const negotiationHref = `/client/projects/${projectId}/negotiation`;
 
+  return (
+    <section className="mt-4">
+      <div className="flex flex-col gap-3">
+        {CANDIDATES.map((candidate) => (
+          <CandidateCard
+            key={candidate.id}
+            {...candidate}
+            negotiationHref={negotiationHref}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function NegotiationActions() {
   const [isRerollInfoOpen, setIsRerollInfoOpen] = useState(false);
 
   return (
-    <section className="mt-6">
-      {/* 재추천 영역 */}
-      <div className="flex flex-col items-end">
+      <div className="relative flex items-center justify-end">
         <div className="flex items-center gap-2">
           {/* 도움말 */}
           <button
@@ -65,7 +79,7 @@ export function ProjectNegotiation() {
             aria-label="무료 재추천 안내"
             aria-expanded={isRerollInfoOpen}
             onClick={() => setIsRerollInfoOpen((prev) => !prev)}
-            className={`flex h-[36px] w-[36px] items-center justify-center rounded-full border text-[15px] font-bold transition ${
+            className={`flex h-[36px] w-[36px] cursor-pointer items-center justify-center rounded-full border text-[15px] font-bold transition ${
               isRerollInfoOpen
                 ? "border-[#3478f6] bg-[#eff5ff] text-[#3478f6]"
                 : "border-[#dfe3e8] bg-white text-[#98a2b3] hover:bg-[#f9fafb]"
@@ -77,7 +91,7 @@ export function ProjectNegotiation() {
           {/* 무료 재추천 */}
           <button
             type="button"
-            className="h-[36px] rounded-[8px] border border-[#dfe3e8] bg-white px-4 text-[12px] font-semibold text-[#667085] transition hover:bg-[#f9fafb]"
+            className="h-[36px] cursor-pointer rounded-[8px] border border-[#dfe3e8] bg-white px-4 text-[12px] font-semibold text-[#667085] transition hover:bg-[#f9fafb]"
           >
             무료 재추천
           </button>
@@ -85,7 +99,7 @@ export function ProjectNegotiation() {
           {/* 재추천 요청 */}
           <button
             type="button"
-            className="h-[36px] rounded-[8px] bg-[#142f50] px-4 text-[12px] font-bold text-white transition hover:bg-[#102641]"
+            className="h-[36px] cursor-pointer rounded-[8px] bg-[#142f50] px-4 text-[12px] font-bold text-white transition hover:bg-[#102641]"
           >
             재추천 요청
           </button>
@@ -93,13 +107,13 @@ export function ProjectNegotiation() {
 
         {/* 안내 박스 (펼침/접힘) */}
         <div
-          className={`w-full overflow-hidden transition-all duration-300 ease-in-out ${
+          className={`absolute right-0 top-[44px] z-20 w-[520px] max-w-full transition duration-150 ease-out ${
             isRerollInfoOpen
-              ? "mt-3 max-h-[240px] opacity-100"
-              : "mt-0 max-h-0 opacity-0"
+              ? "translate-y-0 opacity-100"
+              : "pointer-events-none -translate-y-1 opacity-0"
           }`}
         >
-          <div className="ml-auto w-[620px] max-w-full rounded-[12px] border border-[#3478f6] bg-[#eff5ff] px-5 py-4 text-[13px] font-semibold leading-[1.6] text-[#3478f6]">
+          <div className="rounded-[10px] border border-[#3478f6] bg-[#eff5ff] px-4 py-3 text-[12px] font-semibold leading-[1.6] text-[#3478f6] shadow-[0_8px_20px_rgba(15,23,42,0.08)]">
             모든 추천 프리랜서가 요청을 거절한 경우 무료 재추천 버튼이 자동으로
             활성화됩니다.
             <br />
@@ -107,17 +121,5 @@ export function ProjectNegotiation() {
           </div>
         </div>
       </div>
-
-      {/* 협상 후보 목록 */}
-      <div className="mt-4 flex flex-col gap-3">
-        {CANDIDATES.map((candidate) => (
-          <CandidateCard
-            key={candidate.id}
-            {...candidate}
-            negotiationHref={negotiationHref}
-          />
-        ))}
-      </div>
-    </section>
   );
 }

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { ClientProjectCard } from "@/features/client/myprojects/components/ClientProjectCard";
 import {
   ProjectStatusTabs,
   type ProjectStatus,
 } from "@/features/client/myprojects/components/ProjectStatusTabs";
+import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
 
 const REGISTERED_PROJECTS = [{
   title: "쇼핑몰 관리자 페이지 리뉴얼",
@@ -133,8 +135,15 @@ const PROJECTS_BY_STATUS = {
 type ClientProject = Parameters<typeof ClientProjectCard>[0];
 
 export function ClientProjects() {
+  const router = useRouter();
   const [activeStatus, setActiveStatus] = useState<ProjectStatus>("등록 완료");
+  const [paymentProject, setPaymentProject] = useState<ClientProject | null>(null);
   const projects = PROJECTS_BY_STATUS[activeStatus];
+
+  const completePayment = () => {
+    setPaymentProject(null);
+    router.push("/client/payments/complete");
+  };
 
   return (
     <main className="min-h-screen bg-[#f7f8fa]">
@@ -151,7 +160,15 @@ export function ClientProjects() {
         {projects.length > 0 ? (
           <div className="mt-6 flex flex-col gap-3">
             {projects.map((project) => (
-              <ClientProjectCard key={project.title} {...project} />
+              <ClientProjectCard
+                key={project.title}
+                {...project}
+                onPayment={
+                  project.actionType === "payment"
+                    ? () => setPaymentProject(project)
+                    : undefined
+                }
+              />
             ))}
           </div>
         ) : (
@@ -160,6 +177,18 @@ export function ClientProjects() {
           </div>
         )}
       </div>
+
+      <PaymentMethodModal
+        open={paymentProject !== null}
+        payment={{
+          type: "UPFRONT_FEE",
+          title: "착수금 수수료",
+          description: paymentProject?.title ?? "프로젝트",
+          amount: 450000,
+        }}
+        onClose={() => setPaymentProject(null)}
+        onPay={completePayment}
+      />
     </main>
   );
 }
