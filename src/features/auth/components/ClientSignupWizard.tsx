@@ -27,11 +27,11 @@ import {
 } from "@/features/auth/components/SignupPasswordFields";
 import { SignupWizardLayout } from "@/features/auth/components/SignupWizardLayout";
 import { CLIENT_SIGNUP_STEPS } from "@/features/auth/constants/signupSteps";
+import { useSignupSubmit } from "@/features/auth/hooks/useSignupSubmit";
 import { signupClient } from "@/features/auth/services/signup";
 import type { ClientSignupForm } from "@/features/auth/types";
 import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
 import { buildClientSignupRequest } from "@/features/auth/utils/buildSignupRequest";
-import { ApiException } from "@/lib/api";
 
 const STEP_LABELS = CLIENT_SIGNUP_STEPS.map((step) => step.label);
 
@@ -39,31 +39,17 @@ export function ClientSignupWizard() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
   const [form, setForm] = useState<ClientSignupForm>({});
+  const { submit, isSubmitting, submitError } =
+    useSignupSubmit(signupClient);
 
   const patch = (partial: Partial<ClientSignupForm>) => {
     setForm((current) => ({ ...current, ...partial }));
   };
 
   const handleSignup = async (terms: SignupTermsItem[]) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    setSubmitError("");
-
-    try {
-      await signupClient(buildClientSignupRequest(form, terms));
-      setCompleted(true);
-    } catch (error) {
-      setSubmitError(
-        error instanceof ApiException
-          ? error.message
-          : "회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    const succeeded = await submit(buildClientSignupRequest(form, terms));
+    if (succeeded) setCompleted(true);
   };
 
   if (completed) {

@@ -8,8 +8,7 @@ import type {
   SignupAgreement,
   SignupTermsItem,
 } from "@/features/auth/types/signupApiTypes";
-
-const onlyNumbers = (value: string) => value.replace(/\D/g, "");
+import { normalizeDigits } from "@/features/auth/utils/normalizeDigits";
 
 const buildAgreements = (
   terms: SignupTermsItem[],
@@ -26,12 +25,12 @@ export const buildClientSignupRequest = (
   terms: SignupTermsItem[],
 ): ClientSignupRequest => ({
   companyName: form.companyName ?? "",
-  businessNo: onlyNumbers(form.businessRegistrationNumber ?? ""),
+  businessNo: normalizeDigits(form.businessRegistrationNumber ?? ""),
   businessField: form.businessField ?? "",
   employeeCount: form.employeeCount ?? "",
   email: `${form.emailLocalPart ?? ""}@${form.emailDomain ?? ""}`,
   name: form.representativeName ?? "",
-  phone: onlyNumbers(form.phone ?? ""),
+  phone: normalizeDigits(form.phone ?? ""),
   password: form.password ?? "",
   passwordConfirm: form.confirmPassword ?? "",
   card: {
@@ -60,7 +59,7 @@ export const buildFreelancerSignupRequest = (
   terms: SignupTermsItem[],
 ): FreelancerSignupRequest => ({
   name: form.name ?? "",
-  phone: onlyNumbers(form.phone ?? ""),
+  phone: normalizeDigits(form.phone ?? ""),
   email: `${form.emailLocalPart ?? ""}@${form.emailDomain ?? ""}`,
   password: form.password ?? "",
   passwordConfirm: form.confirmPassword ?? "",

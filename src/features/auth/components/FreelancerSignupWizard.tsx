@@ -26,11 +26,11 @@ import {
 } from "@/features/auth/components/SignupPasswordFields";
 import { SignupWizardLayout } from "@/features/auth/components/SignupWizardLayout";
 import { FREELANCER_SIGNUP_STEPS } from "@/features/auth/constants/signupSteps";
+import { useSignupSubmit } from "@/features/auth/hooks/useSignupSubmit";
 import { signupFreelancer } from "@/features/auth/services/signup";
 import type { FreelancerSignupForm } from "@/features/auth/types";
 import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
 import { buildFreelancerSignupRequest } from "@/features/auth/utils/buildSignupRequest";
-import { ApiException } from "@/lib/api";
 
 const STEP_LABELS = FREELANCER_SIGNUP_STEPS.map((step) => step.label);
 
@@ -38,32 +38,18 @@ export function FreelancerSignupWizard() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
   const [form, setForm] = useState<FreelancerSignupForm>({});
   const [today] = useState(() => new Date());
+  const { submit, isSubmitting, submitError } =
+    useSignupSubmit(signupFreelancer);
 
   const patch = (partial: Partial<FreelancerSignupForm>) => {
     setForm((current) => ({ ...current, ...partial }));
   };
 
   const handleSignup = async (terms: SignupTermsItem[]) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    setSubmitError("");
-
-    try {
-      await signupFreelancer(buildFreelancerSignupRequest(form, terms));
-      setCompleted(true);
-    } catch (error) {
-      setSubmitError(
-        error instanceof ApiException
-          ? error.message
-          : "회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    const succeeded = await submit(buildFreelancerSignupRequest(form, terms));
+    if (succeeded) setCompleted(true);
   };
 
   if (completed) {

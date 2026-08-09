@@ -36,5 +36,4 @@ export const SIGNUP_PASSWORD_RULES: PasswordRule[] = [
   },
 ];
 
-// 이메일 인증 유효시간과 발송 제한은 실제 API 연동 작업에서 적용한다.
-// 클라이언트에는 별도 정책 상수를 두지 않는다.
+// 이메일 인증 시간과 발송 제한은 서버 응답(expiresAt, remainingSendCount)을 사용합니다.
