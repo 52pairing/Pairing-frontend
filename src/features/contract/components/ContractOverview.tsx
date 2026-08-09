@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState, useSyncExternalStore } from "react";
 
-import { ContractSignModal } from "@/features/client/myprojects/contract/components/ContractSignModal";
+import { ContractSignModal } from "@/features/contract/components/ContractSignModal";
 
 const CONTRACT_CONDITIONS = [
   ["프로젝트", "AI 추천 엔진 개발"],
@@ -16,26 +16,36 @@ const CONTRACT_CONDITIONS = [
   ["서명 기한", "2026.08.10"],
 ];
 
-export function ClientContractOverview() {
+interface ContractOverviewProps {
+  role: "client" | "freelancer";
+}
+
+export function ContractOverview({ role }: ContractOverviewProps) {
   const router = useRouter();
-  const params = useParams<{ projectId: string; contractId: string }>();
+  const params = useParams<{ projectId?: string; contractId: string }>();
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
 
-  const signPath = `/client/projects/${params.projectId}/contracts/${params.contractId}/sign`;
+  const contractPath = role === "client"
+    ? `/client/projects/${params.projectId}/contracts/${params.contractId}`
+    : `/freelancer/contracts/${params.contractId}`;
+  const signPath = `${contractPath}/sign`;
+  const backHref = role === "client"
+    ? `/client/projects/${params.projectId}`
+    : "/freelancer/contracts";
   const subscribeToContractState = useCallback((onStoreChange: () => void) => {
     window.addEventListener("contract-signed", onStoreChange);
     return () => window.removeEventListener("contract-signed", onStoreChange);
   }, []);
   const getContractState = useCallback(
-    () => window.sessionStorage.getItem(`client-contract-${params.contractId}-signed`) === "true",
-    [params.contractId],
+    () => window.sessionStorage.getItem(`${role}-contract-${params.contractId}-signed`) === "true",
+    [params.contractId, role],
   );
   const isSigned = useSyncExternalStore(subscribeToContractState, getContractState, () => false);
 
   return (
     <main className="min-h-screen bg-[#f5f7fa] px-5 py-5 text-[#172033]">
       <div className="mx-auto w-full max-w-[960px]">
-        <Link href={`/client/projects/${params.projectId}`} className="text-[12px] font-semibold text-[#667085] hover:underline">← 내 계약</Link>
+        <Link href={backHref} className="text-[12px] font-semibold text-[#667085] hover:underline">← 내 계약</Link>
 
         <header className="mt-7">
           <h1 className="text-[20px] font-extrabold tracking-[-0.04em]">AI 추천 엔진 개발</h1>
@@ -83,6 +93,9 @@ export function ClientContractOverview() {
         <ContractSignModal
           onCancel={() => setIsSignModalOpen(false)}
           onConfirm={() => router.push(signPath)}
+          projectName="AI 추천 엔진 개발"
+          company="카카오"
+          roleName="AI · ML 엔지니어"
         />
       )}
     </main>

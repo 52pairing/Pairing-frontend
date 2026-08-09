@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { ContractCompleteModal } from "@/features/client/myprojects/contract/components/ContractCompleteModal";
+import { ContractCompleteModal } from "@/features/contract/components/ContractCompleteModal";
 
 const CLIENT_ROWS = [
   ["기업명", "카카오 주식회사"],
@@ -44,13 +44,17 @@ const ARTICLES = [
   { title: "제14조 (분쟁 해결)", lines: ["① 준거법은 대한민국 법률을 적용한다.", "② 관할은 민사소송법상의 관할 법원으로 한다.", "③ 플랫폼의 분쟁 조정 절차를 우선 적용한다."] },
 ];
 
-export function ClientContractDetail() {
+interface ContractDocumentProps {
+  role: "client" | "freelancer";
+}
+
+export function ContractDocument({ role }: ContractDocumentProps) {
   const router = useRouter();
-  const params = useParams<{ projectId: string; contractId: string }>();
+  const params = useParams<{ projectId?: string; contractId: string }>();
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
 
   const completeContract = () => {
-    window.sessionStorage.setItem(`client-contract-${params.contractId}-signed`, "true");
+    window.sessionStorage.setItem(`${role}-contract-${params.contractId}-signed`, "true");
     setIsCompleteModalOpen(true);
   };
 
@@ -122,8 +126,9 @@ export function ClientContractDetail() {
 
       {isCompleteModalOpen && (
         <ContractCompleteModal
-          onBackToProject={() => router.push(`/client/projects/${params.projectId}?tab=계약`)}
+          onBackToProject={() => router.push(role === "client" ? `/client/projects/${params.projectId}?tab=계약` : "/freelancer/contracts")}
           onDownload={() => window.print()}
+          backLabel={role === "client" ? "프로젝트로 돌아가기" : "내 계약으로 돌아가기"}
         />
       )}
     </main>

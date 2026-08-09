@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
+import { SuccessFeePaymentModal } from "@/features/payment/components/SuccessFeePaymentModal";
 
 const CONTRACT_AMOUNT = 60_000_000;
 const SUCCESS_FEE = 1_800_000;
@@ -55,9 +55,15 @@ export function SuccessFeePayment() {
         </button>
       </div>
 
-      <PaymentMethodModal
+      <SuccessFeePaymentModal
         open={isPaymentModalOpen}
-        payment={{ type: "SUCCESS_FEE", title: "성공보수 수수료", description: "B2B 주문 관리 서비스 리뉴얼", amount: SUCCESS_FEE }}
+        summary={{
+          projectTitle: "B2B 주문 관리 서비스 리뉴얼",
+          duration: "4개월",
+          contractAmount: CONTRACT_AMOUNT,
+          baseRate: 3,
+          paymentAmount: SUCCESS_FEE,
+        }}
         onClose={() => setIsPaymentModalOpen(false)}
         onPay={completePayment}
       />
