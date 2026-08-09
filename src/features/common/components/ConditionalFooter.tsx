@@ -14,10 +14,12 @@ const FOOTER_HIDDEN_PREFIXES = ["/login", "/signup"];
 
 export function ConditionalFooter() {
   const pathname = usePathname();
+  const isNegotiationRoom = /^\/client\/projects\/[^/]+\/negotiation$/.test(pathname);
 
   const isHidden =
     FOOTER_HIDDEN_PATHS.includes(pathname) ||
-    FOOTER_HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    FOOTER_HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+    isNegotiationRoom;
 
   if (isHidden) {
     return null;
