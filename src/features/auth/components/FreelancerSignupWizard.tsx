@@ -19,18 +19,18 @@ import {
 } from "@/features/auth/components/PhoneNumberField";
 import { SignupCompleteScreen } from "@/features/auth/components/SignupCompleteScreen";
 import { SignupStepNavigation } from "@/features/auth/components/SignupStepNavigation";
+import { SignupTermsStep } from "@/features/auth/components/SignupTermsStep";
 import {
   SignupPasswordFields,
   isSignupPasswordValid,
 } from "@/features/auth/components/SignupPasswordFields";
 import { SignupWizardLayout } from "@/features/auth/components/SignupWizardLayout";
-import {
-  TermsChecklist,
-  areRequiredTermsAgreed,
-} from "@/features/auth/components/TermsChecklist";
 import { FREELANCER_SIGNUP_STEPS } from "@/features/auth/constants/signupSteps";
-import { SIGNUP_TERMS_ITEMS } from "@/features/auth/constants/signupTerms";
+import { useSignupSubmit } from "@/features/auth/hooks/useSignupSubmit";
+import { signupFreelancer } from "@/features/auth/services/signup";
 import type { FreelancerSignupForm } from "@/features/auth/types";
+import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
+import { buildFreelancerSignupRequest } from "@/features/auth/utils/buildSignupRequest";
 
 const STEP_LABELS = FREELANCER_SIGNUP_STEPS.map((step) => step.label);
 
@@ -40,9 +40,16 @@ export function FreelancerSignupWizard() {
   const [completed, setCompleted] = useState(false);
   const [form, setForm] = useState<FreelancerSignupForm>({});
   const [today] = useState(() => new Date());
+  const { submit, isSubmitting, submitError } =
+    useSignupSubmit(signupFreelancer);
 
   const patch = (partial: Partial<FreelancerSignupForm>) => {
     setForm((current) => ({ ...current, ...partial }));
+  };
+
+  const handleSignup = async (terms: SignupTermsItem[]) => {
+    const succeeded = await submit(buildFreelancerSignupRequest(form, terms));
+    if (succeeded) setCompleted(true);
   };
 
   if (completed) {
@@ -87,11 +94,14 @@ export function FreelancerSignupWizard() {
         />
       ) : null}
       {step === 4 ? (
-        <TermsStep
-          form={form}
-          patch={patch}
+        <SignupTermsStep
+          role="FREELANCER"
+          agreed={form.agreedTerms ?? {}}
+          onChange={(agreed) => patch({ agreedTerms: agreed })}
           onPrevious={() => setStep(3)}
-          onComplete={() => setCompleted(true)}
+          onComplete={handleSignup}
+          isSubmitting={isSubmitting}
+          submitError={submitError}
         />
       ) : null}
     </SignupWizardLayout>
@@ -121,7 +131,8 @@ function BasicStep({
       form.birthDay ?? "",
       today,
     ) &&
-    isPhoneNumberValid(phone);
+    isPhoneNumberValid(phone) &&
+    !!form.phoneChecked;
 
   return (
     <>
@@ -154,6 +165,8 @@ function BasicStep({
           label="휴대폰번호"
           value={phone}
           onChange={(value) => patch({ phone: value })}
+          checked={form.phoneChecked ?? false}
+          onCheckedChange={(checked) => patch({ phoneChecked: checked })}
           role="FREELANCER"
         />
       </div>
@@ -209,36 +222,6 @@ function PaymentStep({ form, patch, onPrevious, onNext }: FreelancerStepProps) {
         onPrevious={onPrevious}
         onNext={onNext}
         nextDisabled={!isCardAccountValid(values)}
-      />
-    </>
-  );
-}
-
-function TermsStep({
-  form,
-  patch,
-  onPrevious,
-  onComplete,
-}: Omit<FreelancerStepProps, "onNext"> & { onComplete: () => void }) {
-  const agreedTerms = form.agreedTerms ?? {};
-  const isValid = areRequiredTermsAgreed(SIGNUP_TERMS_ITEMS, agreedTerms);
-
-  return (
-    <>
-      <p className="mb-6 text-sm font-semibold text-[#111827]">
-        서비스 이용을 위한 약관에 동의해 주세요.
-      </p>
-      <TermsChecklist
-        items={SIGNUP_TERMS_ITEMS}
-        agreed={agreedTerms}
-        onChange={(agreed) => patch({ agreedTerms: agreed })}
-        emphasizeAll
-      />
-      <SignupStepNavigation
-        onPrevious={onPrevious}
-        onNext={onComplete}
-        nextDisabled={!isValid}
-        nextLabel="회원가입 완료"
       />
     </>
   );

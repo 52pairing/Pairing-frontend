@@ -4,16 +4,17 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
+import { useDuplicateCheck } from "@/features/auth/hooks/useDuplicateCheck";
+import { useSignupOptions } from "@/features/auth/hooks/useSignupOptions";
+import { checkBusinessNoDuplicate } from "@/features/auth/services/signupDuplicateCheck";
 import {
-  BUSINESS_FIELD_OPTIONS,
-  EMPLOYEE_COUNT_OPTIONS,
-} from "@/features/auth/constants/signupOptions";
+  getBusinessFields,
+  getEmployeeCounts,
+} from "@/features/auth/services/signupMeta";
 import {
   formatBusinessRegistrationNumber,
   isValidBusinessRegistrationNumberFormat,
 } from "@/features/auth/utils/formatBusinessRegistrationNumber";
-
-type CheckStatus = "idle" | "available";
 
 interface BusinessRegistrationNumberFieldProps {
   value: string;
@@ -22,16 +23,16 @@ interface BusinessRegistrationNumberFieldProps {
   onCheckedChange: (checked: boolean) => void;
 }
 
-// 사업자등록번호 입력 + 디자인 확인용 중복 확인
+// 사업자등록번호 입력 + 서버 중복 확인
 export const BusinessRegistrationNumberField = ({
   value,
   checked,
   onChange,
   onCheckedChange,
 }: BusinessRegistrationNumberFieldProps) => {
-  // 스텝을 벗어났다 돌아와도 이미 확인된 상태라면 배지가 유지되도록 초기값에 반영
-  const [status, setStatus] = useState<CheckStatus>(
-    checked ? "available" : "idle",
+  const duplicateCheck = useDuplicateCheck(
+    checkBusinessNoDuplicate,
+    checked ? value : undefined,
   );
 
   const isFormatValid = isValidBusinessRegistrationNumberFormat(value);
@@ -39,13 +40,12 @@ export const BusinessRegistrationNumberField = ({
   const handleChange = (next: string) => {
     onChange(formatBusinessRegistrationNumber(next));
     onCheckedChange(false);
-    setStatus("idle");
+    duplicateCheck.reset();
   };
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     if (!isFormatValid) return;
-    setStatus("available");
-    onCheckedChange(true);
+    onCheckedChange(await duplicateCheck.check(value));
   };
 
   return (
@@ -68,14 +68,14 @@ export const BusinessRegistrationNumberField = ({
         <button
           type="button"
           onClick={handleCheck}
-          disabled={!isFormatValid}
+          disabled={!isFormatValid || duplicateCheck.status === "checking"}
           className="h-11 shrink-0 rounded-md border border-gray-200 px-4 text-sm font-semibold text-gray-500 transition disabled:cursor-not-allowed disabled:text-gray-300 enabled:hover:bg-gray-50"
         >
-          중복 확인
+          {duplicateCheck.status === "checking" ? "확인 중..." : "중복 확인"}
         </button>
       </div>
 
-      {status === "available" ? (
+      {duplicateCheck.status === "available" ? (
         <p className="mt-2 flex items-center gap-1.5 text-xs text-green-600">
           <Image
             src="/icons/CheckIcon-green.svg"
@@ -87,7 +87,20 @@ export const BusinessRegistrationNumberField = ({
           사용 가능한 사업자등록번호입니다.
         </p>
       ) : null}
-      {!checked && value.length > 0 && isFormatValid && status === "idle" ? (
+      {duplicateCheck.status === "duplicated" ? (
+        <p className="mt-2 text-xs text-red-500">
+          이미 사용 중인 사업자등록번호입니다.
+        </p>
+      ) : null}
+      {duplicateCheck.status === "error" ? (
+        <p className="mt-2 text-xs text-red-500">
+          {duplicateCheck.errorMessage}
+        </p>
+      ) : null}
+      {!checked &&
+      value.length > 0 &&
+      isFormatValid &&
+      duplicateCheck.status === "idle" ? (
         <p className="mt-2 text-xs text-gray-400">
           중복 확인을 눌러 사용 가능 여부를 확인해 주세요.
         </p>
@@ -108,7 +121,8 @@ export const BusinessFieldSelect = ({
 }: BusinessFieldSelectProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const options = BUSINESS_FIELD_OPTIONS;
+  const { options, isLoading, isError, retry } =
+    useSignupOptions(getBusinessFields);
 
   const selectedLabel = options.find((option) => option.code === value)?.label;
 
@@ -135,14 +149,19 @@ export const BusinessFieldSelect = ({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
+        disabled={isLoading || isError}
         className={`h-11 w-full rounded-md border border-gray-200 px-4 text-left text-sm outline-none focus:border-[#142B4A] disabled:cursor-not-allowed disabled:text-gray-300 ${
           selectedLabel ? "text-gray-900" : "text-gray-400"
         }`}
       >
-        {selectedLabel ?? "사업 분야를 선택해 주세요."}
+        {isLoading
+          ? "사업 분야를 불러오는 중..."
+          : selectedLabel ?? "사업 분야를 선택해 주세요."}
       </button>
 
-
+      {isError ? (
+        <LoadError message="사업 분야를 불러오지 못했습니다." onRetry={retry} />
+      ) : null}
       {open ? (
         <div className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-md">
           <input
@@ -191,7 +210,8 @@ export const EmployeeCountSelect = ({
   value,
   onChange,
 }: EmployeeCountSelectProps) => {
-  const options = EMPLOYEE_COUNT_OPTIONS;
+  const { options, isLoading, isError, retry } =
+    useSignupOptions(getEmployeeCounts);
 
   return (
     <div>
@@ -218,6 +238,30 @@ export const EmployeeCountSelect = ({
           );
         })}
       </div>
+      {isLoading ? (
+        <p className="mt-2 text-xs text-gray-400">직원 수를 불러오는 중...</p>
+      ) : null}
+      {isError ? (
+        <LoadError message="직원 수를 불러오지 못했습니다." onRetry={retry} />
+      ) : null}
     </div>
   );
 };
+
+// 목록을 불러오지 못했을 때 보여주는 간단한 재시도 UI입니다.
+function LoadError({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="mt-2 flex items-center gap-2 text-xs text-red-500">
+      <span>{message}</span>
+      <button type="button" onClick={onRetry} className="font-semibold underline">
+        다시 시도
+      </button>
+    </div>
+  );
+}

@@ -14,22 +14,20 @@ import {
   type CardAccountValues,
 } from "@/features/auth/components/CardAccountFields";
 import { SignupCompleteScreen } from "@/features/auth/components/SignupCompleteScreen";
-import { SignupStepNavigation } from "@/features/auth/components/SignupStepNavigation";
-import { SignupWizardLayout } from "@/features/auth/components/SignupWizardLayout";
 import {
-  TermsChecklist,
-  areRequiredTermsAgreed,
-} from "@/features/auth/components/TermsChecklist";
+  PhoneNumberField,
+  isPhoneNumberValid,
+} from "@/features/auth/components/PhoneNumberField";
+import { SignupStepNavigation } from "@/features/auth/components/SignupStepNavigation";
+import { SignupTermsStep } from "@/features/auth/components/SignupTermsStep";
+import { SignupWizardLayout } from "@/features/auth/components/SignupWizardLayout";
 import { FREELANCER_SOCIAL_SIGNUP_STEPS } from "@/features/auth/constants/signupSteps";
-import { SIGNUP_TERMS_ITEMS } from "@/features/auth/constants/signupTerms";
 import type {
   FreelancerSocialSignupForm,
   SocialProvider,
 } from "@/features/auth/types";
-import { formatPhoneNumber } from "@/features/auth/utils/formatPhoneNumber";
 
 const STEP_LABELS = FREELANCER_SOCIAL_SIGNUP_STEPS.map((step) => step.label);
-const PHONE_LENGTH = 13;
 const MOCK_EMAIL: Record<SocialProvider, string> = {
   kakao: "user@kakao.com",
   google: "user@gmail.com",
@@ -93,9 +91,10 @@ function FreelancerSocialSignupContent() {
         />
       ) : null}
       {step === 3 ? (
-        <TermsStep
-          form={form}
-          patch={patch}
+        <SignupTermsStep
+          role="FREELANCER"
+          agreed={form.agreedTerms ?? {}}
+          onChange={(agreed) => patch({ agreedTerms: agreed })}
           onPrevious={() => setStep(2)}
           onComplete={() => setCompleted(true)}
         />
@@ -121,7 +120,6 @@ function SocialInfoStep({
   onNext: () => void;
 }) {
   const phone = form.phone ?? "";
-  const isPhoneValid = phone.length === PHONE_LENGTH;
   const isValid =
     (form.name ?? "").trim().length > 0 &&
     isBirthDateValid(
@@ -130,7 +128,8 @@ function SocialInfoStep({
       form.birthDay ?? "",
       today,
     ) &&
-    isPhoneValid;
+    isPhoneNumberValid(phone) &&
+    !!form.phoneChecked;
 
   return (
     <>
@@ -182,28 +181,14 @@ function SocialInfoStep({
           onDayChange={(value) => patch({ birthDay: value })}
           today={today}
         />
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-[#374151]">
-            휴대폰번호 <span className="text-[#356DF3]">*</span>
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={phone}
-            onChange={(event) =>
-              patch({ phone: formatPhoneNumber(event.target.value) })
-            }
-            placeholder="010-0000-0000"
-            className={`h-11 w-full rounded-md border px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A] ${
-              phone && !isPhoneValid ? "border-red-400" : "border-gray-200"
-            }`}
-          />
-          {phone && !isPhoneValid ? (
-            <p className="mt-2 text-xs text-red-500">
-              올바른 휴대폰 번호를 입력해 주세요.
-            </p>
-          ) : null}
-        </div>
+        <PhoneNumberField
+          label="휴대폰번호"
+          value={phone}
+          onChange={(value) => patch({ phone: value })}
+          checked={form.phoneChecked ?? false}
+          onCheckedChange={(checked) => patch({ phoneChecked: checked })}
+          role="FREELANCER"
+        />
       </div>
       <SignupStepNavigation
         onPrevious={() => window.history.back()}
@@ -229,36 +214,6 @@ function PaymentStep({
         onPrevious={onPrevious}
         onNext={onNext}
         nextDisabled={!isCardAccountValid(values)}
-      />
-    </>
-  );
-}
-
-function TermsStep({
-  form,
-  patch,
-  onPrevious,
-  onComplete,
-}: SocialStepProps & { onPrevious: () => void; onComplete: () => void }) {
-  const agreedTerms = form.agreedTerms ?? {};
-  const isValid = areRequiredTermsAgreed(SIGNUP_TERMS_ITEMS, agreedTerms);
-
-  return (
-    <>
-      <p className="mb-6 text-sm font-semibold text-[#111827]">
-        서비스 이용을 위한 약관에 동의해 주세요.
-      </p>
-      <TermsChecklist
-        items={SIGNUP_TERMS_ITEMS}
-        agreed={agreedTerms}
-        onChange={(agreed) => patch({ agreedTerms: agreed })}
-        emphasizeAll
-      />
-      <SignupStepNavigation
-        onPrevious={onPrevious}
-        onNext={onComplete}
-        nextDisabled={!isValid}
-        nextLabel="회원가입 완료"
       />
     </>
   );
