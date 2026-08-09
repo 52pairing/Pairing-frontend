@@ -20,18 +20,18 @@ import {
 } from "@/features/auth/components/PhoneNumberField";
 import { SignupCompleteScreen } from "@/features/auth/components/SignupCompleteScreen";
 import { SignupStepNavigation } from "@/features/auth/components/SignupStepNavigation";
+import { SignupTermsStep } from "@/features/auth/components/SignupTermsStep";
 import {
   SignupPasswordFields,
   isSignupPasswordValid,
 } from "@/features/auth/components/SignupPasswordFields";
 import { SignupWizardLayout } from "@/features/auth/components/SignupWizardLayout";
-import {
-  TermsChecklist,
-  areRequiredTermsAgreed,
-} from "@/features/auth/components/TermsChecklist";
 import { CLIENT_SIGNUP_STEPS } from "@/features/auth/constants/signupSteps";
-import { SIGNUP_TERMS_ITEMS } from "@/features/auth/constants/signupTerms";
+import { signupClient } from "@/features/auth/services/signup";
 import type { ClientSignupForm } from "@/features/auth/types";
+import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
+import { buildClientSignupRequest } from "@/features/auth/utils/buildSignupRequest";
+import { ApiException } from "@/lib/api";
 
 const STEP_LABELS = CLIENT_SIGNUP_STEPS.map((step) => step.label);
 
@@ -39,10 +39,31 @@ export function ClientSignupWizard() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [form, setForm] = useState<ClientSignupForm>({});
 
   const patch = (partial: Partial<ClientSignupForm>) => {
     setForm((current) => ({ ...current, ...partial }));
+  };
+
+  const handleSignup = async (terms: SignupTermsItem[]) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      await signupClient(buildClientSignupRequest(form, terms));
+      setCompleted(true);
+    } catch (error) {
+      setSubmitError(
+        error instanceof ApiException
+          ? error.message
+          : "회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (completed) {
@@ -94,11 +115,14 @@ export function ClientSignupWizard() {
         />
       ) : null}
       {step === 5 ? (
-        <TermsStep
-          form={form}
-          patch={patch}
+        <SignupTermsStep
+          role="CLIENT"
+          agreed={form.agreedTerms ?? {}}
+          onChange={(agreed) => patch({ agreedTerms: agreed })}
           onPrevious={() => setStep(4)}
-          onComplete={() => setCompleted(true)}
+          onComplete={handleSignup}
+          isSubmitting={isSubmitting}
+          submitError={submitError}
         />
       ) : null}
     </SignupWizardLayout>
@@ -168,6 +192,7 @@ function ManagerStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
   const isValid =
     (form.representativeName ?? "").trim().length > 0 &&
     isPhoneNumberValid(phone) &&
+    !!form.phoneChecked &&
     isSignupPasswordValid(form.password ?? "", form.confirmPassword ?? "");
 
   return (
@@ -191,6 +216,8 @@ function ManagerStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
           label="휴대폰번호(법인폰)"
           value={phone}
           onChange={(value) => patch({ phone: value })}
+          checked={form.phoneChecked ?? false}
+          onCheckedChange={(checked) => patch({ phoneChecked: checked })}
           role="CLIENT"
         />
         <SignupPasswordFields
@@ -240,36 +267,6 @@ function PaymentStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
         onPrevious={onPrevious}
         onNext={onNext}
         nextDisabled={!isCardAccountValid(values)}
-      />
-    </>
-  );
-}
-
-function TermsStep({
-  form,
-  patch,
-  onPrevious,
-  onComplete,
-}: Omit<ClientStepProps, "onNext"> & { onComplete: () => void }) {
-  const agreedTerms = form.agreedTerms ?? {};
-  const isValid = areRequiredTermsAgreed(SIGNUP_TERMS_ITEMS, agreedTerms);
-
-  return (
-    <>
-      <p className="mb-6 text-sm font-semibold text-[#111827]">
-        서비스 이용을 위한 약관에 동의해 주세요.
-      </p>
-      <TermsChecklist
-        items={SIGNUP_TERMS_ITEMS}
-        agreed={agreedTerms}
-        onChange={(agreed) => patch({ agreedTerms: agreed })}
-        emphasizeAll
-      />
-      <SignupStepNavigation
-        onPrevious={onPrevious}
-        onNext={onComplete}
-        nextDisabled={!isValid}
-        nextLabel="회원가입 완료"
       />
     </>
   );

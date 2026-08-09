@@ -1,55 +1,135 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import {
+  confirmVerificationCode,
+  sendVerificationCode,
+} from "@/features/auth/services/emailVerification";
+import { ApiException } from "@/lib/api";
 
 interface UseEmailOtpOptions {
   email: string;
 }
 
-// 회원가입 디자인 확인용 로컬 인증 흐름입니다. 실제 API는 후속 작업에서 연동합니다.
+const getSecondsLeft = (expiresAt: string) =>
+  Math.max(Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000), 0);
+
+// 회원가입 이메일 인증의 발송·확인·서버 만료시간을 관리합니다.
 export const useEmailOtp = ({ email }: UseEmailOtpOptions) => {
   const [sent, setSent] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [expiresAt, setExpiresAt] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [remainingSendCount, setRemainingSendCount] = useState<number | null>(
+    null,
+  );
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
-    if (secondsLeft <= 0) return;
+    if (!expiresAt) return;
 
-    const timer = window.setInterval(() => {
-      setSecondsLeft((current) => {
-        const next = Math.max(0, current - 1);
-        if (next === 0) setSent(false);
-        return next;
-      });
-    }, 1000);
-
+    const updateTimer = () => setSecondsLeft(getSecondsLeft(expiresAt));
+    updateTimer();
+    const timer = window.setInterval(updateTimer, 1000);
     return () => window.clearInterval(timer);
-  }, [secondsLeft]);
+  }, [expiresAt]);
 
-  const handleSend = () => {
-    if (!email) return;
-    setError(null);
-    setSent(true);
+  const reset = () => {
+    requestIdRef.current += 1;
+    setSent(false);
     setVerified(false);
+    setExpiresAt("");
+    setSecondsLeft(0);
+    setRemainingSendCount(null);
     setCode("");
-    setSecondsLeft(180);
+    setError(null);
+    setIsSending(false);
+    setIsConfirming(false);
   };
 
-  const handleVerify = () => {
-    if (!code) return;
+  const handleSend = async () => {
+    if (!email || isSending || remainingSendCount === 0) return;
+
+    const requestId = ++requestIdRef.current;
+    setIsSending(true);
     setError(null);
-    setVerified(true);
+
+    try {
+      const result = await sendVerificationCode({ email, purpose: "SIGNUP" });
+      if (requestId !== requestIdRef.current) return;
+
+      setSent(true);
+      setVerified(false);
+      setCode("");
+      setExpiresAt(result.expiresAt);
+      setSecondsLeft(getSecondsLeft(result.expiresAt));
+      setRemainingSendCount(result.remainingSendCount);
+    } catch (sendError) {
+      if (requestId !== requestIdRef.current) return;
+
+      if (sendError instanceof ApiException && sendError.errorCode === "AU_003") {
+        setRemainingSendCount(0);
+      }
+      setError(
+        sendError instanceof ApiException
+          ? sendError.message
+          : "인증코드 발송 중 문제가 발생했습니다.",
+      );
+    } finally {
+      if (requestId === requestIdRef.current) setIsSending(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!email || !code || secondsLeft <= 0 || isConfirming) return;
+
+    const requestId = ++requestIdRef.current;
+    setIsConfirming(true);
+    setError(null);
+
+    try {
+      await confirmVerificationCode({ email, purpose: "SIGNUP", code });
+      if (requestId !== requestIdRef.current) return;
+
+      setVerified(true);
+      setExpiresAt("");
+      setSecondsLeft(0);
+    } catch (confirmError) {
+      if (requestId !== requestIdRef.current) return;
+
+      if (
+        confirmError instanceof ApiException &&
+        ["AU_005", "AU_012"].includes(confirmError.errorCode)
+      ) {
+        setExpiresAt("");
+        setSecondsLeft(0);
+      }
+      setError(
+        confirmError instanceof ApiException
+          ? confirmError.message
+          : "인증코드 확인 중 문제가 발생했습니다.",
+      );
+    } finally {
+      if (requestId === requestIdRef.current) setIsConfirming(false);
+    }
   };
 
   return {
     sent,
     verified,
     secondsLeft,
+    remainingSendCount,
     code,
     setCode,
     error,
+    isSending,
+    isConfirming,
+    reset,
     handleSend,
     handleVerify,
   };

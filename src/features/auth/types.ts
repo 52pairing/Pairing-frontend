@@ -60,6 +60,13 @@ export interface SendVerificationCodeResponseData {
   remainingSendCount: number;
 }
 
+// 이메일 인증코드 확인 요청
+export interface ConfirmVerificationCodeRequest {
+  email: string;
+  purpose: VerificationPurpose;
+  code: string;
+}
+
 // 계정 잠금 해제 요청 - /email-verifications/confirm을 거치지 않고 코드를 여기 바로 넣음
 export interface UnlockAccountRequest {
   email: string;
@@ -95,6 +102,7 @@ export interface ClientSignupForm {
   // ── Step2 담당자 정보 ──
   representativeName?: string;
   phone?: string;
+  phoneChecked?: boolean;
   password?: string;
   confirmPassword?: string;
 
@@ -122,6 +130,7 @@ export interface FreelancerSignupForm {
   birthMonth?: string;
   birthDay?: string;
   phone?: string;
+  phoneChecked?: boolean;
 
   // ── Step2 이메일 인증 + 비밀번호 ──
   emailLocalPart?: string;
@@ -153,6 +162,7 @@ export interface FreelancerSocialSignupForm {
   birthMonth?: string;
   birthDay?: string;
   phone?: string;
+  phoneChecked?: boolean;
 
   // ── Step2 카드/계좌 등록 ──
   cardNumber?: string;
@@ -164,28 +174,4 @@ export interface FreelancerSocialSignupForm {
   // ── Step3 약관 동의 (key: termsId) ──
   agreedTerms?: Record<number, boolean>;
 }
-
-// ============================================================
-// 회원가입 UI 공통 표시 타입
-// ============================================================
-
-/** 회원가입 UI 선택지의 저장용 code와 화면 표시용 label */
-export interface CodeLabel {
-  code: string;
-  label: string;
-}
-
-/** 회원가입 UI에서 사용하는 약관 항목 */
-export interface TermsItem {
-  termsId: number;
-  code: string;
-  /** AGREEMENT만 동의 대상, POLICY(개인정보 처리방침)는 체크박스로 노출하지 않음 */
-  type: "AGREEMENT" | "POLICY";
-  title: string;
-  version: string;
-  required: boolean;
-  effectiveAt: string;
-  content: string;
-}
-
 

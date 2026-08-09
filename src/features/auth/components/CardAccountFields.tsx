@@ -3,7 +3,8 @@
 // 카드사(cardBrand)는 별도 meta 엔드포인트가 없어 자유 입력으로 받습니다.
 "use client";
 
-import { BANK_OPTIONS } from "@/features/auth/constants/signupOptions";
+import { useSignupOptions } from "@/features/auth/hooks/useSignupOptions";
+import { getBanks } from "@/features/auth/services/signupMeta";
 
 export interface CardAccountValues {
   cardNumber: string;
@@ -22,7 +23,12 @@ export const CardAccountFields = ({
   values,
   onChange,
 }: CardAccountFieldsProps) => {
-  const bankOptions = BANK_OPTIONS;
+  const {
+    options: bankOptions,
+    isLoading,
+    isError,
+    retry,
+  } = useSignupOptions(getBanks);
 
   return (
     <div className="space-y-8">
@@ -77,10 +83,11 @@ export const CardAccountFields = ({
             <select
               value={values.bankCode}
               onChange={(e) => onChange({ bankCode: e.target.value })}
+              disabled={isLoading || isError}
               className="h-11 w-full rounded-md border border-gray-200 px-3 text-sm text-gray-900 outline-none focus:border-[#142B4A] disabled:cursor-not-allowed disabled:text-gray-300"
             >
               <option value="" disabled>
-                은행 선택
+                {isLoading ? "은행 목록을 불러오는 중..." : "은행 선택"}
               </option>
               {bankOptions.map((bank) => (
                 <option key={bank.code} value={bank.code}>
@@ -88,6 +95,18 @@ export const CardAccountFields = ({
                 </option>
               ))}
             </select>
+            {isError ? (
+              <div className="mt-2 flex items-center gap-2 text-xs text-red-500">
+                <span>은행 목록을 불러오지 못했습니다.</span>
+                <button
+                  type="button"
+                  onClick={retry}
+                  className="font-semibold underline"
+                >
+                  다시 시도
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div>

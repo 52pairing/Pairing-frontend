@@ -4,10 +4,10 @@
 import { useId, useState } from "react";
 
 import { Modal } from "@/features/common/components/Modal";
-import type { TermsItem } from "@/features/auth/types";
+import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
 
 interface TermsChecklistProps {
-  items: TermsItem[];
+  items: SignupTermsItem[];
   agreed: Record<number, boolean>;
   onChange: (agreed: Record<number, boolean>) => void;
   /** 전체 동의 항목을 강조 카드로 보여줄지 */
@@ -128,6 +128,6 @@ export const TermsChecklist = ({
 };
 
 export const areRequiredTermsAgreed = (
-  items: TermsItem[],
+  items: SignupTermsItem[],
   agreed: Record<number, boolean>,
 ) => items.filter((item) => item.required).every((item) => agreed[item.termsId]);

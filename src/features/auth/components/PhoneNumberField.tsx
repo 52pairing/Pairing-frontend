@@ -1,20 +1,21 @@
-// 휴대폰번호 입력 + 디자인 확인용 중복 확인
+// 휴대폰번호 입력 + 역할별 서버 중복 확인
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 
+import { useDuplicateCheck } from "@/features/auth/hooks/useDuplicateCheck";
+import { checkPhoneDuplicate } from "@/features/auth/services/signupDuplicateCheck";
 import type { LoginRole } from "@/features/auth/types";
 import { formatPhoneNumber } from "@/features/auth/utils/formatPhoneNumber";
 
 const PHONE_LENGTH = 13; // "010-0000-0000"
 
-type CheckStatus = "idle" | "available";
-
 interface PhoneNumberFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
   role: LoginRole;
 }
 
@@ -22,14 +23,20 @@ export const PhoneNumberField = ({
   label,
   value,
   onChange,
+  checked,
+  onCheckedChange,
+  role,
 }: PhoneNumberFieldProps) => {
-  const [status, setStatus] = useState<CheckStatus>("idle");
+  const duplicateCheck = useDuplicateCheck(
+    (phone) => checkPhoneDuplicate(phone, role),
+    checked ? value : undefined,
+  );
 
   const isFormatValid = value.length === PHONE_LENGTH;
 
-  const handleBlur = () => {
+  const handleBlur = async () => {
     if (!isFormatValid) return;
-    setStatus("available");
+    onCheckedChange(await duplicateCheck.check(value));
   };
 
   return (
@@ -43,7 +50,8 @@ export const PhoneNumberField = ({
         value={value}
         onChange={(e) => {
           onChange(formatPhoneNumber(e.target.value));
-          setStatus("idle");
+          onCheckedChange(false);
+          duplicateCheck.reset();
         }}
         onBlur={handleBlur}
         placeholder="010-0000-0000"
@@ -58,7 +66,10 @@ export const PhoneNumberField = ({
           올바른 휴대폰 번호를 입력해 주세요.
         </p>
       ) : null}
-      {status === "available" ? (
+      {duplicateCheck.status === "checking" ? (
+        <p className="mt-2 text-xs text-gray-400">중복 확인 중...</p>
+      ) : null}
+      {duplicateCheck.status === "available" ? (
         <p className="mt-2 flex items-center gap-1.5 text-xs text-green-600">
           <Image
             src="/icons/CheckIcon-green.svg"
@@ -68,6 +79,16 @@ export const PhoneNumberField = ({
             aria-hidden="true"
           />
           사용 가능한 번호입니다.
+        </p>
+      ) : null}
+      {duplicateCheck.status === "duplicated" ? (
+        <p className="mt-2 text-xs text-red-500">
+          이미 사용 중인 휴대폰 번호입니다.
+        </p>
+      ) : null}
+      {duplicateCheck.status === "error" ? (
+        <p className="mt-2 text-xs text-red-500">
+          {duplicateCheck.errorMessage}
         </p>
       ) : null}
     </div>
