@@ -1,5 +1,5 @@
-import { ClientContractDetail } from "@/features/client/myprojects/contract/components/ClientContractDetail";
+import { ContractDocument } from "@/features/contract/components/ContractDocument";
 
 export default function ClientContractSignPage() {
-  return <ClientContractDetail />;
+  return <ContractDocument role="client" />;
 }
