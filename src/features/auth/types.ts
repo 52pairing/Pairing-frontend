@@ -16,6 +16,15 @@ export interface LoginResponseData {
   tempPassword: boolean;
 }
 
+// 현재 로그인 사용자 조회 응답
+export interface CurrentUserResponse {
+  accountId: number;
+  email: string;
+  role: LoginRole;
+  name: string;
+  tempPassword: boolean;
+}
+
 // 아이디(이메일) 찾기 요청
 export interface FindEmailRequest {
   name: string;

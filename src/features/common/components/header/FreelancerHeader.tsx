@@ -16,9 +16,9 @@ interface FreelancerHeaderProps {
 
 // 프리랜서 로그인 사용자에게 보여주는 Header
 export function FreelancerHeader({
-  name = "김페어",
-  chatCount = 2,
-  noticeCount = 4,
+  name = "프리랜서",
+  chatCount = 0,
+  noticeCount = 0,
 }: FreelancerHeaderProps) {
   return (
     <HeaderShell

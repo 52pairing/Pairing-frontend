@@ -13,6 +13,25 @@
 - Swagger 확인: 미확인
 - 실제 네트워크 응답: 미검증
 
+## 현재 로그인 사용자 조회
+
+- Method / Path: `GET /api/v1/auth/me`
+- 사용 위치: `src/features/auth/services/currentUser.ts`
+- 성공 응답: `{ accountId, email, role, name, tempPassword }`
+- 인증: HttpOnly 로그인 쿠키
+- 화면 처리: 실제 역할에 맞는 헤더와 사용자 이름·이름 첫 글자 표시
+- 실제 응답: 미검증
+
+## 로그아웃
+
+- Method / Path: `POST /api/v1/auth/logout`
+- 사용 위치: `src/features/auth/services/logout.ts`
+- 인증: HttpOnly 로그인 쿠키
+- 성공 응답: `data: null`
+- 화면 처리: 중복 클릭을 막고 완료 후 `/login`으로 이동
+- 실패 처리: 프론트 흐름은 로그인 화면으로 이동하되 서버 쿠키 만료 여부는 확인 필요
+- 실제 응답: 미검증
+
 ## 회원가입 메타 목록
 
 사용 위치: `src/features/auth/services/signupMeta.ts`
@@ -111,6 +130,63 @@
 - 서버 오류 메시지를 약관 단계에 표시하고 입력값 유지
 - 성공 시 자동 로그인하지 않고 가입 완료 화면에서 로그인 페이지로 이동
 
+## 프리랜서 소셜 로그인 시작
+
+- Method / Path: `GET /api/v1/auth/social/{provider}/authorize?returnUrl={returnUrl}`
+- 사용 위치: `src/features/auth/services/socialAuth.ts`
+- Path parameter: `provider=kakao | google`
+- Query parameter: 로그인 완료 후 이동할 앱 내부 `returnUrl`
+- 성공 응답: `{ authorizeUrl: string, state: string }`
+- 실제 응답: 미검증
+
+### 화면 처리
+
+- 프리랜서 로그인 탭과 회원가입 역할 선택 화면에서 카카오·구글 버튼 표시
+- 두 화면은 `useSocialLoginStart`로 같은 인증 시작 로직 재사용
+- 요청 중 두 소셜 버튼을 비활성화해 중복 요청 방지
+- 성공하면 백엔드가 전달한 `authorizeUrl`로 이동
+- 실패하면 로그인 화면에 서버 오류 메시지 표시
+- 외부 URL이 `returnUrl`로 전달되지 않도록 앱 내부 절대 경로만 허용
+
+## 프리랜서 소셜 로그인 콜백
+
+- Method / Path: `POST /api/v1/auth/social/{provider}/callback`
+- OAuth Redirect URI 라우트: `/oauth/callback/{provider}`
+- Google: `/oauth/callback/google`
+- Kakao: `/oauth/callback/kakao`
+- 사용 위치: `src/features/auth/services/socialAuth.ts`
+- 요청: `{ code: string, state: string }`
+- 실제 응답: 미검증
+
+### 응답 분기
+
+- `LOGIN`: 응답 쿠키로 로그인 완료 후 기존 `returnUrl` 또는 `/freelancer`로 이동
+- `SIGNUP_REQUIRED`: `signUpTicket`, `email`, `name`을 메모리에 잠시 보관하고 `/signup/freelancer/social`로 이동
+- `state`는 별도 저장하지 않고 공급자 콜백 쿼리 값을 그대로 전송
+- 공급자와 내부 `returnUrl`만 현재 탭의 `sessionStorage`에 보관
+- `signUpTicket`은 URL·localStorage·sessionStorage에 저장하지 않음
+
+## 프리랜서 소셜 회원가입
+
+- Method / Path: `POST /api/v1/auth/signup/freelancer/social`
+- 사용 위치: `src/features/auth/services/signup.ts`
+- 실제 응답: 미검증
+
+### 요청
+
+- `signUpTicket`, `name`, `phone`, `birthDate`
+- `card`, `bankAccount`, `agreements`
+- 이메일은 요청에 넣지 않으며 가입 티켓의 소셜 이메일을 서버가 사용
+
+### 화면 처리
+
+- 콜백에서 받은 실제 이메일과 이름을 표시하고 목업 정보 제거
+- 이메일은 읽기 전용으로 표시
+- 가입 티켓이 메모리에 없으면 소셜 로그인을 다시 시작하도록 안내
+- 요청 중 중복 제출 방지 및 서버 오류 메시지 표시
+- 성공 시 로그인 쿠키가 발급된 상태이므로 프리랜서 홈으로 이동
+
 ## 변경 이력
 
+- 2026-08-09: 프리랜서 소셜 로그인 시작·콜백·추가 회원가입 코드 추가, 실제 응답 미검증
 - 2026-08-09: 회원가입 메타·약관 조회, 중복 확인, 이메일 인증, 일반 회원가입 제출 코드 추가, 실제 응답 미검증
