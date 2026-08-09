@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Footer } from "@/features/common/components/Footer";
 
 const FOOTER_HIDDEN_PATHS = [
+  "/chat",
   "/client/projects/new/complete",
   "/client/payments/complete",
 ];

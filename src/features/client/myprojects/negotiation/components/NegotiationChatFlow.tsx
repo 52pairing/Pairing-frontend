@@ -10,10 +10,11 @@ type Decision = "accept" | "reject" | null;
 
 interface NegotiationChatFlowProps {
   onGiveUp: () => void;
+  onComplete: () => void;
   isFailed?: boolean;
 }
 
-export function NegotiationChatFlow({ onGiveUp, isFailed = false }: NegotiationChatFlowProps) {
+export function NegotiationChatFlow({ onGiveUp, onComplete, isFailed = false }: NegotiationChatFlowProps) {
   const [step, setStep] = useState<FlowStep>("setup");
   const [round, setRound] = useState(1);
   const [salaryDecision, setSalaryDecision] = useState<Decision>(null);
@@ -31,7 +32,11 @@ export function NegotiationChatFlow({ onGiveUp, isFailed = false }: NegotiationC
 
   const confirmReview = () => {
     if (!salaryDecision || !durationDecision) return;
-    setStep(salaryDecision === "accept" && durationDecision === "accept" ? "complete" : "adjust");
+    const isAgreementComplete = salaryDecision === "accept" && durationDecision === "accept";
+    setStep(isAgreementComplete ? "complete" : "adjust");
+    if (isAgreementComplete) {
+      onComplete();
+    }
   };
 
   const restartNegotiation = () => {

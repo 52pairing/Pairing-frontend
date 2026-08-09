@@ -12,6 +12,7 @@ export function NegotiationRoom() {
   const projectId = String(params.projectId ?? "");
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [isFailed, setIsFailed] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
 
   return (
     <div className="flex h-[calc(100dvh-60px)] min-h-0 flex-col overflow-hidden bg-[#f3f4f8] px-6 pb-4 pt-2 text-[#151b2b]">
@@ -32,7 +33,15 @@ export function NegotiationRoom() {
             </p>
           </div>
 
-          {!isFailed ? (
+          {isComplete ? (
+            <button
+              type="button"
+              onClick={() => router.push("/chat")}
+              className="cursor-pointer rounded-[9px] bg-[#142f50] px-5 py-2.5 text-[12px] font-bold text-white transition hover:bg-[#102641]"
+            >
+              1:1 채팅방 이동
+            </button>
+          ) : !isFailed ? (
             <button
               type="button"
               onClick={() => setIsCancelOpen(true)}
@@ -47,6 +56,7 @@ export function NegotiationRoom() {
       <NegotiationChatFlow
         isFailed={isFailed}
         onGiveUp={() => setIsCancelOpen(true)}
+        onComplete={() => setIsComplete(true)}
       />
 
       {isCancelOpen ? (
