@@ -45,9 +45,8 @@
 ## 확인이 필요한 내용
 
 - 백엔드 OAuth 설정과 카카오·구글 Redirect URI
-- 콜백을 받을 프론트 라우트
 - Google Redirect URI: `/oauth/callback/google`
-- Kakao Redirect URI: `/oauth/callback/kakao` 등록 여부 확인 필요
+- Kakao Redirect URI: `/oauth/callback/kakao`
 - 실제 `authorizeUrl`과 콜백 응답 구조
 
 ## 주의사항

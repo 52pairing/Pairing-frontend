@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 
 import { Modal } from "@/features/common/components/Modal";
+import { ConfirmModal } from "@/features/common/components/Modal";
 import { PaymentMethodCard } from "@/features/payment/components/PaymentMethodCard";
 import { MOCK_PAYMENT_METHODS } from "@/features/payment/constants/mockPaymentMethods";
 import type { PaymentSummary } from "@/features/payment/types/payment";
@@ -25,22 +26,34 @@ export function PaymentMethodModal({
   const [selectedMethodId, setSelectedMethodId] = useState(
     MOCK_PAYMENT_METHODS[0]?.id ?? "",
   );
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  const closePaymentModal = () => {
+    setIsConfirmOpen(false);
+    onClose();
+  };
+
+  const confirmPayment = () => {
+    setIsConfirmOpen(false);
+    onPay();
+  };
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      labelledBy={titleId}
-      describedBy={descriptionId}
-      size="lg"
-    >
+    <>
+      <Modal
+        open={open}
+        onClose={closePaymentModal}
+        labelledBy={titleId}
+        describedBy={descriptionId}
+        size="lg"
+      >
       <div className="flex items-center justify-between">
         <h2 id={titleId} className="text-[18px] font-extrabold text-[#111827]">
           결제 수단 선택
         </h2>
         <button
           type="button"
-          onClick={onClose}
+          onClick={closePaymentModal}
           aria-label="결제 모달 닫기"
           className="cursor-pointer text-[22px] leading-none text-[#98a2b3] hover:text-[#475467]"
         >
@@ -82,20 +95,30 @@ export function PaymentMethodModal({
       <div className="mt-5 flex gap-2 border-t border-[#e5e9ef] pt-4">
         <button
           type="button"
-          onClick={onClose}
+          onClick={closePaymentModal}
           className="h-[48px] flex-1 cursor-pointer rounded-[10px] border border-[#dce2e8] bg-white text-[13px] font-semibold text-[#667085] transition hover:bg-[#f8fafc]"
         >
           취소
         </button>
         <button
           type="button"
-          onClick={onPay}
+          onClick={() => setIsConfirmOpen(true)}
           disabled={!selectedMethodId}
           className="h-[48px] flex-[2] cursor-pointer rounded-[10px] bg-[#17365d] text-[13px] font-bold text-white transition hover:bg-[#102a49] disabled:cursor-not-allowed disabled:bg-[#a7b0bf]"
         >
           {payment.amount.toLocaleString("ko-KR")}원 결제하기
         </button>
       </div>
-    </Modal>
+      </Modal>
+      <ConfirmModal
+        open={isConfirmOpen}
+        title="결제하시겠습니까?"
+        description={`${payment.amount.toLocaleString("ko-KR")}원이 선택한 결제 수단으로 결제됩니다.`}
+        confirmText="결제"
+        cancelText="취소"
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={confirmPayment}
+      />
+    </>
   );
 }

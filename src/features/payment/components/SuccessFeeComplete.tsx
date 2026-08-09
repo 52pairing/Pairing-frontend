@@ -3,23 +3,53 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-export function SuccessFeeComplete() {
-  const params = useParams<{ projectId: string }>();
+interface SuccessFeeCompleteProps {
+  role: "client" | "freelancer";
+}
+
+const SETTLEMENT_ROWS = [
+  ["계약 금액", "24,000,000원"],
+  ["착수 수수료 (4%)", "960,000원"],
+  ["성공보수 수수료 (6%)", "1,440,000원"],
+  ["전체 플랫폼 수수료", "2,400,000원"],
+  ["착수 수수료 결제일", "2026.09.02"],
+  ["성공보수 결제일", "2027.01.04"],
+  ["프로젝트 최종 종료일", "2027.01.04"],
+] as const;
+
+export function SuccessFeeComplete({ role }: SuccessFeeCompleteProps) {
+  const params = useParams<{ projectId?: string; contractId?: string }>();
+  const historyHref = role === "client"
+    ? `/client/projects/${params.projectId}?tab=progress&completed=true`
+    : "/freelancer/contracts";
 
   return (
-    <main className="flex min-h-[calc(100dvh-60px)] items-center justify-center bg-[#f7f8fa] px-5 text-[#172033]">
-      <section className="w-full max-w-[520px] py-10 text-center">
-        <div className="mx-auto flex h-[64px] w-[64px] items-center justify-center rounded-full border border-[#86efac] bg-[#dcfce7] text-[30px] font-bold text-[#16a34a]">✓</div>
+    <main className="min-h-[calc(100dvh-60px)] bg-[#f7f8fa] px-5 py-8 text-[#172033]">
+      <div className="mx-auto w-full max-w-[1040px] text-center">
+        <div className="mx-auto flex h-[58px] w-[58px] items-center justify-center rounded-full bg-[#d9fbe8] text-[25px] font-bold">✓</div>
+        <h1 className="mt-5 text-[20px] font-extrabold tracking-[-0.04em] text-[#16a05d]">모든 정산이 완료되었습니다.</h1>
+        <p className="mt-3 text-[12px] font-semibold text-[#667085]">프로젝트 검수와 성공보수 수수료 결제가 완료되어 프로젝트가 최종 종료되었습니다.</p>
 
-        <h1 className="mt-7 text-[23px] font-extrabold tracking-[-0.04em]">결제가 완료되었습니다</h1>
-        <p className="mt-4 text-[14px] font-semibold text-[#667085]">성공보수 결제가 완료되었습니다.</p>
-        <p className="mt-2 text-[13px] font-medium text-[#667085]">결제가 정상적으로 처리되었으며, 프로젝트 진행이 완료되었습니다.</p>
+        <section className="mt-7 rounded-xl border border-[#dce2e8] bg-white px-6 py-6 text-left">
+          <h2 className="text-[13px] font-bold">최종 정산 요약</h2>
+          <dl className="mt-4">
+            {SETTLEMENT_ROWS.map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between gap-5 border-b border-[#e5e9ef] py-3 text-[11px] last:border-b-0">
+                <dt className="font-semibold text-[#98a2b3]">{label}</dt>
+                <dd className="font-bold text-[#172033]">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
 
-        <div className="mt-8 flex items-center justify-center gap-3">
-          <Link href={`/client/projects/${params.projectId}?tab=progress&completed=true`} className="flex h-[46px] min-w-[170px] cursor-pointer items-center justify-center rounded-[9px] border border-[#dce2e8] bg-white px-5 text-[13px] font-semibold text-[#667085] transition hover:bg-[#f8fafc]">프로젝트로 돌아가기</Link>
-          <button type="button" className="h-[46px] min-w-[138px] cursor-pointer rounded-[9px] bg-[#102846] px-5 text-[13px] font-bold text-white transition hover:bg-[#0c2039]">리뷰 작성하기</button>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <Link href={historyHref} className="flex h-11 items-center justify-center rounded-lg border border-[#dce2e8] bg-white text-[12px] font-semibold text-[#667085] hover:bg-[#f8fafc]">전체 정산 내역 보기</Link>
+          <button type="button" onClick={() => window.print()} className="h-11 rounded-lg border border-[#dce2e8] bg-white text-[12px] font-semibold text-[#667085] hover:bg-[#f8fafc]">계약서 다운로드</button>
         </div>
-      </section>
+        <button type="button" className="mt-3 h-11 w-full rounded-lg bg-[#17365d] text-[12px] font-bold text-white hover:bg-[#102a49]">
+          {role === "client" ? "프리랜서 평가하기" : "클라이언트 평가하기"}
+        </button>
+      </div>
     </main>
   );
 }

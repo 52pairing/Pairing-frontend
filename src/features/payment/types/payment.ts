@@ -12,3 +12,13 @@ export interface PaymentMethod {
   issuer: string;
   maskedNumber: string;
 }
+
+export interface SuccessFeePaymentSummary {
+  projectTitle: string;
+  duration: string;
+  contractAmount: number;
+  baseRate: number;
+  discountLabel?: string;
+  discountRate?: number;
+  paymentAmount: number;
+}

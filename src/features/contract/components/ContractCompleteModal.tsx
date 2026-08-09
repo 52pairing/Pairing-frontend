@@ -3,9 +3,10 @@
 type ContractCompleteModalProps = {
   onBackToProject: () => void;
   onDownload: () => void;
+  backLabel?: string;
 };
 
-export function ContractCompleteModal({ onBackToProject, onDownload }: ContractCompleteModalProps) {
+export function ContractCompleteModal({ onBackToProject, onDownload, backLabel = "프로젝트로 돌아가기" }: ContractCompleteModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/45 px-4">
       <section role="dialog" aria-modal="true" aria-labelledby="contract-complete-title" className="w-full max-w-[520px] rounded-[18px] bg-white px-10 py-10 shadow-[0_24px_60px_rgba(15,23,42,0.22)]">
@@ -23,7 +24,7 @@ export function ContractCompleteModal({ onBackToProject, onDownload }: ContractC
         </dl>
 
         <div className="mt-7 grid grid-cols-2 gap-3">
-          <button type="button" onClick={onBackToProject} className="h-12 cursor-pointer rounded-[9px] border border-[#e1e6ed] bg-white text-[14px] font-semibold text-[#667085] transition hover:bg-[#f8fafc]">프로젝트로 돌아가기</button>
+          <button type="button" onClick={onBackToProject} className="h-12 cursor-pointer rounded-[9px] border border-[#e1e6ed] bg-white text-[14px] font-semibold text-[#667085] transition hover:bg-[#f8fafc]">{backLabel}</button>
           <button type="button" onClick={onDownload} className="h-12 cursor-pointer rounded-[9px] bg-[#102846] text-[14px] font-bold text-white transition hover:bg-[#0c2039]">계약서 다운로드</button>
         </div>
       </section>
