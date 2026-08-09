@@ -5,22 +5,27 @@ export type ProjectDetailTab = (typeof PROJECT_DETAIL_TABS)[number];
 interface ProjectDetailTabsProps {
   activeTab: ProjectDetailTab;
   onTabChange: (tab: ProjectDetailTab) => void;
+  rightContent?: ReactNode;
 }
 
-export function ProjectDetailTabs({ activeTab, onTabChange }: ProjectDetailTabsProps) {
+export function ProjectDetailTabs({ activeTab, onTabChange, rightContent }: ProjectDetailTabsProps) {
   return (
     <div className="mt-10 border-b border-[#dfe4ea]">
-      <div className="flex h-[48px] items-end gap-3">
-        {PROJECT_DETAIL_TABS.map((tab) => {
-          const isActive = activeTab === tab;
-          return (
-            <button key={tab} type="button" onClick={() => onTabChange(tab)} className={`relative flex h-full min-w-[90px] cursor-pointer items-center justify-center px-3 text-[13px] font-bold transition ${isActive ? "text-[#17365d]" : "text-[#7b8797] hover:text-[#475467]"}`}>
-              {tab}
-              {isActive ? <span className="absolute bottom-[-1px] h-[2px] w-full bg-[#17365d]" /> : null}
-            </button>
-          );
-        })}
+      <div className="flex h-[48px] items-center justify-between">
+        <div className="flex h-full items-end gap-3">
+          {PROJECT_DETAIL_TABS.map((tab) => {
+            const isActive = activeTab === tab;
+            return (
+              <button key={tab} type="button" onClick={() => onTabChange(tab)} className={`relative flex h-full min-w-[90px] cursor-pointer items-center justify-center px-3 text-[13px] font-bold transition ${isActive ? "text-[#17365d]" : "text-[#7b8797] hover:text-[#475467]"}`}>
+                {tab}
+                {isActive ? <span className="absolute bottom-[-1px] h-[2px] w-full bg-[#17365d]" /> : null}
+              </button>
+            );
+          })}
+        </div>
+        {rightContent}
       </div>
     </div>
   );
 }
+import type { ReactNode } from "react";

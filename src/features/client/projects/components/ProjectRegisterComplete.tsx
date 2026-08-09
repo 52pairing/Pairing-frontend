@@ -62,26 +62,6 @@ export function ProjectRegisterComplete() {
     >
       <div className="mx-auto w-full max-w-[980px] px-6 py-4">
         <div className="mx-auto mt-10 max-w-[720px] text-center">
-          {/* 완료 아이콘 */}
-          <span className="mx-auto flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#e7f7ee]">
-            <svg
-              width="30"
-              height="30"
-              viewBox="0 0 32 32"
-              fill="none"
-              aria-hidden="true"
-            >
-              <circle cx="16" cy="16" r="11" stroke="#12b76a" strokeWidth="2" />
-              <path
-                d="M11 16.2L14.5 19.7L21 12.5"
-                stroke="#12b76a"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-
           <h1 className="mt-5 text-[24px] font-extrabold tracking-[-0.04em] text-[#111827]">
             프로젝트 등록 완료!
           </h1>
@@ -159,17 +139,9 @@ export function ProjectRegisterComplete() {
             <button
               type="button"
               onClick={goMyProjects}
-              className="flex h-[46px] cursor-pointer items-center justify-center rounded-[9px] border border-[#dce2e8] bg-white px-6 text-[12px] font-semibold text-[#8b95a5] transition hover:bg-[#f8fafc]"
-            >
-              내 프로젝트로 이동
-            </button>
-
-            <button
-              type="button"
-              onClick={goDetail}
               className="flex h-[46px] cursor-pointer items-center justify-center rounded-[9px] border border-[#c3ccd8] bg-white px-6 text-[12px] font-bold text-[#344054] transition hover:bg-[#f8fafc]"
             >
-              프로젝트 상세보기
+              내 프로젝트로 이동
             </button>
 
             <button
@@ -178,7 +150,6 @@ export function ProjectRegisterComplete() {
               className="flex h-[46px] cursor-pointer items-center justify-center gap-1 rounded-[9px] bg-[#17365d] px-6 text-[12px] font-bold text-white transition hover:bg-[#102a49]"
             >
               착수금 결제하기
-              <span aria-hidden="true">→</span>
             </button>
           </div>
         </div>

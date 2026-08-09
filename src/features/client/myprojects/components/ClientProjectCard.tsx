@@ -13,6 +13,7 @@ export interface ClientProjectCardProps {
   deadline?: string;
   actionType?: "payment" | "detail" | "complete" | "successFee";
   detailHref?: string;
+  onPayment?: () => void;
 }
 
 export function ClientProjectCard({
@@ -28,6 +29,7 @@ export function ClientProjectCard({
   deadline,
   actionType = "payment",
   detailHref = "/client/projects/1",
+  onPayment,
 }: ClientProjectCardProps) {
   return (
     <article className="rounded-[15px] border border-[#dde3ea] bg-white px-5 py-[18px] shadow-[0_2px_4px_rgba(15,23,42,0.03)]">
@@ -89,6 +91,7 @@ export function ClientProjectCard({
             </Link>
             <button
               type="button"
+              onClick={onPayment}
               className="h-[34px] cursor-pointer rounded-[8px] bg-[#132d4f] px-5 text-[12px] font-bold text-white transition hover:bg-[#0f2541]"
             >
               결제 하기
