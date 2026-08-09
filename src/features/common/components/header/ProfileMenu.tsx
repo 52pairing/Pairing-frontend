@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { logout } from "@/features/auth/services/logout";
+
 interface ProfileMenuProps {
   label: string;
   myPageHref: string;
@@ -12,7 +14,23 @@ interface ProfileMenuProps {
 // 클라이언트/프리랜서 Header에서 공통으로 사용하는 프로필 드롭다운
 export function ProfileMenu({ label, myPageHref }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const initial = label.trim().charAt(0) || "P";
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+    } catch {
+      // 서버 로그아웃 실패와 관계없이 아래에서 로그인 화면으로 이동합니다.
+    } finally {
+      // 로그아웃 API가 실패해도 인증 화면으로 이동해 프론트 흐름을 초기화합니다.
+      window.location.replace("/login");
+    }
+  };
 
   // 드롭다운 바깥을 클릭하면 메뉴를 닫습니다.
   useEffect(() => {
@@ -35,7 +53,7 @@ export function ProfileMenu({ label, myPageHref }: ProfileMenuProps) {
         className="flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
       >
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0b1f3a] text-xs text-white">
-          P
+          {initial}
         </span>
         <span>{label}</span>
         <span className="flex items-center">
@@ -66,9 +84,11 @@ export function ProfileMenu({ label, myPageHref }: ProfileMenuProps) {
           </Link>
           <button
             type="button"
-            className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-gray-300"
           >
-            로그아웃
+            {isLoggingOut ? "로그아웃 중..." : "로그아웃"}
           </button>
         </div>
       ) : null}

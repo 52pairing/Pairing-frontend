@@ -66,6 +66,17 @@ export interface FreelancerSignupRequest {
   agreements: SignupAgreement[];
 }
 
+// 소셜 인증을 마친 프리랜서의 추가 회원가입 요청입니다.
+export interface FreelancerSocialSignupRequest {
+  signUpTicket: string;
+  name: string;
+  phone: string;
+  birthDate: string;
+  card: SignupCard;
+  bankAccount: SignupBankAccount;
+  agreements: SignupAgreement[];
+}
+
 export interface SignupResponse {
   accountId: number;
   role: "CLIENT" | "FREELANCER";

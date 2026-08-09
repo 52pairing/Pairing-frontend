@@ -4,8 +4,9 @@ import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { AccountLockedAlert } from "@/features/auth/components/AccountLockedAlert";
 import { LoginRestrictedAlert } from "@/features/auth/components/LoginRestrictedAlert";
 import { UnlockAccountModal } from "@/features/auth/components/UnlockAccountModal";
+import { useSocialLoginStart } from "@/features/auth/hooks/useSocialLoginStart";
 import { login } from "@/features/auth/services/login";
-import type { LoginRole } from "@/features/auth/types";
+import { LoginRole } from "@/features/auth/types";
 import { useToast } from "@/features/common/hooks/useToast";
 import { ApiException } from "@/lib/api";
 import Image from "next/image";
@@ -38,6 +39,11 @@ export default function LoginPage() {
   const [formError, setFormError] = useState("");
   const [alert, setAlert] = useState<LoginAlert>(null);
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+  const {
+    start: startSocialLogin,
+    loadingProvider: socialLoadingProvider,
+    error: socialError,
+  } = useSocialLoginStart(returnUrl);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -214,7 +220,9 @@ export default function LoginPage() {
                 <button
                   type="button"
                   aria-label="카카오 로그인"
-                  className="flex h-11 w-11 items-center justify-center rounded-full hover:brightness-95"
+                  onClick={() => startSocialLogin("kakao")}
+                  disabled={socialLoadingProvider !== null}
+                  className="flex h-11 w-11 items-center justify-center rounded-full hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Image
                     src="/icons/KakaoIcon.svg"
@@ -228,7 +236,9 @@ export default function LoginPage() {
                 <button
                   type="button"
                   aria-label="구글 로그인"
-                  className="flex h-11 w-11 items-center justify-center rounded-full hover:brightness-95"
+                  onClick={() => startSocialLogin("google")}
+                  disabled={socialLoadingProvider !== null}
+                  className="flex h-11 w-11 items-center justify-center rounded-full hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Image
                     src="/icons/GoogleIcon.svg"
@@ -239,6 +249,17 @@ export default function LoginPage() {
                   />
                 </button>
               </div>
+              {socialLoadingProvider ? (
+                <p className="mt-3 text-center text-xs text-gray-400">
+                  {socialLoadingProvider === "kakao" ? "카카오" : "구글"}
+                  로그인 페이지로 이동 중입니다.
+                </p>
+              ) : null}
+              {socialError ? (
+                <p className="mt-3 text-center text-xs text-red-500">
+                  {socialError}
+                </p>
+              ) : null}
             </>
           ) : null}
 

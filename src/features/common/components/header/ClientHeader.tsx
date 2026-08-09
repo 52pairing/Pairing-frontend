@@ -10,16 +10,16 @@ const clientNavItems = [
 ];
 
 interface ClientHeaderProps {
-  companyName?: string;
+  name?: string;
   chatCount?: number;
   noticeCount?: number;
 }
 
 // 클라이언트 로그인 사용자에게 보여주는 Header
 export function ClientHeader({
-  companyName = "주식회사 오이랩",
-  chatCount = 2,
-  noticeCount = 4,
+  name = "클라이언트",
+  chatCount = 0,
+  noticeCount = 0,
 }: ClientHeaderProps) {
   return (
     <HeaderShell
@@ -42,7 +42,7 @@ export function ClientHeader({
             label="알림"
             count={noticeCount}
           />
-          <ProfileMenu label={companyName} myPageHref="/client/mypage" />
+          <ProfileMenu label={name} myPageHref="/client/mypage" />
         </>
       }
     />

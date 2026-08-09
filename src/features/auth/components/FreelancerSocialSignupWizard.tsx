@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
+import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import {
   BirthDateSelect,
   isBirthDateValid,
@@ -22,47 +24,62 @@ import { SignupStepNavigation } from "@/features/auth/components/SignupStepNavig
 import { SignupTermsStep } from "@/features/auth/components/SignupTermsStep";
 import { SignupWizardLayout } from "@/features/auth/components/SignupWizardLayout";
 import { FREELANCER_SOCIAL_SIGNUP_STEPS } from "@/features/auth/constants/signupSteps";
+import { useSignupSubmit } from "@/features/auth/hooks/useSignupSubmit";
+import { signupFreelancerSocial } from "@/features/auth/services/signup";
 import type {
   FreelancerSocialSignupForm,
   SocialProvider,
 } from "@/features/auth/types";
+import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
+import { buildFreelancerSocialSignupRequest } from "@/features/auth/utils/buildSignupRequest";
+import {
+  clearPendingSocialSignup,
+  getPendingSocialSignup,
+} from "@/features/auth/utils/socialAuthFlow";
 
 const STEP_LABELS = FREELANCER_SOCIAL_SIGNUP_STEPS.map((step) => step.label);
-const MOCK_EMAIL: Record<SocialProvider, string> = {
-  kakao: "user@kakao.com",
-  google: "user@gmail.com",
-};
-
 export function FreelancerSocialSignupWizard() {
-  return (
-    <Suspense fallback={null}>
-      <FreelancerSocialSignupContent />
-    </Suspense>
-  );
-}
-
-function FreelancerSocialSignupContent() {
-  const searchParams = useSearchParams();
-  const provider: SocialProvider =
-    searchParams.get("provider") === "kakao" ? "kakao" : "google";
+  const router = useRouter();
+  const [signup] = useState(() => getPendingSocialSignup());
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState(false);
   const [today] = useState(() => new Date());
   const [form, setForm] = useState<FreelancerSocialSignupForm>(() => ({
-    provider,
-    email: MOCK_EMAIL[provider],
+    provider: signup?.provider,
+    signUpTicket: signup?.signUpTicket,
+    email: signup?.email,
+    name: signup?.name,
   }));
+  const { submit, isSubmitting, submitError } = useSignupSubmit(
+    signupFreelancerSocial,
+  );
 
   const patch = (partial: Partial<FreelancerSocialSignupForm>) => {
     setForm((current) => ({ ...current, ...partial }));
   };
+
+  const handleSignup = async (terms: SignupTermsItem[]) => {
+    const succeeded = await submit(
+      buildFreelancerSocialSignupRequest(form, terms),
+    );
+
+    if (succeeded) {
+      clearPendingSocialSignup();
+      setCompleted(true);
+    }
+  };
+
+  if (!signup) {
+    return <MissingSocialSignup />;
+  }
 
   if (completed) {
     return (
       <SignupCompleteScreen
         title="프리랜서 회원가입이 완료되었습니다."
         description="프로필을 등록하면 적합한 프로젝트를 추천받을 수 있습니다."
-        primaryLabel="로그인하러 가기"
+        primaryLabel="프리랜서 홈으로 이동"
+        primaryHref="/freelancer"
       />
     );
   }
@@ -77,8 +94,9 @@ function FreelancerSocialSignupContent() {
         <SocialInfoStep
           form={form}
           patch={patch}
-          provider={provider}
+          provider={signup.provider}
           today={today}
+          onPrevious={() => router.push("/login")}
           onNext={() => setStep(2)}
         />
       ) : null}
@@ -96,7 +114,9 @@ function FreelancerSocialSignupContent() {
           agreed={form.agreedTerms ?? {}}
           onChange={(agreed) => patch({ agreedTerms: agreed })}
           onPrevious={() => setStep(2)}
-          onComplete={() => setCompleted(true)}
+          onComplete={handleSignup}
+          isSubmitting={isSubmitting}
+          submitError={submitError}
         />
       ) : null}
     </SignupWizardLayout>
@@ -114,10 +134,12 @@ function SocialInfoStep({
   provider,
   today,
   onNext,
+  onPrevious,
 }: SocialStepProps & {
   provider: SocialProvider;
   today: Date;
   onNext: () => void;
+  onPrevious: () => void;
 }) {
   const phone = form.phone ?? "";
   const isValid =
@@ -191,11 +213,36 @@ function SocialInfoStep({
         />
       </div>
       <SignupStepNavigation
-        onPrevious={() => window.history.back()}
+        onPrevious={onPrevious}
         onNext={onNext}
         nextDisabled={!isValid}
       />
     </>
+  );
+}
+
+function MissingSocialSignup() {
+  return (
+    <div className="min-h-screen bg-white">
+      <AuthHeader />
+      <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-5">
+        <section className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white px-8 py-9 text-center shadow-sm">
+          <h1 className="text-lg font-bold text-[#111827]">
+            소셜 회원가입 정보가 없습니다.
+          </h1>
+          <p className="mt-3 text-sm text-gray-500">
+            가입 시간이 만료됐거나 페이지가 새로고침되었습니다. 소셜 로그인을
+            다시 시작해 주세요.
+          </p>
+          <Link
+            href="/login"
+            className="mt-6 inline-flex h-11 items-center rounded-md bg-[#142B4A] px-5 text-sm font-bold text-white"
+          >
+            로그인으로 돌아가기
+          </Link>
+        </section>
+      </main>
+    </div>
   );
 }
 
