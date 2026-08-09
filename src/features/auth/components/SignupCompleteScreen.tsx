@@ -5,12 +5,14 @@ interface SignupCompleteScreenProps {
   title: string;
   description: string;
   primaryLabel: string;
+  primaryHref?: string;
 }
 
 export function SignupCompleteScreen({
   title,
   description,
   primaryLabel,
+  primaryHref = "/login",
 }: SignupCompleteScreenProps) {
   return (
     <div className="min-h-screen bg-white">
@@ -20,7 +22,7 @@ export function SignupCompleteScreen({
           <SignupComplete
             title={title}
             description={description}
-            primaryHref="/login"
+            primaryHref={primaryHref}
             primaryLabel={primaryLabel}
             secondaryHref="/"
             secondaryLabel="홈으로 이동"
