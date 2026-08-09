@@ -1,5 +1,5 @@
-export default function FreelancerProjrctsPage() {
-    return (
-        <div>프리랜서 프로젝트 페이지</div>
-    );
+import { FreelancerProjects } from "@/features/freelancer/myprojects/components/FreelancerProjects";
+
+export default function FreelancerProjectsPage() {
+  return <FreelancerProjects />;
 }
