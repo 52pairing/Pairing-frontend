@@ -2,14 +2,18 @@
 
 import { useState } from "react";
 
+import { NegotiationFailedCard } from "@/features/client/myprojects/negotiation/components/NegotiationFailedCard";
+import { NegotiationResultCard } from "@/features/client/myprojects/negotiation/components/NegotiationResultCard";
+
 type FlowStep = "setup" | "negotiating" | "review" | "adjust" | "complete";
 type Decision = "accept" | "reject" | null;
 
 interface NegotiationChatFlowProps {
   onGiveUp: () => void;
+  isFailed?: boolean;
 }
 
-export function NegotiationChatFlow({ onGiveUp }: NegotiationChatFlowProps) {
+export function NegotiationChatFlow({ onGiveUp, isFailed = false }: NegotiationChatFlowProps) {
   const [step, setStep] = useState<FlowStep>("setup");
   const [round, setRound] = useState(1);
   const [salaryDecision, setSalaryDecision] = useState<Decision>(null);
@@ -38,14 +42,14 @@ export function NegotiationChatFlow({ onGiveUp }: NegotiationChatFlowProps) {
   };
 
   return (
-    <main className="mt-5 overflow-hidden rounded-[14px] bg-white">
-      <NegotiationHeader step={step} round={round} />
+    <main className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] bg-white">
+      <div className="shrink-0"><NegotiationHeader step={step} round={round} isFailed={isFailed} /></div>
 
-      <div className="min-h-[700px] px-6 pb-10 pt-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-7 pt-4">
         <TimelineDivider label={`AI 협상이 시작되었습니다. · ${round === 1 ? "14:00" : "14:35"}`} />
         <InitialOffer />
 
-        {step === "setup" ? <SetupPanel onStart={startNegotiation} /> : null}
+        {step === "setup" && !isFailed ? <SetupPanel onStart={startNegotiation} /> : null}
 
         {step !== "setup" ? (
           <>
@@ -53,7 +57,7 @@ export function NegotiationChatFlow({ onGiveUp }: NegotiationChatFlowProps) {
               조건 검토가 완료되었습니다. 최적 협상안을 도출했어요.
             </AgentMessage>
 
-            {step === "negotiating" ? (
+            {step === "negotiating" && !isFailed ? (
               <>
                 <AgentMessage side="right" time="14:24">
                   근무형태 혼합을 제안합니다.
@@ -75,7 +79,7 @@ export function NegotiationChatFlow({ onGiveUp }: NegotiationChatFlowProps) {
               </>
             ) : null}
 
-            {step === "review" ? (
+            {step === "review" && !isFailed ? (
               <>
                 <TimelineDivider label="대리인이 조건 안을 마련했습니다 · 14:28" />
                 <ReviewPanel
@@ -88,7 +92,7 @@ export function NegotiationChatFlow({ onGiveUp }: NegotiationChatFlowProps) {
               </>
             ) : null}
 
-            {step === "adjust" ? (
+            {step === "adjust" && !isFailed ? (
               <>
                 <TimelineDivider label="거절 조건을 다시 조정해 주세요 · 14:30" />
                 <AdjustmentPanel
@@ -104,16 +108,19 @@ export function NegotiationChatFlow({ onGiveUp }: NegotiationChatFlowProps) {
               </>
             ) : null}
 
-            {step === "complete" ? (
+            {step === "complete" && !isFailed ? (
               <>
                 <TimelineDivider label="모든 조건에 합의했습니다 · 14:30" />
-                <div className="mx-auto mt-8 w-full max-w-[360px] rounded-[14px] border border-[#abefc6] bg-[#ecfdf3] px-6 py-6 text-center">
-                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#d1fadf] text-[22px] text-[#039855]">✓</div>
-                  <h3 className="mt-3 text-[15px] font-extrabold text-[#027a48]">협상이 완료되었습니다</h3>
-                  <p className="mt-2 text-[11px] leading-5 text-[#475467]">연봉 350만 원 · 기간 6개월 · 혼합 근무</p>
-                </div>
+                <div className="mt-8"><NegotiationResultCard result="complete" /></div>
               </>
             ) : null}
+          </>
+        ) : null}
+
+        {isFailed ? (
+          <>
+            <TimelineDivider label="협상이 결렬되었습니다 · 14:31" />
+            <div className="mt-8"><NegotiationFailedCard /></div>
           </>
         ) : null}
       </div>
@@ -121,7 +128,7 @@ export function NegotiationChatFlow({ onGiveUp }: NegotiationChatFlowProps) {
   );
 }
 
-function NegotiationHeader({ step, round }: { step: FlowStep; round: number }) {
+function NegotiationHeader({ step, round, isFailed }: { step: FlowStep; round: number; isFailed: boolean }) {
   const isComplete = step === "complete";
   return (
     <div className="flex items-center justify-between border-b border-[#e8ebf0] px-5 py-4">
@@ -131,8 +138,8 @@ function NegotiationHeader({ step, round }: { step: FlowStep; round: number }) {
       </div>
       <div className="flex items-center gap-3 text-[11px] font-semibold text-[#667085]">
         {step !== "setup" ? <span>라운드 {round} / 15</span> : null}
-        <span className={`rounded-full border px-3 py-1.5 ${isComplete ? "border-[#abefc6] bg-[#ecfdf3] text-[#039855]" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}>
-          {isComplete ? "✓ 협상 완료" : "♙ 협상 중"}
+        <span className={`rounded-full border px-3 py-1.5 ${isFailed ? "border-[#fecdca] bg-[#fef3f2] text-[#d92d20]" : isComplete ? "border-[#abefc6] bg-[#ecfdf3] text-[#039855]" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}>
+          {isFailed ? "× 협상 결렬" : isComplete ? "✓ 협상 완료" : "♙ 협상 중"}
         </span>
       </div>
     </div>
@@ -141,11 +148,11 @@ function NegotiationHeader({ step, round }: { step: FlowStep; round: number }) {
 
 function InitialOffer() {
   return (
-    <div className="mt-7 flex justify-center">
-      <div className="w-[255px] rounded-[14px] bg-[#e8eefc] px-5 py-5">
+    <div className="mt-5 flex justify-center">
+      <div className="w-[255px] rounded-[14px] bg-[#e8eefc] px-5 py-4">
         <p className="text-[12px] font-bold text-[#3780f6]">초기 제안 조건</p>
         <p className="mt-2 text-[11px] text-[#79859a]">클라이언트 AI가 전달한 조건입니다.</p>
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-2 gap-3">
           <ConditionValue label="연봉" value="320만 원" />
           <ConditionValue label="근무 형태" value="상시" />
         </div>
@@ -224,12 +231,12 @@ function DecisionButton({ label, selected, onClick }: { label: string; selected:
 }
 
 function TimelineDivider({ label }: { label: string }) {
-  return <div className="mt-6 flex items-center gap-3"><div className="h-px flex-1 bg-[#e7eaf0]" /><span className="whitespace-nowrap text-[10px] text-[#a5adbb]">{label}</span><div className="h-px flex-1 bg-[#e7eaf0]" /></div>;
+  return <div className="mt-4 flex items-center gap-3"><div className="h-px flex-1 bg-[#e7eaf0]" /><span className="whitespace-nowrap text-[10px] text-[#a5adbb]">{label}</span><div className="h-px flex-1 bg-[#e7eaf0]" /></div>;
 }
 
 function AgentMessage({ side, time, emphasized = false, children }: { side: "left" | "right"; time: string; emphasized?: boolean; children: React.ReactNode }) {
   const isLeft = side === "left";
-  return <div className={`mt-7 flex ${isLeft ? "justify-start" : "justify-end"}`}><div className={`flex max-w-[420px] items-start gap-2 ${isLeft ? "" : "flex-row-reverse"}`}><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8878e8] text-[11px] font-bold text-white">{isLeft ? "F" : "C"}</span><div><p className={`mb-1 text-[10px] text-[#a5adbb] ${isLeft ? "" : "text-right"}`}>{isLeft ? "프리랜서 AI" : "클라이언트 AI"} · {time}</p><div className={`rounded-[12px] px-4 py-3 text-[12px] leading-5 ${isLeft || emphasized ? "bg-[#8878e8] text-white" : "border border-[#e1e5eb] bg-white text-[#283142]"}`}>{children}</div></div></div></div>;
+  return <div className={`mt-5 flex ${isLeft ? "justify-start" : "justify-end"}`}><div className={`flex max-w-[420px] items-start gap-2 ${isLeft ? "" : "flex-row-reverse"}`}><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8878e8] text-[11px] font-bold text-white">{isLeft ? "F" : "C"}</span><div><p className={`mb-1 text-[10px] text-[#a5adbb] ${isLeft ? "" : "text-right"}`}>{isLeft ? "프리랜서 AI" : "클라이언트 AI"} · {time}</p><div className={`rounded-[12px] px-4 py-2.5 text-[12px] leading-5 ${isLeft || emphasized ? "bg-[#8878e8] text-white" : "border border-[#e1e5eb] bg-white text-[#283142]"}`}>{children}</div></div></div></div>;
 }
 
 function ConditionValue({ label, value }: { label: string; value: string }) {
