@@ -449,6 +449,15 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
   - 조건 종류 필드명은 **`type`** (요청 바디의 `conditionType` 과 다름). 값 필드는 **전부 문자열**.
 - `conditionType` 코드: `AMOUNT`(월 단가·원), `PERIOD`("4 MONTH"), `START_DATE`("2026-09-01"), `WORK_STYLE`(REMOTE/ONSITE/ANY), `WORK_FORM`(FULL_TIME/PART_TIME/ANY), `SCOPE`, `OTHER`.
 - **값 라벨은 하드코딩 금지 → meta API 사용**: `GET /api/v1/meta/work-conditions`(비로그인 가능) 의 `workStyles/workForms/periodUnits`({code,label}) 로 해결. 서비스 `getWorkConditionsMeta`, 유틸 `formatConditionValue(type, value, labels)`. (조건 "종류" 라벨 AMOUNT="단가(월)" 등은 협상 고유 개념이라 `CONDITION_LABEL` 로 관리)
+
+#### 추가 클라리피케이션 (2차)
+
+- 협상 화면의 근무형태 토글(상주/혼합/재택)은 **`WORK_STYLE`** 이다. `WORK_FORM`(FULL_TIME/PART_TIME/ANY)은 **협상 화면에 안 나옴**. 혼합=`ANY`(`HYBRID` 보내면 거부).
+- 헤더 배지 3종은 소스가 다름: 말풍선=`GET /chat-rooms/unread-count`, 종=`GET /notifications/unread-count`, 카드 빨간점=매칭 `newProposalCount`. **종은 당분간 협상으로 안 켜짐**(협상 도메인은 알림 미발행) → 헤더에 협상 배지 재연결 금지.
+- 빨간점: 켜기=매칭 응답 `newProposalCount > 0`, 끄기=협상방 진입 시 `POST /negotiations/{id}/read`. (이미 반영)
+- 메시지에 `(stub)` 표기 = AI 서버 폴백 상태(상대 제시값 무조건 수락 → 1라운드 전조건 합의). 프론트 문제 아님, AWS 설정 후 자연어로 전환.
+- 상단 상태 배지는 `status` 기준(결렬/타결/협상 중) — 이미 반영. 초기 카드의 "상시" 값은 존재하지 않으므로 무시.
+- 매칭 카드 "남은 시간"은 매칭 응답 `expiresAt` 기준으로 **프론트가 계산**(서버가 잔여시간 안 내려줌).
 - 값 형식: 금액은 **원 단위 월 단가**(만원 ×10,000 전송, 표시 ÷10,000). 기간 "N MONTH", 날짜 "YYYY-MM-DD".
 - 메시지 `GET /{id}/messages`: `messageId, roundNo, senderType, messageType(PROPOSAL|RESPONSE|SYSTEM), conditionType, content, reason, proposedValue, response, createdAt`. 서버가 roundNo→id 정렬. SYSTEM 은 `conditionType` null.
 - 승인/재지시 판정: 상세의 **`waitingForMe === true`** 일 때만 패널 노출. 패널 안 조건별 분기는 `status`(PENDING/AGREED/REJECTED).

@@ -43,10 +43,11 @@
       `ClientHeader`/`FreelancerHeader` 종(알림) 배지 count 주입, 0이면 숨김
 - [x] TypeScript(`npx tsc --noEmit`) 통과
 - [x] 변경 파일 ESLint 통과
+- [x] 협상방 역할 대응(뒤로가기 경로를 `usePathname`로 client/freelancer 판별)
+- [x] 프리랜서 협상방 라우트 신설(`/freelancer/projects/{projectId}/negotiation/{negotiationId}`, `NegotiationRoom` 재사용)
 - [ ] 브라우저 화면 및 실제 API/STOMP 확인
 - [ ] 전역 STOMP 활성화(로그인 후 1회) 및 `/user/queue/notifications` 전역 구독
-- [ ] 종 배지 클릭 이동 대상 확정 (§0 "협상 목록" vs 현재 `/notifications`) — 전역 협상 목록 라우트 없음
-- [ ] 프리랜서 측 협상 화면(대칭)
+- [ ] 프리랜서 협상 진입(매칭 수락/거절·받은 요청 목록) — **매칭 도메인 계약 필요**
 
 ## 실행한 검증
 
