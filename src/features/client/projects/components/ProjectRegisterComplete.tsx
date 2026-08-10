@@ -26,7 +26,12 @@ function formatKoreanDate(iso: string) {
 
 export function ProjectRegisterComplete() {
   const router = useRouter();
-  const { form, registeredProject, clearDraft } = useProjectRegister();
+  const {
+    form,
+    registeredProject,
+    clearDraft,
+    clearRegisteredProject,
+  } = useProjectRegister();
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
@@ -65,6 +70,7 @@ export function ProjectRegisterComplete() {
 
   const leaveCompletePage = (path: string) => {
     clearDraft();
+    clearRegisteredProject();
     router.push(path);
   };
 
