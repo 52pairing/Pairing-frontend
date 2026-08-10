@@ -34,6 +34,7 @@ interface ProjectRegisterContextValue {
   patch: (partial: Partial<ProjectRegisterForm>) => void;
   registeredProject: ProjectResponse | null;
   setRegisteredProject: (project: ProjectResponse) => void;
+  clearDraft: () => void;
   reset: () => void;
 }
 
@@ -73,6 +74,11 @@ export function ProjectRegisterProvider({ children }: { children: ReactNode }) {
     setRegisteredProjectState(project);
   }, []);
 
+  const clearDraft = useCallback(() => {
+    setForm({});
+    sessionStorage.removeItem(PROJECT_REGISTER_STORAGE_KEY);
+  }, []);
+
   const reset = useCallback(() => {
     setForm({});
     setRegisteredProjectState(null);
@@ -80,8 +86,15 @@ export function ProjectRegisterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ form, patch, registeredProject, setRegisteredProject, reset }),
-    [form, patch, registeredProject, setRegisteredProject, reset],
+    () => ({
+      form,
+      patch,
+      registeredProject,
+      setRegisteredProject,
+      clearDraft,
+      reset,
+    }),
+    [form, patch, registeredProject, setRegisteredProject, clearDraft, reset],
   );
 
   if (!isHydrated) {

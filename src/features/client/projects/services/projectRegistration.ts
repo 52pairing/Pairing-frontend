@@ -27,7 +27,7 @@ export interface ProjectResponse {
   startDesiredDate: string;
   status: string;
   positions: ProjectResponsePosition[];
-  payableSettlementId: number;
+  payableSettlementId: number | null;
 }
 
 export interface ProjectRegistrationRequest {
@@ -103,9 +103,6 @@ export const createProject = (request: ProjectRegistrationRequest) =>
     method: "POST",
     body: JSON.stringify(request),
   });
-
-export const getMyProjects = () =>
-  apiCall<ProjectResponse[]>("/api/v1/projects/mine");
 
 export const getProject = (projectId: number) =>
   apiCall<ProjectResponse>(`/api/v1/projects/${projectId}`);

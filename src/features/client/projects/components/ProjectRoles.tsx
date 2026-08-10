@@ -42,6 +42,14 @@ interface ProjectRecruitMeta {
   skills: ProjectMetaOption[];
 }
 
+/** 모집 조건 메타(직군·직무·스킬) 3종을 한 번에 조회 */
+const fetchRecruitMeta = () =>
+  Promise.all([
+    getProjectJobCategories(),
+    getProjectJobRoles(),
+    getProjectSkills(),
+  ]);
+
 export function ProjectRoles() {
   const router = useRouter();
   const { form, patch } = useProjectRegister();
@@ -83,11 +91,7 @@ export function ProjectRoles() {
   const loadMeta = async () => {
     setMetaError("");
     try {
-      const [categories, jobRoles, skills] = await Promise.all([
-        getProjectJobCategories(),
-        getProjectJobRoles(),
-        getProjectSkills(),
-      ]);
+      const [categories, jobRoles, skills] = await fetchRecruitMeta();
       applyMeta(categories, jobRoles, skills);
     } catch (error) {
       setMetaError(error instanceof Error ? error.message : "모집 조건 선택지를 불러오지 못했습니다.");
@@ -96,11 +100,7 @@ export function ProjectRoles() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      getProjectJobCategories(),
-      getProjectJobRoles(),
-      getProjectSkills(),
-    ])
+    fetchRecruitMeta()
       .then(([categories, jobRoles, skills]) => {
         if (!cancelled) applyMeta(categories, jobRoles, skills);
       })

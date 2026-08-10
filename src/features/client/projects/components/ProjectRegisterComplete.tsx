@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { useProjectRegister } from "@/features/client/projects/context/ProjectRegisterContext";
 import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
+import type { SettlementResponse } from "@/features/payment/types/payment";
 
 const PERIOD_UNIT_LABEL: Record<string, string> = {
   DAY: "일",
@@ -25,7 +26,7 @@ function formatKoreanDate(iso: string) {
 
 export function ProjectRegisterComplete() {
   const router = useRouter();
-  const { form, registeredProject, reset } = useProjectRegister();
+  const { form, registeredProject, clearDraft } = useProjectRegister();
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   useEffect(() => {
@@ -63,8 +64,15 @@ export function ProjectRegisterComplete() {
   const upfrontFee = Math.round(registeredProject.budgetAmount * 0.03);
 
   const leaveCompletePage = (path: string) => {
-    reset();
+    clearDraft();
     router.push(path);
+  };
+
+  const completePayment = async (paidSettlement?: SettlementResponse) => {
+    if (!paidSettlement) return;
+    leaveCompletePage(
+      `/client/payments/complete?projectId=${paidSettlement.projectId}`,
+    );
   };
 
   return (
@@ -98,7 +106,9 @@ export function ProjectRegisterComplete() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
             <ActionButton onClick={() => leaveCompletePage("/client/projects")}>내 프로젝트로 이동</ActionButton>
             <ActionButton onClick={() => leaveCompletePage(`/client/projects/${registeredProject.projectId}`)}>프로젝트 상세보기</ActionButton>
-            <button type="button" onClick={() => setIsPaymentModalOpen(true)} className="flex h-[46px] items-center justify-center rounded-[9px] bg-[#17365d] px-6 text-[12px] font-bold text-white hover:bg-[#102a49]">착수금 결제하기</button>
+            {registeredProject.payableSettlementId != null ? (
+              <button type="button" onClick={() => setIsPaymentModalOpen(true)} className="flex h-[46px] items-center justify-center rounded-[9px] bg-[#17365d] px-6 text-[12px] font-bold text-white hover:bg-[#102a49]">착수금 결제하기</button>
+            ) : null}
           </div>
         </div>
       </div>
@@ -106,14 +116,14 @@ export function ProjectRegisterComplete() {
       <PaymentMethodModal
         open={isPaymentModalOpen}
         payment={{
-          settlementId: registeredProject.payableSettlementId,
+          settlementId: registeredProject.payableSettlementId ?? undefined,
           type: "UPFRONT_FEE",
           title: "착수금 수수료",
           description: registeredProject.title,
           amount: upfrontFee,
         }}
         onClose={() => setIsPaymentModalOpen(false)}
-        onPay={() => leaveCompletePage("/client/payments/complete")}
+        onPay={completePayment}
       />
     </main>
   );

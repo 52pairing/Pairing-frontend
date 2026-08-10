@@ -345,6 +345,31 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 - 2026-08-10: 등록 성공 응답 기반 완료 화면, 프로젝트 목록·상세 조회 서비스 및 결제 정산 ID 전달 추가
 - 2026-08-10: Step 6 `POST /api/v1/projects` 최종 등록 호출 및 전체 폼 변환 추가, 실제 응답 미검증
+
+## 정산 결제
+
+### 결제 모달 조회
+
+- `GET /api/v1/settlements/{settlementId}`: 프로젝트명, 결제 단계, 결제 금액, 결제 가능 여부, 상태, 프로젝트 ID 조회
+- `GET /api/v1/accounts/me/payment-methods`: 로그인 계정 결제수단 조회
+- 결제수단 중 `methodType: CARD`만 표시하고 `BANK_ACCOUNT`는 제외
+- 계정당 카드 1장 정책에 따라 선택 목록 없이 `displayName`을 그대로 표시
+- 카드사 로고나 전체 카드번호를 추측하지 않음
+- 정산 `feeAmount`를 상단 금액과 결제 버튼에 동일하게 사용
+- `payable: false`, 카드 없음, 조회 실패 시 결제 버튼 비활성화
+
+### 결제 실행
+
+- `POST /api/v1/settlements/{settlementId}/payment`
+- 요청: `{ paymentMethodId }`
+- `status: PAID`일 때만 결제 완료 화면으로 이동
+- `status: FAILED`이면 `failReason`을 모달에 표시
+- 결제 중 중복 요청과 모달 닫기 방지
+- 성공 후 `/client/payments/complete?projectId={projectId}`로 이동
+- 결제 완료 화면에서 응답의 `projectId`로 `GET /api/v1/projects/{projectId}`를 호출해 최신 프로젝트 상태 표시
+- `MATCHING` 상태는 `모집 중`으로 표시
+- 내 프로젝트 보기 버튼은 `/client/projects?tab=MATCHING`으로 이동
+- 등록 응답의 `payableSettlementId`가 null이면 착수금 결제 버튼을 표시하지 않음
 - 2026-08-10: 프로젝트 상세정보 필드와 첨부 업로드·삭제 API 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 사전 검수 요청·응답 및 직무 메타 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 등록 안내 동의 및 클라이언트 역할 제한 계약 추가, 실제 응답 미검증

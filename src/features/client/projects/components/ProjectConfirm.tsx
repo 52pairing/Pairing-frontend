@@ -16,24 +16,8 @@ import {
   createProject,
   toProjectRegistrationRequest,
 } from "@/features/client/projects/services/projectRegistration";
-import type {
-  WorkMethod,
-  WorkType,
-} from "@/features/client/projects/types/project";
 
 const STEP = 6;
-
-const WORK_METHOD_LABEL: Record<WorkMethod, string> = {
-  REMOTE: "재택",
-  ONSITE: "상주",
-  ALL: "모두 가능",
-};
-
-const WORK_TYPE_LABEL: Record<WorkType, string> = {
-  FULL_TIME: "풀타임",
-  PART_TIME: "파트타임",
-  ALL: "모두 가능",
-};
 
 export function ProjectConfirm() {
   const router = useRouter();
@@ -119,17 +103,11 @@ export function ProjectConfirm() {
           />
           <InfoRow
             label="근무 방식"
-            value={
-              form.workMethodLabel ??
-              (form.workMethod ? WORK_METHOD_LABEL[form.workMethod] : "-")
-            }
+            value={form.workMethodLabel ?? form.workMethod ?? "-"}
           />
           <InfoRow
             label="근무 형태"
-            value={
-              form.workTypeLabel ??
-              (form.workType ? WORK_TYPE_LABEL[form.workType] : "-")
-            }
+            value={form.workTypeLabel ?? form.workType ?? "-"}
           />
         </SummaryCard>
 

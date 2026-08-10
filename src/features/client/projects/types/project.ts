@@ -42,7 +42,7 @@ export interface ProjectRegisterForm {
   // ── Step2 기본 정보 ──
   /** 프로젝트 이름 */
   projectName?: string;
-  /** 시작 희망일 "YYYY-MM-DD" (협의 가능 선택 시 빈 문자열) */
+  /** 시작 희망일 "YYYY-MM-DD", 협의 가능 여부와 관계없이 필수 */
   startDate?: string;
   /** 시작일 협의 가능 여부 */
   startNegotiable?: boolean;
@@ -78,14 +78,4 @@ export interface ProjectRegisterForm {
   extraNote?: string;
   /** Step4에서 서버에 업로드한 첨부 파일 */
   files?: ProjectUploadedFile[];
-
-  // ── Step5 검수 / Step6 최종 확인 ... ──
-  // TODO: 각 스텝 UI 확정 시 필드 추가
 }
-
-/**
- * (API 연동 시 사용) 서버로 보낼 요청 타입 자리.
- * UI 타입(ProjectRegisterForm)과 형태가 다를 수 있으므로 분리해 둡니다.
- */
-// export interface ProjectRegisterRequest { ... }
-// export function toProjectRegisterRequest(form: ProjectRegisterForm): ProjectRegisterRequest { ... }
