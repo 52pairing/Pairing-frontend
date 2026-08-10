@@ -1,0 +1,45 @@
+name: CI
+
+# PR 에서만 린트·빌드를 돌린다.
+# develop / main push 는 deploy.yml 이 받아서 빌드까지 같이 하므로 여기서 중복 실행하지 않는다.
+on:
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+concurrency:
+  # 같은 브랜치에 새 커밋이 올라오면 이전 실행을 취소한다.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: lint & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 런타임 이미지(Dockerfile)와 같은 22 로 맞춘다. Next 16 은 Node 20.9 이상이 필요하다.
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # package-lock.json 기준으로 정확히 설치한다. lock 과 어긋나면 여기서 실패한다.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # next build 가 타입 체크까지 한다. useSearchParams 를 Suspense 없이 쓴 경우처럼
+      # 프리렌더 단계에서만 드러나는 문제도 여기서 잡힌다.
+      # NEXT_PUBLIC_* 은 빌드 시점에 번들에 박히므로 CI 빌드에도 넣어 준다.
+      - name: Build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://52pairing.kro.kr' }}
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: npm run build
