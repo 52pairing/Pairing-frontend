@@ -12,6 +12,10 @@ import {
   prevStep,
 } from "@/features/client/projects/constants/steps";
 import { useProjectRegister } from "@/features/client/projects/context/ProjectRegisterContext";
+import {
+  createProject,
+  toProjectRegistrationRequest,
+} from "@/features/client/projects/services/projectRegistration";
 import type {
   WorkMethod,
   WorkType,
@@ -33,30 +37,17 @@ const WORK_TYPE_LABEL: Record<WorkType, string> = {
 
 export function ProjectConfirm() {
   const router = useRouter();
-  const { form } = useProjectRegister();
+  const { form, setRegisteredProject } = useProjectRegister();
   const prev = prevStep(STEP);
 
   const recruits = form.recruits ?? [];
   const totalCount = recruits.reduce((sum, r) => sum + r.count, 0);
 
-  // 예상 착수금 수수료 (계약 금액 1억 미만 3% / 이상 2% — Step1 안내 기준)
   const budgetWon = (form.budget ?? 0) * 10000;
-  const feeRate = budgetWon >= 100_000_000 ? 0.02 : 0.03;
-  const fee = Math.round(budgetWon * feeRate);
-
-  const [agree, setAgree] = useState({
-    terms: false,
-    privacy: false,
-    projectInfo: false,
-  });
   const [finalConfirm, setFinalConfirm] = useState(false);
-
-  const allAgreed = agree.terms && agree.privacy && agree.projectInfo;
-  const canRegister = allAgreed && finalConfirm;
-
-  const toggleAll = (checked: boolean) => {
-    setAgree({ terms: checked, privacy: checked, projectInfo: checked });
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const canRegister = finalConfirm && !isSubmitting;
 
   const goPrev = () => {
     if (prev) router.push(prev.path);
@@ -66,12 +57,25 @@ export function ProjectConfirm() {
     router.push(`${PROJECT_REGISTER_BASE}/details`);
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!canRegister) return;
 
-    // TODO: 실제 프로젝트 등록 API 연동 예정.
-    // 등록 완료 페이지에서 요약을 보여주므로 여기서 Context를 비우지 않습니다.
-    router.push(`${PROJECT_REGISTER_BASE}/complete`);
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      const request = toProjectRegistrationRequest(form);
+      const response = await createProject(request);
+      setRegisteredProject(response);
+      router.push(`${PROJECT_REGISTER_BASE}/complete`);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "프로젝트 등록에 실패했습니다.",
+      );
+      setIsSubmitting(false);
+    }
   };
 
   const startText = form.startNegotiable
@@ -85,7 +89,7 @@ export function ProjectConfirm() {
       <div className="mx-auto mt-12 max-w-[720px]">
         <header>
           <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-[#111827]">
-            이용약관 동의 및 최종 확인
+            최종 확인
           </h1>
 
           <p className="mt-2 text-[12px] font-medium text-[#667085]">
@@ -100,7 +104,9 @@ export function ProjectConfirm() {
           <InfoRow
             label="예상 기간"
             value={
-              form.durationMonths != null ? `${form.durationMonths}개월` : "-"
+              form.periodValue != null
+                ? `${form.periodValue}${form.periodUnitLabel ?? ""}`
+                : "-"
             }
           />
           <InfoRow
@@ -113,11 +119,17 @@ export function ProjectConfirm() {
           />
           <InfoRow
             label="근무 방식"
-            value={form.workMethod ? WORK_METHOD_LABEL[form.workMethod] : "-"}
+            value={
+              form.workMethodLabel ??
+              (form.workMethod ? WORK_METHOD_LABEL[form.workMethod] : "-")
+            }
           />
           <InfoRow
             label="근무 형태"
-            value={form.workType ? WORK_TYPE_LABEL[form.workType] : "-"}
+            value={
+              form.workTypeLabel ??
+              (form.workType ? WORK_TYPE_LABEL[form.workType] : "-")
+            }
           />
         </SummaryCard>
 
@@ -130,12 +142,16 @@ export function ProjectConfirm() {
                 className="rounded-[10px] bg-[#f7f8fa] px-5 py-4"
               >
                 <p className="text-[12px] font-extrabold text-[#111827]">
-                  {recruit.job || "직무 미지정"} · {recruit.count}명
+                  {recruit.jobLabel || recruit.job || "직무 미지정"} · {recruit.count}명
                 </p>
 
                 <p className="mt-1 text-[11px] leading-5 text-[#667085]">
                   희망 경력: {recruit.experience}년 이상 · 요구 스킬:{" "}
-                  {recruit.skills.length > 0 ? recruit.skills.join(", ") : "-"}
+                  {recruit.skills.length > 0
+                    ? recruit.skills
+                        .map((code) => recruit.skillLabels?.[code] ?? code)
+                        .join(", ")
+                    : "-"}
                 </p>
               </div>
             ))}
@@ -156,71 +172,12 @@ export function ProjectConfirm() {
           }
         >
           <div className="space-y-4 py-2">
-            <DetailSection label="현재 상황" text={form.projectStatus} />
-            <DetailSection label="주요 업무" text={form.mainTasks} />
-            <DetailSection label="업무 범위" text={form.scope} />
-            {form.additionalInfo ? (
-              <DetailSection label="기타 전달사항" text={form.additionalInfo} />
+            <DetailSection label="현재 상황" text={form.currentSituation} />
+            <DetailSection label="주요 업무" text={form.mainTask} />
+            <DetailSection label="업무 범위" text={form.detailScope} />
+            {form.extraNote ? (
+              <DetailSection label="기타 전달사항" text={form.extraNote} />
             ) : null}
-          </div>
-        </SummaryCard>
-
-        {/* 예상 착수금 수수료 */}
-        <SummaryCard title="예상 착수금 수수료">
-          <div className="py-2">
-            <div className="flex items-center justify-between">
-              <p className="text-[12px] font-bold text-[#344054]">
-                클라이언트 착수금 수수료 ({Math.round(feeRate * 100)}%)
-              </p>
-
-              <p className="text-[15px] font-extrabold text-[#111827]">
-                {fee.toLocaleString("ko-KR")}원
-              </p>
-            </div>
-
-            <p className="mt-2 text-[10px] leading-5 text-[#98a2b3]">
-              계약 체결 시 발생합니다. 성공보수 수수료는 프로젝트 완료 후
-              발생합니다.
-              <br />
-              실제 용역비는 플랫폼을 거치지 않고 클라이언트가 프리랜서에게 직접
-              지급합니다.
-            </p>
-          </div>
-        </SummaryCard>
-
-        {/* 이용약관 동의 */}
-        <SummaryCard
-          title="이용약관 동의"
-          action={
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={allAgreed}
-                onChange={(e) => toggleAll(e.target.checked)}
-                className="h-[15px] w-[15px] cursor-pointer accent-[#17365d]"
-              />
-              <span className="text-[12px] font-bold text-[#111827]">
-                전체 동의
-              </span>
-            </label>
-          }
-        >
-          <div>
-            <AgreeRow
-              label="서비스 이용약관 동의"
-              checked={agree.terms}
-              onChange={(v) => setAgree((p) => ({ ...p, terms: v }))}
-            />
-            <AgreeRow
-              label="개인정보 수집 및 이용 동의"
-              checked={agree.privacy}
-              onChange={(v) => setAgree((p) => ({ ...p, privacy: v }))}
-            />
-            <AgreeRow
-              label="프로젝트 정보 활용 동의"
-              checked={agree.projectInfo}
-              onChange={(v) => setAgree((p) => ({ ...p, projectInfo: v }))}
-            />
           </div>
         </SummaryCard>
 
@@ -239,6 +196,12 @@ export function ProjectConfirm() {
           </span>
         </label>
       </div>
+
+      {submitError ? (
+        <p role="alert" className="mx-auto mt-4 max-w-[720px] text-right text-[11px] font-semibold text-[#b42318]">
+          {submitError}
+        </p>
+      ) : null}
 
       {/* 하단 */}
       <div className="mt-8 border-t border-[#e2e7ec] pt-6">
@@ -262,7 +225,7 @@ export function ProjectConfirm() {
                 : "cursor-not-allowed bg-[#a7b0bf]"
             }`}
           >
-            프로젝트 등록하기
+            {isSubmitting ? "등록 중..." : "프로젝트 등록하기"}
           </button>
         </div>
       </div>
@@ -314,33 +277,5 @@ function DetailSection({ label, text }: { label: string; text?: string }) {
         {text || "-"}
       </p>
     </div>
-  );
-}
-
-function AgreeRow({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label className="flex cursor-pointer items-center justify-between border-t border-[#f1f3f6] py-3 first:border-t-0">
-      <span className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-          className="h-[15px] w-[15px] cursor-pointer accent-[#17365d]"
-        />
-        <span className="text-[12px] font-semibold text-[#344054]">
-          {label}
-        </span>
-      </span>
-
-      <span className="text-[11px] font-bold text-[#f04438]">필수</span>
-    </label>
   );
 }

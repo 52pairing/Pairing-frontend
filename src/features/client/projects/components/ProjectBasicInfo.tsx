@@ -2,7 +2,7 @@
 
 // Step 2 · 기본 정보
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 
 import { ProjectRegisterShell } from "@/features/client/projects/components/ProjectRegisterShell";
@@ -10,12 +10,20 @@ import { ProjectRequiredLabel } from "@/features/client/projects/components/Proj
 import { ProjectStepNavigation } from "@/features/client/projects/components/ProjectStepNavigation";
 import { nextStep, prevStep } from "@/features/client/projects/constants/steps";
 import { useProjectRegister } from "@/features/client/projects/context/ProjectRegisterContext";
+import { getProjectWorkConditions } from "@/features/client/projects/services/projectPreReview";
+import type { ProjectWorkConditionsResponse } from "@/features/client/projects/types/preReview";
 import type { WorkMethod, WorkType } from "@/features/client/projects/types/project";
 
 const STEP = 2;
 const MIN_BUDGET_IN_TEN_THOUSAND_WON = 500;
 const MAX_BUDGET_IN_TEN_THOUSAND_WON = 100_000;
 const MAX_DURATION_MONTHS = 24;
+
+const getLocalDateString = () => {
+  const now = new Date();
+  const timezoneOffset = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - timezoneOffset).toISOString().slice(0, 10);
+};
 
 export function ProjectBasicInfo() {
   const router = useRouter();
@@ -31,11 +39,14 @@ export function ProjectBasicInfo() {
   );
 
   const [duration, setDuration] = useState(
-    form.durationMonths != null ? String(form.durationMonths) : "3",
+    form.periodValue != null ? String(form.periodValue) : "3",
   );
+  const [periodUnit, setPeriodUnit] = useState(form.periodUnit ?? "");
   const [budget, setBudget] = useState(
     form.budget != null ? form.budget.toLocaleString("ko-KR") : "",
   );
+  const [budgetValidationRequested, setBudgetValidationRequested] =
+    useState(false);
 
   const [workMethod, setWorkMethod] = useState<WorkMethod | null>(
     form.workMethod ?? null,
@@ -44,9 +55,57 @@ export function ProjectBasicInfo() {
   const [workType, setWorkType] = useState<WorkType | null>(
     form.workType ?? null,
   );
+  const [workConditions, setWorkConditions] =
+    useState<ProjectWorkConditionsResponse | null>(null);
+  const [metaError, setMetaError] = useState("");
+
+  const loadWorkConditions = async () => {
+    setMetaError("");
+
+    try {
+      const response = await getProjectWorkConditions();
+
+      setWorkConditions(response);
+      setPeriodUnit((current) => current || response.periodUnits[0]?.code || "");
+    } catch (error) {
+      setMetaError(
+        error instanceof Error
+          ? error.message
+          : "근무 조건 선택지를 불러오지 못했습니다.",
+      );
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getProjectWorkConditions()
+      .then((response) => {
+        if (cancelled) return;
+
+        setWorkConditions(response);
+        setPeriodUnit((current) => current || response.periodUnits[0]?.code || "");
+      })
+      .catch((error) => {
+        if (cancelled) return;
+
+        setMetaError(
+          error instanceof Error
+            ? error.message
+            : "근무 조건 선택지를 불러오지 못했습니다.",
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const budgetNumber = Number(budget.replace(/,/g, "")) || 0;
   const budgetWithVat = budgetNumber ? Math.round(budgetNumber * 1.1) : 0;
+  const today = getLocalDateString();
+  const isStartDateValid =
+    startDate.length > 0 && startDate >= today;
 
   const handleBudgetChange = (event: ChangeEvent<HTMLInputElement>) => {
     const onlyNumber = event.target.value.replace(/[^\d]/g, "");
@@ -62,32 +121,48 @@ export function ProjectBasicInfo() {
   };
 
   const durationNumber = Number(duration);
-  const isValid =
+  const isBudgetValid =
+    budgetNumber >= MIN_BUDGET_IN_TEN_THOUSAND_WON &&
+    budgetNumber <= MAX_BUDGET_IN_TEN_THOUSAND_WON;
+  const areOtherFieldsValid =
     projectName.trim().length > 0 &&
-    (startNegotiable || startDate.length > 0) &&
+    isStartDateValid &&
     durationNumber >= 1 &&
     durationNumber <= MAX_DURATION_MONTHS &&
-    budgetNumber >= MIN_BUDGET_IN_TEN_THOUSAND_WON &&
-    budgetNumber <= MAX_BUDGET_IN_TEN_THOUSAND_WON &&
+    periodUnit.length > 0 &&
     workMethod !== null &&
     workType !== null;
-
   const goPrev = () => {
     if (prev) router.push(prev.path);
   };
 
   const goNext = () => {
-    if (!isValid || !next) return;
+    if (!isBudgetValid) {
+      setBudgetValidationRequested(true);
+      return;
+    }
+
+    if (!areOtherFieldsValid || !next) return;
 
     // 입력값을 공용 Context에 저장 → 이후 스텝(검수·최종 확인)에서 사용
     patch({
       projectName: projectName.trim(),
       startDate,
       startNegotiable,
-      durationMonths: durationNumber,
+      periodValue: durationNumber,
+      periodUnit,
+      periodUnitLabel: workConditions?.periodUnits.find(
+        (option) => option.code === periodUnit,
+      )?.label,
       budget: budgetNumber,
       workMethod: workMethod ?? undefined,
+      workMethodLabel: workConditions?.workStyles.find(
+        (option) => option.code === workMethod,
+      )?.label,
       workType: workType ?? undefined,
+      workTypeLabel: workConditions?.workForms.find(
+        (option) => option.code === workType,
+      )?.label,
     });
 
     router.push(next.path);
@@ -132,9 +207,10 @@ export function ProjectBasicInfo() {
               <input
                 type="date"
                 value={startDate}
-                disabled={startNegotiable}
+                min={today}
+                aria-invalid={startDate.length > 0 && !isStartDateValid}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="h-[43px] w-full rounded-[8px] border border-[#dce2e8] bg-white px-3 text-[11px] text-[#344054] outline-none disabled:bg-[#fafafa] disabled:text-[#98a2b3]"
+                className="h-[43px] w-full rounded-[8px] border border-[#dce2e8] bg-white px-3 text-[11px] text-[#344054] outline-none"
               />
             </div>
 
@@ -143,15 +219,7 @@ export function ProjectBasicInfo() {
               <input
                 type="checkbox"
                 checked={startNegotiable}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-
-                  setStartNegotiable(checked);
-
-                  if (checked) {
-                    setStartDate("");
-                  }
-                }}
+                onChange={(e) => setStartNegotiable(e.target.checked)}
                 className="h-[15px] w-[15px] cursor-pointer accent-[#17365d]"
               />
 
@@ -165,6 +233,21 @@ export function ProjectBasicInfo() {
                 </span>
               )}
             </label>
+
+            {startDate.length > 0 && !isStartDateValid ? (
+              <p role="alert" className="mt-2 text-[10px] font-semibold text-[#b42318]">
+                프로젝트 시작 희망일은 오늘 이후 날짜로 선택해주세요.
+              </p>
+            ) : (
+              <p
+                className={`mt-2 text-[10px] font-semibold ${
+                  startDate.length === 0 ? "text-[#b42318]" : "text-[#667085]"
+                }`}
+              >
+                시작 희망일은 협의 가능 여부와 관계없이 필수입니다. 오늘 이후
+                날짜를 선택해주세요.
+              </p>
+            )}
           </div>
         </div>
 
@@ -182,9 +265,19 @@ export function ProjectBasicInfo() {
               className="h-[41px] w-[66px] rounded-[8px] border border-[#dce2e8] bg-white px-3 text-center text-[12px] font-semibold text-[#344054] outline-none focus:border-[#17365d]"
             />
 
-            <div className="flex h-[41px] min-w-[61px] items-center justify-center rounded-[8px] border border-[#dce2e8] bg-white px-4 text-[11px] font-bold text-[#344054]">
-              개월
-            </div>
+            <select
+              value={periodUnit}
+              onChange={(e) => setPeriodUnit(e.target.value)}
+              disabled={!workConditions}
+              className="h-[41px] min-w-[88px] rounded-[8px] border border-[#dce2e8] bg-white px-3 text-[11px] font-bold text-[#344054] outline-none disabled:bg-[#f8fafc]"
+            >
+              <option value="">단위 선택</option>
+              {workConditions?.periodUnits.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <p className="mt-2 text-[10px] text-[#98a2b3]">
@@ -217,9 +310,15 @@ export function ProjectBasicInfo() {
           )}
 
           <p className="mt-2 text-[10px] text-[#98a2b3]">
-            전체 프로젝트 기준 총예산 · 최소 500만원 · 최대 10억 · 부가세 별도 ·
+            전체 프로젝트 기준 총예산 · 최소 500만원 · 최대 10억원(100,000만원) · 부가세 별도 ·
             만 원 단위 입력
           </p>
+
+          {!isBudgetValid && (budget.length > 0 || budgetValidationRequested) ? (
+            <p role="alert" className="mt-2 text-[10px] font-semibold text-[#b42318]">
+              프로젝트 전체 예산은 500만원 이상 100,000만원 이하로 입력해주세요.
+            </p>
+          ) : null}
         </div>
 
         {/* 근무 방식 */}
@@ -227,26 +326,15 @@ export function ProjectBasicInfo() {
           <ProjectRequiredLabel>근무 방식</ProjectRequiredLabel>
 
           <div className="mt-3 flex flex-wrap gap-[9px]">
-            <SelectButton
-              selected={workMethod === "REMOTE"}
-              onClick={() => setWorkMethod("REMOTE")}
-            >
-              재택
-            </SelectButton>
-
-            <SelectButton
-              selected={workMethod === "ONSITE"}
-              onClick={() => setWorkMethod("ONSITE")}
-            >
-              상주
-            </SelectButton>
-
-            <SelectButton
-              selected={workMethod === "ALL"}
-              onClick={() => setWorkMethod("ALL")}
-            >
-              모두 가능
-            </SelectButton>
+            {workConditions?.workStyles.map((option) => (
+              <SelectButton
+                key={option.code}
+                selected={workMethod === option.code}
+                onClick={() => setWorkMethod(option.code)}
+              >
+                {option.label}
+              </SelectButton>
+            ))}
           </div>
         </div>
 
@@ -255,34 +343,36 @@ export function ProjectBasicInfo() {
           <ProjectRequiredLabel>근무 형태</ProjectRequiredLabel>
 
           <div className="mt-3 flex flex-wrap gap-[9px]">
-            <SelectButton
-              selected={workType === "FULL_TIME"}
-              onClick={() => setWorkType("FULL_TIME")}
-            >
-              풀타임
-            </SelectButton>
-
-            <SelectButton
-              selected={workType === "PART_TIME"}
-              onClick={() => setWorkType("PART_TIME")}
-            >
-              파트타임
-            </SelectButton>
-
-            <SelectButton
-              selected={workType === "ALL"}
-              onClick={() => setWorkType("ALL")}
-            >
-              모두 가능
-            </SelectButton>
+            {workConditions?.workForms.map((option) => (
+              <SelectButton
+                key={option.code}
+                selected={workType === option.code}
+                onClick={() => setWorkType(option.code)}
+              >
+                {option.label}
+              </SelectButton>
+            ))}
           </div>
         </div>
+
+        {metaError ? (
+          <div className="mt-6 flex items-center justify-between rounded-[8px] border border-[#fda29b] bg-[#fff5f4] px-4 py-3">
+            <p className="text-[11px] font-semibold text-[#b42318]">{metaError}</p>
+            <button
+              type="button"
+              onClick={() => void loadWorkConditions()}
+              className="text-[11px] font-bold text-[#b42318] underline"
+            >
+              다시 시도
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <ProjectStepNavigation
         onPrevious={goPrev}
         onNext={goNext}
-        nextDisabled={!isValid}
+        nextDisabled={!areOtherFieldsValid}
       />
     </ProjectRegisterShell>
   );

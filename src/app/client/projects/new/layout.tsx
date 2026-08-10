@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { ClientProjectRegisterGuard } from "@/features/client/projects/components/ClientProjectRegisterGuard";
 import { ProjectRegisterProvider } from "@/features/client/projects/context/ProjectRegisterContext";
 
 /**
@@ -12,5 +13,9 @@ export default function NewProjectLayout({
 }: {
   children: ReactNode;
 }) {
-  return <ProjectRegisterProvider>{children}</ProjectRegisterProvider>;
+  return (
+    <ClientProjectRegisterGuard>
+      <ProjectRegisterProvider>{children}</ProjectRegisterProvider>
+    </ClientProjectRegisterGuard>
+  );
 }

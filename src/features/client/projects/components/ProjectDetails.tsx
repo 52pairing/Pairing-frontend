@@ -10,8 +10,17 @@ import { ProjectRequiredLabel } from "@/features/client/projects/components/Proj
 import { ProjectStepNavigation } from "@/features/client/projects/components/ProjectStepNavigation";
 import { nextStep, prevStep } from "@/features/client/projects/constants/steps";
 import { useProjectRegister } from "@/features/client/projects/context/ProjectRegisterContext";
+import {
+  deleteProjectFile,
+  uploadProjectFile,
+} from "@/features/client/projects/services/projectFiles";
+import type { ProjectUploadedFile } from "@/features/client/projects/types/project";
 
 const STEP = 4;
+const MAX_TEXT_LENGTH = 1500;
+const MAX_FILES = 10;
+const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
+const ALLOWED_FILE_EXTENSIONS = ["pdf", "jpg", "jpeg", "png"];
 
 export function ProjectDetails() {
   const router = useRouter();
@@ -19,12 +28,14 @@ export function ProjectDetails() {
   const prev = prevStep(STEP);
   const next = nextStep(STEP);
 
-  const [projectStatus, setProjectStatus] = useState(form.projectStatus ?? "");
-  const [mainTasks, setMainTasks] = useState(form.mainTasks ?? "");
-  const [scope, setScope] = useState(form.scope ?? "");
-  const [additionalInfo, setAdditionalInfo] = useState(
-    form.additionalInfo ?? "",
-  );
+  const [currentSituation, setCurrentSituation] = useState(form.currentSituation ?? "");
+  const [mainTask, setMainTask] = useState(form.mainTask ?? "");
+  const [detailScope, setDetailScope] = useState(form.detailScope ?? "");
+  const [extraNote, setExtraNote] = useState(form.extraNote ?? "");
+  const [files, setFiles] = useState<ProjectUploadedFile[]>(form.files ?? []);
+  const [isUploading, setIsUploading] = useState(false);
+  const [deletingFileId, setDeletingFileId] = useState<number | null>(null);
+  const [fileError, setFileError] = useState("");
 
   const [statusGuideOpen, setStatusGuideOpen] = useState(true);
   const [taskGuideOpen, setTaskGuideOpen] = useState(true);
@@ -34,9 +45,14 @@ export function ProjectDetails() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isValid =
-    projectStatus.trim().length > 0 &&
-    mainTasks.trim().length > 0 &&
-    scope.trim().length > 0;
+    currentSituation.trim().length > 0 &&
+    mainTask.trim().length > 0 &&
+    currentSituation.length <= MAX_TEXT_LENGTH &&
+    mainTask.length <= MAX_TEXT_LENGTH &&
+    detailScope.length <= MAX_TEXT_LENGTH &&
+    extraNote.length <= MAX_TEXT_LENGTH &&
+    !isUploading &&
+    deletingFileId === null;
 
   const goPrev = () => {
     if (prev) router.push(prev.path);
@@ -46,9 +62,59 @@ export function ProjectDetails() {
     if (!isValid || !next) return;
 
     // 입력값을 공용 Context에 저장 → 이후 스텝(검수·최종 확인)에서 사용
-    patch({ projectStatus, mainTasks, scope, additionalInfo });
+    patch({ currentSituation, mainTask, detailScope, extraNote, files });
 
     router.push(next.path);
+  };
+
+  const handleFiles = async (selectedFiles: File[]) => {
+    setFileError("");
+    const remainingCount = MAX_FILES - files.length;
+    const filesToUpload = selectedFiles.slice(0, remainingCount);
+
+    if (selectedFiles.length > remainingCount) {
+      setFileError(`파일은 최대 ${MAX_FILES}개까지 업로드할 수 있습니다.`);
+      return;
+    }
+
+    const invalidFile = filesToUpload.find((file) => {
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+      return !ALLOWED_FILE_EXTENSIONS.includes(extension) || file.size > MAX_FILE_SIZE_BYTES;
+    });
+
+    if (invalidFile) {
+      setFileError("PDF, JPG, JPEG, PNG 형식의 100MB 이하 파일만 업로드할 수 있습니다.");
+      return;
+    }
+
+    setIsUploading(true);
+    const uploaded: ProjectUploadedFile[] = [];
+
+    try {
+      for (const file of filesToUpload) {
+        uploaded.push(await uploadProjectFile(file));
+      }
+      setFiles((current) => [...current, ...uploaded]);
+    } catch (error) {
+      setFiles((current) => [...current, ...uploaded]);
+      setFileError(error instanceof Error ? error.message : "파일 업로드에 실패했습니다.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteFile = async (file: ProjectUploadedFile) => {
+    setFileError("");
+    setDeletingFileId(file.fileId);
+    try {
+      await deleteProjectFile(file.fileId);
+      setFiles((current) => current.filter((item) => item.fileId !== file.fileId));
+    } catch (error) {
+      setFileError(error instanceof Error ? error.message : "파일 삭제에 실패했습니다.");
+    } finally {
+      setDeletingFileId(null);
+    }
   };
 
   return (
@@ -106,8 +172,8 @@ export function ProjectDetails() {
           </NoticeBox>
 
           <Textarea
-            value={projectStatus}
-            onChange={setProjectStatus}
+            value={currentSituation}
+            onChange={setCurrentSituation}
             placeholder="현재 프로젝트 진행 상황을 작성해주세요..."
           />
         </FieldCard>
@@ -164,8 +230,8 @@ export function ProjectDetails() {
           </NoticeBox>
 
           <Textarea
-            value={mainTasks}
-            onChange={setMainTasks}
+            value={mainTask}
+            onChange={setMainTask}
             placeholder="주요 담당 업무를 작성해주세요..."
           />
         </FieldCard>
@@ -206,7 +272,9 @@ export function ProjectDetails() {
         </GuideBox>
 
         <FieldCard>
-          <ProjectRequiredLabel>세부 업무 범위</ProjectRequiredLabel>
+          <label className="text-[12px] font-extrabold text-[#111827]">
+            세부 업무 범위
+          </label>
 
           <NoticeBox>
             준비된 자료와 작업 대상, 예상 작업량을 작성해 주세요. 업무 범위가
@@ -214,8 +282,8 @@ export function ProjectDetails() {
           </NoticeBox>
 
           <Textarea
-            value={scope}
-            onChange={setScope}
+            value={detailScope}
+            onChange={setDetailScope}
             placeholder="세부 업무 범위를 작성해주세요..."
           />
         </FieldCard>
@@ -256,8 +324,8 @@ export function ProjectDetails() {
           </label>
 
           <Textarea
-            value={additionalInfo}
-            onChange={setAdditionalInfo}
+            value={extraNote}
+            onChange={setExtraNote}
             placeholder="기타 전달사항 및 우대사항을 작성해주세요..."
           />
         </FieldCard>
@@ -279,17 +347,32 @@ export function ProjectDetails() {
             multiple
             className="hidden"
             accept=".pdf,.png,.jpg,.jpeg"
+            onChange={(event) =>
+              void handleFiles(Array.from(event.target.files ?? []))
+            }
           />
 
           <button
             type="button"
+            disabled={files.length >= MAX_FILES || isUploading}
             onClick={() => fileInputRef.current?.click()}
-            className="mt-5 flex min-h-[92px] w-full flex-col items-center justify-center rounded-[10px] border border-dashed border-[#cfd6df] bg-[#fafbfc] transition hover:bg-[#f6f8fa]"
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              if (files.length < MAX_FILES && !isUploading) {
+                void handleFiles(Array.from(event.dataTransfer.files));
+              }
+            }}
+            className="mt-5 flex min-h-[92px] w-full flex-col items-center justify-center rounded-[10px] border border-dashed border-[#cfd6df] bg-[#fafbfc] transition hover:bg-[#f6f8fa] disabled:cursor-not-allowed disabled:bg-[#f1f3f5] disabled:opacity-60"
           >
             <UploadIcon />
 
             <p className="mt-2 text-[12px] font-bold text-[#667085]">
-              클릭하거나 파일을 드래그하여 업로드
+              {isUploading
+                ? "파일을 업로드하고 있습니다."
+                : files.length >= MAX_FILES
+                  ? "최대 10개 파일을 업로드했습니다."
+                  : "클릭하거나 파일을 드래그하여 업로드"}
             </p>
 
             <p className="mt-1 text-[10px] text-[#98a2b3]">
@@ -297,27 +380,32 @@ export function ProjectDetails() {
             </p>
           </button>
 
-          <div className="mt-3 flex h-[48px] items-center justify-between rounded-[8px] border border-[#dce2e8] px-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <FileIcon />
-
-              <p className="truncate text-[11px] font-bold text-[#344054]">
-                오컬트 영화감독 송(1).pdf
-              </p>
-
-              <span className="shrink-0 text-[10px] text-[#98a2b3]">
-                28.8 KB
-              </span>
+          {files.length > 0 ? (
+            <div className="mt-3 space-y-2">
+              {files.map((file) => (
+                <div key={file.fileId} className="flex h-[48px] items-center justify-between rounded-[8px] border border-[#dce2e8] px-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <FileIcon />
+                    <p className="truncate text-[11px] font-bold text-[#344054]">{file.originalName}</p>
+                    <span className="shrink-0 text-[10px] text-[#98a2b3]">{formatFileSize(file.sizeBytes)}</span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={deletingFileId === file.fileId}
+                    onClick={() => void handleDeleteFile(file)}
+                    className="text-[16px] text-[#98a2b3] hover:text-[#344054] disabled:cursor-wait"
+                    aria-label={`${file.originalName} 삭제`}
+                  >
+                    {deletingFileId === file.fileId ? "…" : "×"}
+                  </button>
+                </div>
+              ))}
             </div>
+          ) : null}
 
-            <button
-              type="button"
-              className="text-[16px] text-[#98a2b3] hover:text-[#344054]"
-              aria-label="파일 삭제"
-            >
-              ×
-            </button>
-          </div>
+          {fileError ? (
+            <p role="alert" className="mt-3 text-[11px] font-semibold text-[#b42318]">{fileError}</p>
+          ) : null}
 
           <div className="mt-3 space-y-1 text-[10px] font-medium text-[#98a2b3]">
             <p>
@@ -379,17 +467,23 @@ function Textarea({
     <div className="mt-3">
       <textarea
         value={value}
-        maxLength={1500}
+        maxLength={MAX_TEXT_LENGTH}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="min-h-[165px] w-full resize-none rounded-[9px] border border-[#dce2e8] bg-white px-4 py-4 text-[11px] font-medium leading-6 text-[#344054] outline-none transition placeholder:text-[#98a2b3] focus:border-[#3b73ff] focus:ring-1 focus:ring-[#3b73ff]"
       />
 
       <p className="mt-1 text-right text-[10px] font-medium text-[#98a2b3]">
-        {value.length}자/1500자
+        {value.length}자/{MAX_TEXT_LENGTH}자
       </p>
     </div>
   );
+}
+
+function formatFileSize(sizeBytes: number) {
+  if (sizeBytes < 1024) return `${sizeBytes} B`;
+  if (sizeBytes < 1024 * 1024) return `${(sizeBytes / 1024).toFixed(1)} KB`;
+  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /* =========================================================
