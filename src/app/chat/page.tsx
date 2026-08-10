@@ -1,5 +1,5 @@
+import { Chat } from "@/features/chat/components/Chat";
+
 export default function ChatPage() {
-    return (
-        <div>채팅</div>
-    );
+  return <Chat />;
 }
