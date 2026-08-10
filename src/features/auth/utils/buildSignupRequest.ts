@@ -30,6 +30,7 @@ export const buildClientSignupRequest = (
   businessNo: normalizeDigits(form.businessRegistrationNumber ?? ""),
   businessField: form.businessField ?? "",
   employeeCount: form.employeeCount ?? "",
+  address: (form.address ?? "").trim(),
   email: `${form.emailLocalPart ?? ""}@${form.emailDomain ?? ""}`,
   name: form.representativeName ?? "",
   phone: normalizeDigits(form.phone ?? ""),

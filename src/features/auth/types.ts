@@ -107,6 +107,8 @@ export interface ClientSignupForm {
   businessField?: string;
   /** 직원 수 선택값 */
   employeeCount?: string;
+  /** 기업 주소 (가입 API 필수값, 최대 255자) */
+  address?: string;
 
   // ── Step2 담당자 정보 ──
   representativeName?: string;
