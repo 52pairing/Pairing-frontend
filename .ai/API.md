@@ -351,6 +351,10 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 ## 변경 이력
 
+- 2026-08-10: 백엔드 2차 답변 반영 — `WORK_FORM`(FULL_TIME/PART_TIME/ANY), 조건 값 라벨 meta API화(`getWorkConditionsMeta` + `formatConditionValue(labels)`, 하드코딩 제거), 협상 자동생성(매칭 수락)·프리랜서 현황 버튼 `status==="NEGOTIATING"` 기반, 헤더 종 배지 제거. 실제 네트워크 응답 미검증
+- 2026-08-10: 백엔드 확정 답변 반영 — 필드명(`projectTitle`, 조건 `type`), 값 전부 문자열·금액 원단위 월단가, `waitingForMe` 기반 승인/재지시 패널, 조건 코드 7종·라벨 매핑, `/mine` 페이지 필드, 빨간점=매칭 API `newProposalCount`(프리랜서 현황 버튼). 실제 네트워크 응답 미검증
+- 2026-08-10: 협상 목록(`/mine`)·헤더 종 배지(`waiting-count`) 연동, 협상방 라우트 `[negotiationId]` 전환, 실제 응답 미검증
+- 2026-08-10: 협상 도메인 기반(타입·REST 서비스·STOMP)과 협상방 화면 연동 코드 추가, 실제 응답·STOMP 미검증
 - 2026-08-10: 클라이언트 일반 회원가입 요청에 필수 `address` 필드 추가, 실제 응답 미검증
 - 2026-08-10: 등록 성공 응답 기반 완료 화면, 프로젝트 목록·상세 조회 서비스 및 결제 정산 ID 전달 추가
 - 2026-08-10: Step 6 `POST /api/v1/projects` 최종 등록 호출 및 전체 폼 변환 추가, 실제 응답 미검증
@@ -427,3 +431,78 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 2026-08-10: 프로젝트 등록 안내 동의 및 클라이언트 역할 제한 계약 추가, 실제 응답 미검증
 - 2026-08-09: 프리랜서 소셜 로그인 시작·콜백·추가 회원가입 코드 추가, 실제 응답 미검증
 - 2026-08-09: 회원가입 메타·약관 조회, 중복 확인, 이메일 인증, 일반 회원가입 제출 코드 추가, 실제 응답 미검증
+
+## 협상 도메인
+
+- 계약 기준 문서: `docs/api/negotiation-realtime-frontend.md`(STOMP), `docs/api/negotiation-screen-api-map.md`(화면↔API)
+- 타입: `src/features/negotiation/types/negotiation.ts`
+- REST 서비스: `src/features/negotiation/services/negotiation.ts`
+- STOMP: `src/features/negotiation/stomp/client.ts`, `src/features/negotiation/stomp/useNegotiationEvents.ts`
+- 필드 계약은 **백엔드 확정 답변(2026-08)** 으로 확정. **실제 네트워크 응답만 미검증.**
+- 모든 응답은 공통 래퍼 `{ timestamp, status, code, message, data }`. 아래 필드는 전부 `data` 안.
+
+#### 확정된 필드 (주의점)
+
+- 상세 `GET /{id}`: `negotiationId, projectId, projectTitle, positionId, counterpartName, viewerRole, waitingForMe, status, totalRound, maxRound, agreedAmount, chatRoomId, aiOutAt, finalApprovalRequired, conditions[]`
+  - `title` 아님 → **`projectTitle`**. `viewerRole`(CLIENT|FREELANCER) 제공 → 역추정 불필요. `finalApprovalRequired` 미사용(항상 false).
+- `conditions[]`: `conditionId, type, clientValue, freelancerValue, proposedValue, reason, agreedValue, status, roundCount, myFloor`
+  - 조건 종류 필드명은 **`type`** (요청 바디의 `conditionType` 과 다름). 값 필드는 **전부 문자열**.
+- `conditionType` 코드: `AMOUNT`(월 단가·원), `PERIOD`("4 MONTH"), `START_DATE`("2026-09-01"), `WORK_STYLE`(REMOTE/ONSITE/ANY), `WORK_FORM`(FULL_TIME/PART_TIME/ANY), `SCOPE`, `OTHER`.
+- **값 라벨은 하드코딩 금지 → meta API 사용**: `GET /api/v1/meta/work-conditions`(비로그인 가능) 의 `workStyles/workForms/periodUnits`({code,label}) 로 해결. 서비스 `getWorkConditionsMeta`, 유틸 `formatConditionValue(type, value, labels)`. (조건 "종류" 라벨 AMOUNT="단가(월)" 등은 협상 고유 개념이라 `CONDITION_LABEL` 로 관리)
+- 값 형식: 금액은 **원 단위 월 단가**(만원 ×10,000 전송, 표시 ÷10,000). 기간 "N MONTH", 날짜 "YYYY-MM-DD".
+- 메시지 `GET /{id}/messages`: `messageId, roundNo, senderType, messageType(PROPOSAL|RESPONSE|SYSTEM), conditionType, content, reason, proposedValue, response, createdAt`. 서버가 roundNo→id 정렬. SYSTEM 은 `conditionType` null.
+- 승인/재지시 판정: 상세의 **`waitingForMe === true`** 일 때만 패널 노출. 패널 안 조건별 분기는 `status`(PENDING/AGREED/REJECTED).
+- `answers.roundNo` = 상세 `totalRound` 그대로(늦은 응답 필터용). `give-up` `reason` 선택(생략 시 서버가 "협상 포기" 기록).
+
+### REST (협상방)
+
+| Method | Path | 용도 | 요청 바디 | 실제 응답 |
+| --- | --- | --- | --- | --- |
+| GET | `/api/v1/negotiations/{id}` | 협상 상세(조건·라운드·상태) | - | 미검증 |
+| GET | `/api/v1/negotiations/{id}/messages` | 협상 로그(초기/재동기화) | - | 미검증 |
+| POST | `/api/v1/negotiations/{id}/start` | 협상 시작(마지노선 저장) | `{ conditions:[{ conditionType, value }] }` | 미검증 |
+| POST | `/api/v1/negotiations/{id}/answers` | 조건 승인/재지시 | `{ roundNo, answers:[{ conditionId, accepted, proposedValue? }] }` | 미검증 |
+| POST | `/api/v1/negotiations/{id}/give-up` | 협상 포기 | `{ reason? }`(선택, 생략 시 `{}`) | 미검증 |
+| POST | `/api/v1/negotiations/{id}/read` | 안 읽은 새 제안 표시 해제 | - | 미검증 |
+
+- 시작/승인·재지시/포기 액션의 성공 응답 구조는 미검증이라, 호출 후 상세·메시지를 GET 재조회해 화면을 재동기화한다.
+
+### REST (목록)
+
+| Method | Path | 용도 | 실제 응답 |
+| --- | --- | --- | --- |
+| GET | `/api/v1/negotiations/mine?projectId={id}` | 협상 탭 후보 목록 | 미검증 |
+
+- 목록(`getMyNegotiations`): **페이지 객체**(`content, page, size, totalElements, totalPages, first, last`). 항목: `negotiationId, negotiationNo, projectId, projectTitle, counterpartName, clientName, freelancerName, status, totalRound, waitingForMe, lastProposalBy, lastProposalAt, startedAt, endedAt`.
+  - 목록에 **없는 것**: `maxRound`(상수 15), `newProposalCount`(매칭 API), `jobRole`(매칭 API).
+  - `status` 는 협상 상태(IN_PROGRESS/AGREED/FAILED). §1 와이어프레임의 수락/대기/거절 배지는 **매칭 요청 상태**라 매칭 API와 합쳐 그려야 함.
+  - `lastProposalBy` 는 `SenderType`. AI 는 `CLIENT_AGENT`/`FREELANCER_AGENT` → 화면에선 `_AGENT` 를 "AI"로 뭉침.
+- `ProjectNegotiation`(협상 탭) → `CandidateCard`(상태·라운드·마지막 제안) → 카드 클릭 시 협상방 이동.
+- **알림(빨간점)은 "협상방 가기" 버튼에만** 표시 (결정: 헤더 종 배지 미사용). 데이터는 매칭 요청 API(`MatchingRequestItem.newProposalCount`) → `ProjectFreelancerStatus`의 "협상방 가기" 버튼, `newProposalCount > 0` 이면 빨간점. 협상 시작·내부 변동 시 증가, 협상방 진입(`read`)으로 해제.
+- `GET /negotiations/waiting-count` 는 현재 프론트에서 **미사용**(헤더 종 배지 연동 제거). 필요 시 서비스에 다시 추가.
+- **협상방 생성**: 별도 생성 엔드포인트 없음. 매칭 수락(`POST /api/v1/matchings/requests/{requestId}/acceptance`, 프리랜서 화면) 시 같은 트랜잭션에서 자동 생성되고 응답 `MatchingRequestResponse.negotiationId` 로 즉시 이동 가능. 그래서 `negotiationId == null` = 아직 수락 전(PENDING/REJECTED/EXPIRED).
+- 프리랜서 현황(`ProjectFreelancerStatus`, 클라 화면) 버튼: `status === "NEGOTIATING" && negotiationId != null` 일 때만 "협상방 가기". 수락 전/계약 단계엔 버튼 없음. (매칭 응답의 `currentRound/maxRound/newProposalCount` 는 협상 시작 전 null)
+
+### STOMP 실시간
+
+- 핸드셰이크: `wss://{host}/ws` (REST `NEXT_PUBLIC_API_URL`의 http(s)→ws(s) 변환 후 `/ws`)
+- 인증: 로그인 accessToken **쿠키** 자동 인증(별도 헤더/쿼리 없음). SockJS 미사용.
+- 협상방 구독 토픽: `/topic/negotiations/{negotiationId}` → `NegotiationEvent`
+- 이벤트 타입: `NEW_PROPOSAL` / `ANSWERED` / `CONDITION_LOCKED` / `AGREED` / `FAILED`
+- 화면 처리: 협상방 마운트 시 구독, 언마운트 시 해제. 이벤트 수신 시 상세/메시지 재조회.
+- 크로스 오리진 시: 서버 `app.cors.allowed-origins`에 프론트 도메인 등록 필요(WS 핸드셰이크 동일 값), 프론트 `credentials:'include'`, 쿠키 `SameSite=None; Secure`. **프론트 배포 도메인 정해지면 백엔드에 CORS 등록 요청 필요.**
+
+### 화면 처리 (협상방 `NegotiationRoom`)
+
+- `negotiationId`는 동적 라우트 파라미터로 수신 (`/client/projects/{projectId}/negotiation/{negotiationId}`, `useParams`)
+- 진입 시 상세+메시지 병렬 로드, `read` 호출, 로딩/에러/빈 상태 처리
+- 상태별 화면: `IN_PROGRESS` 로그+인라인 패널 / `AGREED` 타결 카드 / `FAILED` 결렬 카드
+- 타결 시 `chatRoomId != null`일 때만 [채팅으로 이어가기] 노출, null이면 "계약 체결 후 대화" 안내 (screen-api-map §10)
+
+### 남은 확인/결정
+
+- 실제 네트워크 응답·STOMP 연결 검증 (전 항목 미검증)
+- (결정됨) 알림=협상방 가기 버튼 빨간점만 / 채팅 라우트 `/chat` / 협상 자동생성(수락 시)
+- 조건 종류별 전용 입력 UI(금액=만원 외 기간=숫자+단위, 근무방식/형태=드롭다운, 시작일=날짜선택기) — 후속 보강
+- 프리랜서 측 대칭 화면, 전역 STOMP(실시간 자동 갱신)
+- WS 배포 CORS: 프론트 오리진(프로토콜+호스트+포트) 확정 후 백엔드 `CORS_ALLOWED_ORIGINS` 등록 요청(REST+WS 공용, 재빌드 불필요). 쿠키 인증이라 `*` 불가, Vercel은 `https://*.vercel.app` 패턴 가능

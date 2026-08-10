@@ -60,8 +60,22 @@ export function ProjectFreelancerStatus({ projectId, jobRoleLabels }: ProjectFre
                     <p className="mt-1 text-[12px] font-semibold text-[#98a2b3]">{jobRoleLabels[item.jobRole] ?? item.jobRole}</p>
                   </div>
                 </div>
-                {item.negotiationId == null ? (
-                  <Link href={`/client/projects/${projectId}/negotiation`} className="flex h-[46px] min-w-[100px] items-center justify-center rounded-[10px] bg-[#17365d] px-5 text-[13px] font-bold text-white hover:bg-[#102a49]">협상 하기</Link>
+                {/* 협상중(NEGOTIATING)일 때만 협상방 진입. 매칭 수락 시 서버가 협상방을 자동 생성한다.
+                    수락 전(요청 대기)이나 계약 단계에서는 버튼 없음. */}
+                {item.status === "NEGOTIATING" && item.negotiationId != null ? (
+                  <Link
+                    href={`/client/projects/${projectId}/negotiation/${item.negotiationId}`}
+                    className="relative flex h-[46px] min-w-[100px] items-center justify-center rounded-[10px] bg-[#17365d] px-5 text-[13px] font-bold text-white hover:bg-[#102a49]"
+                  >
+                    협상방 가기
+                    {/* 협상 시작·내부 변동 시 새 제안 빨간점 (매칭 응답 newProposalCount) */}
+                    {item.newProposalCount > 0 ? (
+                      <span
+                        aria-label="새 제안 있음"
+                        className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-[#f04438]"
+                      />
+                    ) : null}
+                  </Link>
                 ) : null}
               </article>
             );

@@ -1,8 +1,18 @@
+import type { ReactNode } from "react";
+
 type NegotiationResultCardProps = {
   result: "complete" | "failed";
+  /** 합의 조건 요약 (타결 시). 없으면 기본 안내 문구 */
+  summary?: string;
+  /** 타결 시 [채팅으로 이어가기] 버튼 또는 안내 문구 (chatRoomId 유무에 따라) */
+  actionSlot?: ReactNode;
 };
 
-export function NegotiationResultCard({ result }: NegotiationResultCardProps) {
+export function NegotiationResultCard({
+  result,
+  summary,
+  actionSlot,
+}: NegotiationResultCardProps) {
   const isComplete = result === "complete";
 
   return (
@@ -11,13 +21,14 @@ export function NegotiationResultCard({ result }: NegotiationResultCardProps) {
         {isComplete ? "✓" : "×"}
       </div>
       <h3 className={`mt-5 text-[22px] font-extrabold tracking-[-0.03em] ${isComplete ? "text-[#027a48]" : "text-[#b42318]"}`}>
-        {isComplete ? "협상이 완료되었습니다" : "협상이 결렬되었습니다"}
+        {isComplete ? "모든 조건에 합의했습니다" : "협상이 성립되지 않았어요"}
       </h3>
       <p className="mt-4 text-[15px] font-medium text-[#475467]">
         {isComplete
-          ? "연봉 350만 원 · 기간 6개월 · 혼합 근무"
-          : "상대방과 최종 조건에 합의하지 못했습니다."}
+          ? (summary ?? "모든 조건에 합의했습니다.")
+          : "15회 소진 또는 협상 포기로 종료되었습니다."}
       </p>
+      {actionSlot ? <div className="mt-5">{actionSlot}</div> : null}
     </section>
   );
 }
