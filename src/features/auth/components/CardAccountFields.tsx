@@ -38,8 +38,6 @@ export const CardAccountFields = ({
       </p>
 
       <section>
-        <h2 className="mb-4 text-sm font-bold text-[#111827]">카드 등록</h2>
-
         <div className="space-y-4">
           <div>
             <label className="mb-2 block text-sm font-semibold text-[#374151]">

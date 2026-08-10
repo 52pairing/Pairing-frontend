@@ -127,7 +127,8 @@ function CompanyStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
     (form.companyName ?? "").trim().length > 0 &&
     !!form.businessRegistrationChecked &&
     !!form.businessField &&
-    !!form.employeeCount;
+    !!form.employeeCount &&
+    (form.address ?? "").trim().length > 0;
 
   return (
     <>
@@ -163,6 +164,23 @@ function CompanyStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
           value={form.employeeCount}
           onChange={(value) => patch({ employeeCount: value })}
         />
+        <div>
+          <label
+            htmlFor="company-address"
+            className="mb-2 block text-sm font-semibold text-[#374151]"
+          >
+            기업 주소 <span className="text-[#356DF3]">*</span>
+          </label>
+          <input
+            id="company-address"
+            type="text"
+            value={form.address ?? ""}
+            onChange={(event) => patch({ address: event.target.value })}
+            maxLength={255}
+            placeholder="기업 주소를 입력해 주세요."
+            className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+          />
+        </div>
       </div>
       <SignupStepNavigation
         onPrevious={onPrevious}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { ResetPasswordConfirm } from "@/features/auth/components/ResetPasswordConfirm";
@@ -12,6 +12,14 @@ import { ApiException } from "@/lib/api";
 type ResetPasswordStep = "idle" | "loading" | "done" | "invalid";
 
 export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordPageContent />
+    </Suspense>
+  );
+}
+
+function ResetPasswordPageContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
