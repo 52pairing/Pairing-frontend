@@ -396,6 +396,32 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `POST /api/v1/projects/{projectId}/completion` 성공 시 완료 대기 탭으로 이동해 목록 재조회
 - 로딩, 빈 목록, 조회 실패와 재시도, 이전·다음 페이지 처리
 - 실제 네트워크 응답: 미검증
+
+## 클라이언트 프로젝트 상세
+
+- 서비스 위치: `src/features/client/myprojects/services/projectDetail.ts`
+- `GET /api/v1/projects/{projectId}`로 프로젝트 기본 정보, 포지션, 첨부, 연장 횟수, 모집 마감일과 현재 상태 조회
+- 프로젝트 상세 응답에 프리랜서 배열이 있다고 가정하지 않음
+- `GET /api/v1/matchings/requests?projectId={projectId}&size=100`으로 해당 프로젝트의 프리랜서 현황을 별도 조회
+- 매칭 응답의 `counterpartName`, `jobRole`, `status`, `negotiationId`를 카드에 사용
+- 직무·스킬·근무 방식 코드는 프로젝트 메타 API 라벨로 변환
+- `negotiationId == null`인 매칭 카드에 협상 하기 버튼 표시
+- `recruitDeadline == null`이면 마감일 표시를 숨김
+- `extensionCount >= 2`이면 모집 연장 버튼 비활성화
+- `payableSettlementId != null`이면서 등록 완료 또는 완료 대기 상태일 때만 결제 버튼 표시
+- 등록 완료: 수정, 등록 취소, 착수금 결제
+- 모집중: 수정, 모집 연장, 모집 종료
+- 협상중·계약 대기: 수정
+- 진행중: 수정, 프로젝트 완료
+- 완료 대기: 수정, 성공보수 결제
+- 종료·취소됨: 관리 메뉴 숨김
+- 상태 변경 성공 후 프로젝트 상세를 재조회해 버튼과 화면 갱신
+- `POST /api/v1/projects/{projectId}/registration-cancellation`
+- `POST /api/v1/projects/{projectId}/recruit-extensions`
+- `POST /api/v1/projects/{projectId}/recruit-close`
+- `POST /api/v1/projects/{projectId}/completion`
+- 수정 `PUT`은 수정 폼 연결 전이라 현재 메뉴만 표시하고 요청하지 않음
+- 실제 네트워크 응답: 미검증
 - 2026-08-10: 프로젝트 상세정보 필드와 첨부 업로드·삭제 API 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 사전 검수 요청·응답 및 직무 메타 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 등록 안내 동의 및 클라이언트 역할 제한 계약 추가, 실제 응답 미검증

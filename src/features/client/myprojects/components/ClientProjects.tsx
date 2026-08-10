@@ -173,6 +173,7 @@ export function ClientProjects() {
                   headcount={`${project.totalHeadcount}명`}
                   registeredAt={formatDate(project.createdAt)}
                   actionType={getActionType(activeTab)}
+                  detailHref={`/client/projects/${project.projectId}?status=${project.status}&payableSettlementId=${project.payableSettlementId ?? ""}&fromTab=${activeTab}`}
                   onPayment={
                     project.payableSettlementId != null
                       ? () => setPaymentProject(project)
