@@ -110,6 +110,7 @@ export function NegotiationChatFlow({
           <SetupPanel
             conditions={conditions}
             labels={labels}
+            viewerRole={detail.viewerRole}
             isSubmitting={isSubmitting}
             onStart={onStart}
           />
@@ -117,6 +118,7 @@ export function NegotiationChatFlow({
           <ConditionActionPanel
             conditions={conditions}
             labels={labels}
+            viewerRole={detail.viewerRole}
             isSubmitting={isSubmitting}
             onSubmit={onSubmitAnswers}
             onGiveUp={onGiveUp}
@@ -263,14 +265,23 @@ function TimelineDivider({ label }: { label: string }) {
 const inputSuffix = (type: NegotiationCondition["type"]): string =>
   type === "AMOUNT" ? "만 원" : "";
 
+// 내 관점에서 "상대 희망값". 프리랜서면 클라 값, 클라면 프리랜서 값.
+const opponentValue = (
+  condition: NegotiationCondition,
+  viewerRole: "CLIENT" | "FREELANCER",
+): string | null =>
+  viewerRole === "CLIENT" ? condition.freelancerValue : condition.clientValue;
+
 function SetupPanel({
   conditions,
   labels,
+  viewerRole,
   isSubmitting,
   onStart,
 }: {
   conditions: NegotiationCondition[];
   labels: WorkConditionLabels;
+  viewerRole: "CLIENT" | "FREELANCER";
   isSubmitting: boolean;
   onStart: (values: Array<{ conditionType: ConditionType; value: string }>) => void;
 }) {
@@ -310,7 +321,7 @@ function SetupPanel({
                     }))
                   }
                   placeholder={
-                    formatConditionValue(condition.type, condition.clientValue, labels) ||
+                    formatConditionValue(condition.type, opponentValue(condition, viewerRole), labels) ||
                     "최소값 입력"
                   }
                   className="h-[38px] w-full rounded-[8px] border border-[#e2e5ea] px-3 text-[12px] outline-none focus:border-[#8878e8]"
@@ -343,12 +354,14 @@ type Decision = "accept" | "reject";
 function ConditionActionPanel({
   conditions,
   labels,
+  viewerRole,
   isSubmitting,
   onSubmit,
   onGiveUp,
 }: {
   conditions: NegotiationCondition[];
   labels: WorkConditionLabels;
+  viewerRole: "CLIENT" | "FREELANCER";
   isSubmitting: boolean;
   onSubmit: (answers: AnswerInput[]) => void;
   onGiveUp: () => void;
@@ -394,7 +407,7 @@ function ConditionActionPanel({
           <div key={condition.conditionId} className="mt-4">
             <p className="text-[11px] text-[#98a2b3]">
               {conditionLabel(condition.type)}{" "}
-              {formatConditionValue(condition.type, condition.proposedValue ?? condition.freelancerValue, labels)}
+              {formatConditionValue(condition.type, condition.proposedValue ?? opponentValue(condition, viewerRole), labels)}
             </p>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <DecisionButton

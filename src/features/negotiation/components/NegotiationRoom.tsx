@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { ErrorState } from "@/features/common/components/ErrorState";
@@ -45,8 +45,13 @@ import { ApiException } from "@/lib/api";
 export function NegotiationRoom() {
   const router = useRouter();
   const params = useParams();
+  const pathname = usePathname();
   const projectId = String(params.projectId ?? "");
   const negotiationId = params.negotiationId ? String(params.negotiationId) : null;
+  // 협상방은 클라이언트·프리랜서 공용. 현재 경로로 뒤로가기 대상을 정한다.
+  const projectsBase = pathname?.startsWith("/freelancer")
+    ? "/freelancer/projects"
+    : "/client/projects";
 
   const [detail, setDetail] = useState<NegotiationDetail | null>(null);
   const [messages, setMessages] = useState<NegotiationMessage[]>([]);
@@ -208,7 +213,7 @@ export function NegotiationRoom() {
     }
   }, [negotiationId, isSubmitting, refreshDetail]);
 
-  const goBackToProject = () => router.push(`/client/projects/${projectId}`);
+  const goBackToProject = () => router.push(`${projectsBase}/${projectId}`);
 
   return (
     <div className="flex h-[calc(100dvh-60px)] min-h-0 flex-col overflow-hidden bg-[#f3f4f8] px-6 pb-4 pt-2 text-[#151b2b]">
