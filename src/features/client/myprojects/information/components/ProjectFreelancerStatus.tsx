@@ -1,63 +1,79 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
-const FREELANCERS = [
-  { name: "김개발", role: "프론트엔드", initial: "김", color: "bg-[#3975ef]", status: "협상 중" },
-  { name: "이서연", role: "프론트엔드", initial: "이", color: "bg-[#7c3aed]", status: "요청 대기" },
-  { name: "박서버", role: "백엔드", initial: "박", color: "bg-[#16a34a]", status: "계약 완료" },
-];
+import { getProjectMatchingRequests } from "@/features/client/myprojects/services/projectDetail";
+import type { MatchingRequestItem } from "@/features/client/myprojects/types/projectDetail";
 
-export function ProjectFreelancerStatus() {
-  const params = useParams();
-  const projectId = String(params.projectId ?? "");
+interface ProjectFreelancerStatusProps {
+  projectId: number;
+  jobRoleLabels: Record<string, string>;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  PENDING: "요청 대기",
+  REQUESTED: "요청 대기",
+  NEGOTIATING: "협상중",
+  CONTRACT_PENDING: "계약 대기",
+  CONTRACTED: "계약 완료",
+};
+
+const AVATAR_COLORS = ["bg-[#3975ef]", "bg-[#7c3aed]", "bg-[#16a34a]"];
+
+export function ProjectFreelancerStatus({ projectId, jobRoleLabels }: ProjectFreelancerStatusProps) {
+  const [items, setItems] = useState<MatchingRequestItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    getProjectMatchingRequests(projectId)
+      .then((response) => {
+        if (!cancelled) setItems(response.content);
+      })
+      .catch((error) => {
+        if (!cancelled) setErrorMessage(error instanceof Error ? error.message : "프리랜서 현황을 불러오지 못했습니다.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [projectId]);
 
   return (
     <section className="mt-4 rounded-[14px] border border-[#dfe4ea] bg-white px-6 py-5">
       <h2 className="text-[14px] font-extrabold text-[#172033]">프리랜서 현황</h2>
-      <div className="mt-4 space-y-2.5">
-        {FREELANCERS.map((freelancer) => (
-          <article key={freelancer.name} className="flex min-h-[62px] items-center justify-between rounded-[10px] border border-[#e2e7ec] px-3">
-            <div className="flex items-center gap-3">
-              <span className={`flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold text-white ${freelancer.color}`}>{freelancer.initial}</span>
-              <div>
-                <h3 className="text-[12px] font-bold text-[#172033]">{freelancer.name}</h3>
-                <p className="mt-0.5 text-[10px] text-[#98a2b3]">{freelancer.role}</p>
-              </div>
-            </div>
-            <FreelancerAction
-              status={freelancer.status}
-              negotiationHref={`/client/projects/${projectId}/negotiation`}
-            />
-          </article>
-        ))}
-      </div>
+      {isLoading ? <p className="py-10 text-center text-[12px] text-[#667085]">프리랜서 현황을 불러오고 있습니다.</p> : errorMessage ? <p role="alert" className="py-10 text-center text-[12px] text-[#b42318]">{errorMessage}</p> : items.length === 0 ? <p className="py-10 text-center text-[12px] text-[#98a2b3]">매칭 요청된 프리랜서가 없습니다.</p> : (
+        <div className="mt-4 space-y-3">
+          {items.map((item, index) => {
+            const statusLabel = STATUS_LABEL[item.status] ?? item.status;
+            return (
+              <article key={item.matchingRequestId ?? `${item.counterpartName}-${index}`} className="flex min-h-[86px] items-center justify-between rounded-[12px] border border-[#e2e7ec] px-4 py-3">
+                <div className="flex items-center gap-4">
+                  <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[17px] font-extrabold text-white ${AVATAR_COLORS[index % AVATAR_COLORS.length]}`}>{item.counterpartName.slice(0, 1)}</span>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="text-[15px] font-extrabold text-[#172033]">{item.counterpartName}</h3>
+                      <FreelancerStatusBadge status={statusLabel} />
+                    </div>
+                    <p className="mt-1 text-[12px] font-semibold text-[#98a2b3]">{jobRoleLabels[item.jobRole] ?? item.jobRole}</p>
+                  </div>
+                </div>
+                {item.negotiationId == null ? (
+                  <Link href={`/client/projects/${projectId}/negotiation`} className="flex h-[46px] min-w-[100px] items-center justify-center rounded-[10px] bg-[#17365d] px-5 text-[13px] font-bold text-white hover:bg-[#102a49]">협상 하기</Link>
+                ) : null}
+              </article>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
 
-function FreelancerAction({
-  status,
-  negotiationHref,
-}: {
-  status: string;
-  negotiationHref: string;
-}) {
-  if (status === "협상 중") {
-    return (
-      <div className="flex items-center gap-2">
-        <span className="rounded-full border border-[#f5d9a6] bg-[#fff8e9] px-3 py-1 text-[10px] font-bold text-[#d97706]">협상 중</span>
-        <Link
-          href={negotiationHref}
-          className="flex h-[34px] cursor-pointer items-center rounded-[8px] bg-[#17365d] px-4 text-[11px] font-bold text-white hover:bg-[#102a49]"
-        >
-          협상 하기
-        </Link>
-      </div>
-    );
-  }
-
+function FreelancerStatusBadge({ status }: { status: string }) {
   const isComplete = status === "계약 완료";
-  return <span className={`rounded-full border px-3 py-1 text-[10px] font-bold ${isComplete ? "border-[#b7ebcd] bg-[#ecfdf3] text-[#16a34a]" : "border-[#c9dcfa] bg-[#eef5ff] text-[#3478f6]"}`}>{status}</span>;
+  const isNegotiating = status === "협상중";
+  return <span className={`rounded-full border px-3 py-1 text-[11px] font-bold ${isComplete ? "border-[#b7ebcd] bg-[#ecfdf3] text-[#16a34a]" : isNegotiating ? "border-[#f5d9a6] bg-[#fff8e9] text-[#d97706]" : "border-[#c9dcfa] bg-[#eef5ff] text-[#3478f6]"}`}>{status}</span>;
 }
