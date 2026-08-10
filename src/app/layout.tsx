@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { RoleGuard } from "@/features/auth/components/RoleGuard";
 import { ToastProvider } from "@/features/common/components/Toast";
 import { ConditionalFooter } from "@/features/common/components/ConditionalFooter";
 
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <RoleGuard>{children}</RoleGuard>
+        </ToastProvider>
         <ConditionalFooter />
       </body>
     </html>

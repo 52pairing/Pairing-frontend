@@ -14,6 +14,7 @@ import type { ProjectRegisterForm } from "@/features/client/projects/types/proje
 import type { ProjectResponse } from "@/features/client/projects/services/projectRegistration";
 
 const PROJECT_REGISTER_STORAGE_KEY = "pairing:project-register-form";
+const PROJECT_REGISTER_RESULT_STORAGE_KEY = "pairing:project-register-result";
 
 const readStoredForm = (): ProjectRegisterForm => {
   try {
@@ -29,11 +30,22 @@ const storeForm = (form: ProjectRegisterForm) => {
   sessionStorage.setItem(PROJECT_REGISTER_STORAGE_KEY, JSON.stringify(form));
 };
 
+const readStoredProject = (): ProjectResponse | null => {
+  try {
+    const stored = sessionStorage.getItem(PROJECT_REGISTER_RESULT_STORAGE_KEY);
+    return stored ? (JSON.parse(stored) as ProjectResponse) : null;
+  } catch {
+    sessionStorage.removeItem(PROJECT_REGISTER_RESULT_STORAGE_KEY);
+    return null;
+  }
+};
+
 interface ProjectRegisterContextValue {
   form: ProjectRegisterForm;
   patch: (partial: Partial<ProjectRegisterForm>) => void;
   registeredProject: ProjectResponse | null;
   setRegisteredProject: (project: ProjectResponse) => void;
+  clearRegisteredProject: () => void;
   clearDraft: () => void;
   reset: () => void;
 }
@@ -50,10 +62,12 @@ export function ProjectRegisterProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     const storedForm = readStoredForm();
+    const storedProject = readStoredProject();
 
     Promise.resolve().then(() => {
       if (cancelled) return;
       setForm(storedForm);
+      setRegisteredProjectState(storedProject);
       setIsHydrated(true);
     });
 
@@ -72,6 +86,14 @@ export function ProjectRegisterProvider({ children }: { children: ReactNode }) {
 
   const setRegisteredProject = useCallback((project: ProjectResponse) => {
     setRegisteredProjectState(project);
+    sessionStorage.setItem(
+      PROJECT_REGISTER_RESULT_STORAGE_KEY,
+      JSON.stringify(project),
+    );
+  }, []);
+
+  const clearRegisteredProject = useCallback(() => {
+    sessionStorage.removeItem(PROJECT_REGISTER_RESULT_STORAGE_KEY);
   }, []);
 
   const clearDraft = useCallback(() => {
@@ -83,6 +105,7 @@ export function ProjectRegisterProvider({ children }: { children: ReactNode }) {
     setForm({});
     setRegisteredProjectState(null);
     sessionStorage.removeItem(PROJECT_REGISTER_STORAGE_KEY);
+    sessionStorage.removeItem(PROJECT_REGISTER_RESULT_STORAGE_KEY);
   }, []);
 
   const value = useMemo(
@@ -91,10 +114,19 @@ export function ProjectRegisterProvider({ children }: { children: ReactNode }) {
       patch,
       registeredProject,
       setRegisteredProject,
+      clearRegisteredProject,
       clearDraft,
       reset,
     }),
-    [form, patch, registeredProject, setRegisteredProject, clearDraft, reset],
+    [
+      form,
+      patch,
+      registeredProject,
+      setRegisteredProject,
+      clearRegisteredProject,
+      clearDraft,
+      reset,
+    ],
   );
 
   if (!isHydrated) {
