@@ -4,84 +4,71 @@
 
 ## 현재 작업
 
-- 작업명: 클라이언트 프로젝트 등록 API 연동
+- 작업명: 협상(negotiation) 도메인 연동 — 기반 + 협상방
 - 관련 Issue: 확인 필요
 - 관련 브랜치: 현재 브랜치
-- 작업 목적: 프로젝트 등록 단계별 상태와 사전 검수 API를 서버 계약에 맞게 연동합니다.
+- 작업 목적: 백엔드 협상 도메인 계약(REST + STOMP)에 맞춰 기반 계층과 협상방 화면을 실데이터/실시간으로 연동합니다.
 
-## 현재 작업 범위
+## 계약 문서 (기준)
 
-- 백엔드 프로젝트 도메인 전체 연동 계약 문서 보관 및 실제 구현 기준 연결
-- 클라이언트 내 프로젝트 6개 상태 탭 목록·페이지네이션·완료·결제 연동
-- 클라이언트 프로젝트 상세·매칭 현황·상태별 액션 API 연동
-- Step 3의 직무·모집 인원·스킬을 사전 검수 요청으로 변환
-- `POST /api/v1/projects/pre-review` 호출 및 결과 화면 연동
-- `GET /api/v1/meta/job-roles` 코드·라벨 변환
-- Step 2 `GET /api/v1/meta/work-conditions` 선택지 연동
-- Step 3 직군·직무·스킬 메타 및 자동완성 연동
-- Step 4 상세정보 필드 및 프로젝트 첨부파일 업로드·삭제 연동
-- Step 6 `POST /api/v1/projects` 최종 등록 요청 연동
-- 등록 응답 기반 완료 화면 및 프로젝트 조회 서비스 연동
-- 착수금 정산 조회·카드 조회·결제 실행 API 연동
-- 수정·취소·최종 확인 이동 동작 구현
+- `docs/api/negotiation-realtime-frontend.md` — STOMP over WebSocket 실시간 계약
+- `docs/api/negotiation-screen-api-map.md` — 화면 ↔ API/모달/STOMP 매핑
+- 필드 계약은 **백엔드 확정 답변(2026-08)** 으로 확정했고, 세부 사항은 `.ai/API.md`의 "협상 도메인" 참고. **실제 네트워크 응답만 미검증.**
+
+## 이번 작업 범위 (확정: 기반 + 협상방 먼저)
+
+- 협상 컴포넌트를 공용 `src/features/negotiation`으로 이동 (client 전용 → 양쪽 대칭 대비)
+- `@stomp/stompjs` 도입 (팀 합의 확인됨)
+- 협상 타입 정의 (계약 기반, 미검증 필드 표기)
+- 협상 REST 서비스 계층 (상세/메시지/시작/승인·재지시/포기/read/대기건수)
+- STOMP 클라이언트 싱글턴 + 협상방 구독 훅
+- 협상방(NegotiationRoom): GET 상세+메시지 로드, `/topic/negotiations/{id}` 구독, 이벤트별 재조회, 시작/승인·재지시/포기 액션, 타결/결렬 화면, 채팅 이어가기 게이팅
 
 ## 진행 상황
 
-- [x] 백엔드 프로젝트 연동 가이드를 `docs/api`에 원본 보관
-- [x] `.ai/API.md`와 프로젝트 도메인 기준 문서 역할 구분
-- [x] 내 프로젝트 목록 목데이터 제거 및 페이지 응답 연동
-- [x] 6개 고정 탭과 URL 쿼리 동기화
-- [x] 프로젝트 완료 처리 및 성공보수 결제 모달 연결
-- [x] 목록 날짜 nullable 응답 방어 처리
-- [x] 프로젝트 상세 목록 이동 버튼 및 관리 드롭다운 UI 개선
-- [x] 등록 완료·착수금 결제 전 등록 취소 메뉴 노출 조건 적용
-- [x] 프로젝트 상세 프리랜서 현황 목록 UI 개선
-- [x] 프로젝트 상세 관리 메뉴 모집 종료 항목 및 확인 모달 추가
-- [x] 프로젝트 상세 응답 기반 헤더·기본 정보·포지션·첨부 렌더링
-- [x] 프로젝트별 매칭 요청 프리랜서 현황 API 분리 연동
-- [x] 등록 취소·모집 연장·모집 종료·프로젝트 완료 API 연동
-- [x] 상세 상태별 수정·결제·관리 버튼 노출 조건 적용
-- [x] 프로젝트 목록·상세 `useSearchParams` Suspense 경계 적용
-- [x] 프로젝트 등록 위저드와 현재 사용자 조회 방식 확인
-- [x] 안내 동의 상태 연동
-- [x] 클라이언트 역할 진입 가드 구현
-- [x] 사전 검수 요청·응답 타입 및 서비스 구현
-- [x] 서버 응답 기반 결과 카드와 버튼 분기 구현
-- [x] 근무 방식·형태·기간 단위 서버 선택지 연동
-- [x] 직군·직무·스킬 서버 코드 저장 및 입력 제약 적용
-- [x] 상세정보 1,500자 제약과 필수·선택 조건 적용
-- [x] 첨부파일 multipart 업로드·삭제 및 Context 유지
-- [x] Step 1~4 누적 상태를 최종 등록 본문으로 변환
-- [x] 최종 등록 중복 제출 방지 및 서버 오류 표시
-- [x] `ProjectResponse` Context 저장 및 완료 화면 렌더링
-- [x] 상세 경로와 착수금 결제 정산 ID 연결
-- [x] 실제 정산 금액·결제 가능 여부·등록 카드 기반 결제 모달 구현
-- [x] 결제 성공·실패 분기 및 프로젝트 상태 재조회 연결
-- [x] 결제 완료 페이지 최신 프로젝트 상태 조회 및 매칭 탭 이동 연결
-- [x] TypeScript 및 ESLint 검증
-- [ ] 브라우저 화면 및 실제 API 확인
+- [x] 계약 문서 `docs/api`에 보관
+- [x] `@stomp/stompjs ^7.3.0` 설치 (package.json)
+- [x] 컴포넌트 7종 `src/features/negotiation/components`로 이동, 참조 2곳 갱신
+      (app 라우트 page, `ClientProjectDetail`)
+- [x] 타입: `src/features/negotiation/types/negotiation.ts`
+- [x] 서비스: `src/features/negotiation/services/negotiation.ts`
+- [x] STOMP: `src/features/negotiation/stomp/client.ts`, `useNegotiationEvents.ts`
+- [x] 협상방 컨테이너 실데이터/실시간 연동 (`NegotiationRoom.tsx`)
+- [x] 대화 플로우 데이터 구동화 (`NegotiationChatFlow.tsx`) + 결과 카드 확장
+- [x] 협상방 라우트 `[negotiationId]` 동적 세그먼트로 전환, room 이 `useParams` 로 수신
+      (경로: `/client/projects/{projectId}/negotiation/{negotiationId}`)
+- [x] 협상 목록 연동: `getMyNegotiations`(GET `/negotiations/mine`), `ProjectNegotiation` 실데이터,
+      `CandidateCard` 협상용 재설계(상태·라운드·마지막 제안·빨간점) + 협상방 링크
+- [x] 헤더 종 배지 연동: `useWaitingCount`(GET `/negotiations/waiting-count`) → `Header` 에서
+      `ClientHeader`/`FreelancerHeader` 종(알림) 배지 count 주입, 0이면 숨김
+- [x] TypeScript(`npx tsc --noEmit`) 통과
+- [x] 변경 파일 ESLint 통과
+- [ ] 브라우저 화면 및 실제 API/STOMP 확인
+- [ ] 전역 STOMP 활성화(로그인 후 1회) 및 `/user/queue/notifications` 전역 구독
+- [ ] 종 배지 클릭 이동 대상 확정 (§0 "협상 목록" vs 현재 `/notifications`) — 전역 협상 목록 라우트 없음
+- [ ] 프리랜서 측 협상 화면(대칭)
 
 ## 실행한 검증
 
-- [x] 변경 파일 대상 ESLint
 - [x] `npx tsc --noEmit`
-- [ ] 브라우저 확인
-- [ ] 실제 API 요청·응답 확인
+- [x] 변경 파일 ESLint
+- [ ] 브라우저 확인 (사용자 선호: 로컬 브라우저 검증 생략)
+- [ ] 실제 REST 요청·응답 확인
+- [ ] 실제 STOMP 연결·이벤트 수신 확인
 
-## 확인이 필요한 내용
+## 남은 확인/결정 (백엔드 답변 반영 후)
 
-- `POST /api/v1/projects` 성공 응답 실제 검증
-- 실제 착수금 결제 성공·실패 응답과 결제 완료 화면 확인
-- 인증 실패 사용자의 프로젝트 등록 URL 접근 시 기대 이동 경로
-- `GET /api/v1/meta/job-roles` 및 사전 검수 실제 응답
-- `GET /api/v1/projects/mine` 페이지 응답과 탭별 목록 실제 검증
-- `POST /api/v1/projects/{projectId}/completion` 성공 후 상태 전환 실제 검증
-- 프로젝트 상세·매칭 요청·상태 변경 API 실제 응답 검증
-- 프로젝트 수정 PUT 폼 연결
+- 실제 네트워크 응답·STOMP 연결 검증 (전 항목 미검증)
+- (확정) `WORK_FORM`=FULL_TIME/PART_TIME/ANY, 값 라벨은 meta API(`getWorkConditionsMeta`)로 해결
+- (확정) 협상방은 매칭 수락(`POST /matchings/requests/{id}/acceptance`) 시 자동 생성 → 프리랜서 현황 버튼은 `status==="NEGOTIATING"` 기준
+- (결정) 알림=협상방 가기 버튼 빨간점만(헤더 종 제거) · 타결 후 채팅 `/chat`
+- 조건 종류별 입력 UI 보강(금액=만원 외 기간/근무방식/시작일 전용 위젯) — 후속
+- 프리랜서 측 대칭 화면, 전역 STOMP(실시간 자동 갱신) — 후속
+- WS 배포 CORS: 프론트 오리진 확정 후 백엔드 `CORS_ALLOWED_ORIGINS` 등록 요청(REST+WS 공용), 쿠키 `SameSite=None; Secure`, `*` 불가
 
 ## 주의사항
 
-- 프로젝트 도메인 전체 계약은 `docs/api/frontend-project-integration.md`를 기준으로 확인합니다.
-- 프로젝트 등록 API의 확인되지 않은 요청·응답 필드는 추측하지 않습니다.
-- Step 3 경력 필드는 서버 검증 결과에 따라 `minCareerYears`로 확정했습니다.
+- 협상 도메인 계약은 `docs/api/negotiation-*.md`를 기준으로 확인합니다.
+- 실제 응답을 확인하지 못한 필드는 추측하지 않고 미검증으로 표기했습니다.
+- STOMP 구독은 협상방 화면 마운트/언마운트에만 붙입니다(버튼 아님).
 - commit, push, Pull Request 생성은 사용자 요청 없이 수행하지 않습니다.

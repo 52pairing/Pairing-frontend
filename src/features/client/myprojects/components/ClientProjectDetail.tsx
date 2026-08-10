@@ -7,7 +7,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ProjectDetailTabs, type ProjectDetailTab } from "@/features/client/myprojects/components/ProjectDetailTabs";
 import { ProjectContracts } from "@/features/client/myprojects/contract/components/ProjectContracts";
 import { ProjectInformation } from "@/features/client/myprojects/information/components/ProjectInformation";
-import { NegotiationActions, ProjectNegotiation } from "@/features/client/myprojects/negotiation/components/ProjectNegotiation";
+import { NegotiationActions, ProjectNegotiation } from "@/features/negotiation/components/ProjectNegotiation";
 import { ProjectProgress } from "@/features/client/myprojects/progress/components/ProjectProgress";
 import {
   cancelProjectRegistration,

@@ -1,66 +1,80 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import {
-  CandidateCard,
-  type CandidateCardProps,
-} from "@/features/client/myprojects/negotiation/components/CandidateCard";
-
-type CandidateData = Omit<CandidateCardProps, "negotiationHref"> & {
-  id: number;
-};
-
-const CANDIDATES: CandidateData[] = [
-  {
-    id: 1,
-    initial: "김",
-    name: "김개발",
-    role: "프론트엔드",
-    status: "수락",
-    requestDate: "2026.07.20",
-    responseDate: "2026.07.23",
-    avatarClass: "bg-[#3777f6]",
-  },
-  {
-    id: 2,
-    initial: "이",
-    name: "이서연",
-    role: "프론트엔드",
-    status: "요청 대기",
-    requestDate: "2026.07.20",
-    responseDate: "2026.07.23",
-    remainingTime: "남은 시간 1일 12시간",
-    avatarClass: "bg-[#7839ee]",
-  },
-  {
-    id: 3,
-    initial: "박",
-    name: "박서버",
-    role: "백엔드",
-    status: "거절",
-    requestDate: "2026.07.18",
-    responseDate: "2026.07.21",
-    avatarClass: "bg-[#16a34a]",
-  },
-];
+import { ErrorState } from "@/features/common/components/ErrorState";
+import { LoadingState } from "@/features/common/components/Loading";
+import { CandidateCard } from "@/features/negotiation/components/CandidateCard";
+import { getMyNegotiations } from "@/features/negotiation/services/negotiation";
+import type { NegotiationListItem } from "@/features/negotiation/types/negotiation";
+import { ApiException } from "@/lib/api";
 
 /** 프로젝트 상세 - "협상" 탭 내용 (매칭 후보 협상 목록) */
 export function ProjectNegotiation() {
   const params = useParams();
   const projectId = String(params.projectId ?? "");
-  const negotiationHref = `/client/projects/${projectId}/negotiation`;
+
+  const [items, setItems] = useState<NegotiationListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const reload = useCallback(() => {
+    setErrorMessage(null);
+    setIsLoading(true);
+    setReloadKey((key) => key + 1);
+  }, []);
+
+  // 목록 로드 — effect 본문 동기 setState 를 피하기 위해 상태 갱신은 await 이후에만 수행
+  useEffect(() => {
+    if (!projectId) return;
+    let active = true;
+
+    void (async () => {
+      try {
+        const loaded = await getMyNegotiations(projectId);
+        if (!active) return;
+        setItems(loaded);
+        setErrorMessage(null);
+      } catch (error) {
+        if (!active) return;
+        setErrorMessage(
+          error instanceof ApiException
+            ? error.message
+            : "협상 목록을 불러오지 못했습니다.",
+        );
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [projectId, reloadKey]);
+
+  if (isLoading) {
+    return <LoadingState className="mt-4" message="협상 목록을 불러오는 중입니다." />;
+  }
+
+  if (errorMessage) {
+    return <ErrorState className="mt-4" description={errorMessage} onRetry={reload} />;
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="mt-4 flex h-[200px] items-center justify-center rounded-[14px] border border-[#dfe4ea] bg-white text-[12px] text-[#98a2b3]">
+        진행 중인 협상이 없습니다.
+      </div>
+    );
+  }
 
   return (
     <section className="mt-4">
       <div className="flex flex-col gap-3">
-        {CANDIDATES.map((candidate) => (
-          <CandidateCard
-            key={candidate.id}
-            {...candidate}
-            negotiationHref={negotiationHref}
-          />
+        {items.map((item) => (
+          <CandidateCard key={item.negotiationId} item={item} projectId={projectId} />
         ))}
       </div>
     </section>
