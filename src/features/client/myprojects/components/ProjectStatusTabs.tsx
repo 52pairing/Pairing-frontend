@@ -1,41 +1,35 @@
-export const PROJECT_STATUS_TABS = [
-  "등록 완료",
-  "매칭 중",
-  "진행 중",
-  "완료 대기",
-  "종료",
-  "취소",
-] as const;
-
-export type ProjectStatus = (typeof PROJECT_STATUS_TABS)[number];
+import {
+  CLIENT_PROJECT_TABS,
+  type ClientProjectTab,
+} from "@/features/client/myprojects/types/projectList";
 
 export interface ProjectStatusTabsProps {
-  activeStatus: ProjectStatus;
-  onStatusChange: (status: ProjectStatus) => void;
+  activeTab: ClientProjectTab;
+  onTabChange: (tab: ClientProjectTab) => void;
 }
 
 export function ProjectStatusTabs({
-  activeStatus,
-  onStatusChange,
+  activeTab,
+  onTabChange,
 }: ProjectStatusTabsProps) {
   return (
     <div className="mt-7 border-b border-[#e5e9ef]">
       <div className="flex h-[48px] items-end gap-2">
-        {PROJECT_STATUS_TABS.map((status) => {
-          const isActive = status === activeStatus;
+        {CLIENT_PROJECT_TABS.map(({ tab, label }) => {
+          const isActive = tab === activeTab;
 
           return (
             <button
-              key={status}
+              key={tab}
               type="button"
-              onClick={() => onStatusChange(status)}
+              onClick={() => onTabChange(tab)}
               className={`relative flex h-full min-w-[82px] cursor-pointer items-center justify-center px-2 text-[13px] font-semibold transition ${
                 isActive
                   ? "text-[#122d50]"
                   : "text-[#9aa4b2] hover:text-[#667085]"
               }`}
             >
-              {status}
+              {label}
 
               {isActive ? (
                 <span className="absolute bottom-[-1px] left-0 h-[2px] w-full bg-[#15365d]" />

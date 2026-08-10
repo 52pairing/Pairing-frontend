@@ -2,6 +2,13 @@
 
 프론트에서 실제 사용하는 API와 검증 상태를 기록합니다.
 
+## 프로젝트 도메인 기준 문서
+
+- 백엔드가 전달한 프로젝트 도메인 전체 연동 계약은 `docs/api/frontend-project-integration.md`를 기준으로 합니다.
+- 해당 문서는 프로젝트 등록, 정산 결제, 내 프로젝트 목록, 프로젝트 상세의 전체 계약을 보관합니다.
+- 이 `.ai/API.md`에는 프론트에서 실제로 연동한 API, 화면 처리와 검증 상태만 기록합니다.
+- 기준 문서와 실제 코드가 다르면 차이를 확인한 뒤 구현과 이 문서를 함께 갱신합니다.
+
 ## 공통 정보
 
 - API 기본 주소 환경변수: `NEXT_PUBLIC_API_URL`
@@ -370,6 +377,23 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `MATCHING` 상태는 `모집 중`으로 표시
 - 내 프로젝트 보기 버튼은 `/client/projects?tab=MATCHING`으로 이동
 - 등록 응답의 `payableSettlementId`가 null이면 착수금 결제 버튼을 표시하지 않음
+
+## 클라이언트 내 프로젝트 목록
+
+- 서비스 위치: `src/features/client/myprojects/services/clientProjects.ts`
+- `GET /api/v1/projects/mine?tab={tab}&page={page}&size={size}`
+- 탭 코드: `REGISTERED`, `MATCHING`, `IN_PROGRESS`, `COMPLETION_PENDING`, `CLOSED`, `CANCELED`
+- 응답 `data`는 `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last`를 가진 페이지 객체
+- 탭 변경 시 URL의 `tab` 쿼리와 목록 요청을 함께 갱신하고 페이지를 0으로 초기화
+- `MATCHING` 탭에는 `RECRUITING`, `NEGOTIATING`, `CONTRACT_PENDING` 상태가 함께 표시되며 카드 배지는 실제 상태 코드로 구분
+- `jobRoleLabels`, `skillLabels`, `periodLabel`은 서버 라벨을 그대로 표시
+- `budgetAmount`는 원 단위 콤마 포맷, 날짜는 `YYYY.MM.DD`, `totalHeadcount`는 `N명`으로 표시
+- 실제 목록 응답에서 `startDesiredDate`, `createdAt`이 `null`일 수 있어 화면에는 `-`로 표시
+- `payableSettlementId`가 있을 때만 등록 완료의 착수금 또는 완료 대기의 성공보수 결제 버튼 표시
+- 결제 모달은 기존 정산 조회·결제 API를 공용으로 사용
+- `POST /api/v1/projects/{projectId}/completion` 성공 시 완료 대기 탭으로 이동해 목록 재조회
+- 로딩, 빈 목록, 조회 실패와 재시도, 이전·다음 페이지 처리
+- 실제 네트워크 응답: 미검증
 - 2026-08-10: 프로젝트 상세정보 필드와 첨부 업로드·삭제 API 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 사전 검수 요청·응답 및 직무 메타 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 등록 안내 동의 및 클라이언트 역할 제한 계약 추가, 실제 응답 미검증
