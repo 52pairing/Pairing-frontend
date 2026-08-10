@@ -2,7 +2,6 @@
 
 // 클라이언트 프로젝트 등록 - 등록 전 안내(Step 1) 화면
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 import {
   GuideCard,
@@ -10,13 +9,15 @@ import {
 } from "@/features/client/projects/components/GuideCard";
 import { ProjectRegisterShell } from "@/features/client/projects/components/ProjectRegisterShell";
 import { nextStep } from "@/features/client/projects/constants/steps";
+import { useProjectRegister } from "@/features/client/projects/context/ProjectRegisterContext";
 
 export function ProjectRegisterIntro() {
   const router = useRouter();
-  const [agreed, setAgreed] = useState(false);
+  const { form, patch } = useProjectRegister();
+  const noticeAgreed = form.noticeAgreed ?? false;
 
   const handleStart = () => {
-    if (!agreed) return;
+    if (!noticeAgreed) return;
 
     const next = nextStep(1);
     if (next) router.push(next.path);
@@ -124,8 +125,8 @@ export function ProjectRegisterIntro() {
               <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
+                  checked={noticeAgreed}
+                  onChange={(e) => patch({ noticeAgreed: e.target.checked })}
                   className="mt-[2px] h-[15px] w-[15px] cursor-pointer accent-[#17365d]"
                 />
 
@@ -143,11 +144,11 @@ export function ProjectRegisterIntro() {
             <button
               type="button"
               onClick={handleStart}
-              disabled={!agreed}
+              disabled={!noticeAgreed}
               className={[
                 "mt-8 flex h-[56px] w-full items-center justify-center rounded-[10px]",
                 "text-[15px] font-bold transition",
-                agreed
+                noticeAgreed
                   ? "bg-[#17365d] text-white hover:bg-[#102a49]"
                   : "cursor-not-allowed bg-[#a7b0bf] text-white",
               ].join(" ")}

@@ -1,6 +1,7 @@
 export type PaymentType = "UPFRONT_FEE" | "SUCCESS_FEE" | "PAID_REMATCH";
 
 export interface PaymentSummary {
+  settlementId?: number;
   type: PaymentType;
   title: string;
   description: string;

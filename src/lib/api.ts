@@ -37,12 +37,14 @@ export async function apiCall<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
+  const isFormData = init.body instanceof FormData;
+
   // 공통 API 주소와 요청 옵션을 적용하여 서버 요청
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...(!isFormData ? { "Content-Type": "application/json" } : {}),
       ...init.headers,
     },
   });

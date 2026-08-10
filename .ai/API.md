@@ -186,7 +186,167 @@
 - 요청 중 중복 제출 방지 및 서버 오류 메시지 표시
 - 성공 시 로그인 쿠키가 발급된 상태이므로 프리랜서 홈으로 이동
 
+## 프로젝트 등록
+
+- Method / Path: `POST /api/v1/projects`
+- 사용 위치: `src/features/client/projects/services/projectRegistration.ts`, 프로젝트 등록 Step 6
+- 인증·권한: HttpOnly 로그인 쿠키, `CLIENT` 역할만 허용
+- 실제 응답: 미검증
+
+### 최종 등록 요청
+
+- Step 6 최종 확인 후 한 번만 호출
+- Step 1: `noticeAgreed`
+- Step 2: `title`, `startDesiredDate`, `startNegotiable`, `periodValue`, `periodUnit`, `budgetAmount`, `workStyle`, `workForm`
+- Step 3: `positions[{ jobCategory, jobRole, minCareerYears, headcount, skills }]`
+- Step 4: `currentSituation`, `mainTask`, `detailScope`, `extraNote`, `fileIds`
+- 화면의 만원 단위 예산을 `budgetAmount` 원 단위로 `× 10,000` 변환
+- `startDesiredDate`는 협의 가능 여부와 관계없이 필수이며 `input[type=date]`의 `YYYY-MM-DD` 값을 그대로 전송
+- `startNegotiable`은 날짜와 독립적인 boolean으로 전송하며 체크해도 날짜를 비우지 않음
+- 선택 상세 문구가 비어 있으면 `detailScope`, `extraNote`를 `null`로 변환
+- 첨부 응답의 `fileId`만 `fileIds` 배열로 변환
+- 제출 중 버튼을 비활성화하고 실패 시 서버 메시지와 입력 상태 유지
+- 성공 응답 구조는 미확인이라 현재 완료 화면 이동에만 사용
+- Step 3 희망 경력은 `minCareerYears`로 전송하며 최소 1년
+- 등록 중 다른 페이지로 이동해도 같은 탭에서는 전체 폼을 `sessionStorage`에서 복원
+- 등록 완료 또는 등록 취소 시 임시 저장값 삭제, 탭 종료 시 브라우저가 세션 저장값 삭제
+
+### 등록 성공 응답과 완료 화면
+
+- `ProjectResponse`를 등록 Context에 저장하고 완료 화면은 입력 폼이 아닌 응답으로 렌더링
+- 사용 필드: `projectId`, `title`, `periodValue`, `periodUnit`, `budgetAmount`, `startDesiredDate`, `status`, `positions`, `payableSettlementId`
+- `MONTH`는 `개월`, `REGISTERED`는 `등록 완료`로 표시
+- 모집 포지션 라벨은 `jobRoleLabel`, `jobRoleName`, `label`, `jobRole.label`을 지원하고 응답에 라벨이 없으면 Step 3의 코드·라벨 매핑 사용
+- 모집 인원은 `제품 디자이너 1명`처럼 `라벨 + headcount + 명` 형식으로 표시
+- 프로젝트 상세보기는 `/client/projects/{projectId}`로 이동
+- 착수금 결제 모달에 `payableSettlementId` 전달
+- 실제 결제 API 경로·요청 계약은 미확인이라 모달의 기존 결제 완료 흐름 유지
+
+### 프로젝트 조회
+
+| Method | Path | 용도 | 실제 응답 |
+| --- | --- | --- | --- |
+| GET | `/api/v1/projects/mine` | 내 프로젝트 목록 | 미검증 |
+| GET | `/api/v1/projects/{projectId}` | 프로젝트 상세 조회 | 미검증 |
+
+- 서비스 위치: `src/features/client/projects/services/projectRegistration.ts`
+
+### Step 2 기본 정보
+
+- 화면 진입 시 `GET /api/v1/meta/work-conditions`를 1회 호출
+- 응답: `{ workStyles, workForms, periodUnits }`, 각 선택지는 `{ code, label }`
+- 근무 방식·근무 형태·기간 단위에는 서버 `code`를 저장하고 화면에는 `label` 표시
+- 프로젝트명·시작 희망일·협의 여부·기간 값·예산은 사용자 입력이며 별도 GET 없음
+- Step 6 등록 본문 필드: `title`, `startDesiredDate`, `startNegotiable`, `periodValue`, `periodUnit`, `budgetAmount`, `workStyle`, `workForm`
+- 화면 예산은 만원 단위로 보관하고 최종 요청의 `budgetAmount`만 원 단위로 `× 10,000` 변환
+- API 예산 범위: 5,000,000원~1,000,000,000원
+- 화면 만원 단위 범위: 500만원~100,000만원(10억원)
+- 예산 범위 오류는 Step 2 필드에서 안내하며 버튼을 비활성화하지 않고 클릭 시 다음 단계 이동만 중단
+- 프로젝트 수정 진입 시에만 `GET /api/v1/projects/{projectId}`로 기존 값 조회
+- 신규 등록 위저드에서는 프로젝트 상세 조회를 호출하지 않음
+- `startDesiredDate`는 항상 오늘 이후 날짜가 필수이며 Step 2에서 안내·진행 차단
+
+### 등록 전 안내 동의
+
+- Step 1의 필수 동의값을 프로젝트 등록 Context의 `noticeAgreed`로 Step 6까지 유지
+- 별도 동의 API 호출 없음
+- enum 또는 약관 ID 없음
+- 등록 요청 본문에 `"noticeAgreed": true`로 포함
+- `false` 전송 시 `400 GLOBAL_001`, 메시지 `noticeAgreed: 등록 전 안내에 동의해야 합니다.`
+- 서버가 동의 시각을 자동 기록하며 응답에는 포함하지 않음
+- 프로젝트 수정 `PUT` 요청에는 동의값을 다시 보내지 않음
+
+### 화면 접근 제어
+
+- `/client/projects/new/*` 공통 레이아웃에서 `GET /api/v1/auth/me`로 역할 확인
+- `CLIENT`만 등록 화면을 렌더링
+- `FREELANCER`는 등록 폼이 보이기 전에 `/freelancer`로 이동
+- 인증 조회 실패 시 `/login`으로 이동
+
+### 미확인
+
+- `noticeAgreed` 외 등록 요청 전체 필드와 성공 응답 구조
+- 실제 성공·400·403 네트워크 응답
+
+## 프로젝트 사전 검수
+
+- Method / Path: `POST /api/v1/projects/pre-review`
+- 사용 위치: `src/features/client/projects/services/projectPreReview.ts`
+- 인증·권한: HttpOnly 로그인 쿠키, `CLIENT` 역할만 허용
+- 실제 응답: 미검증
+
+### 요청
+
+- `{ positions: [{ jobRole, headcount, skills }] }`
+- Step 3 입력 순서대로 직무·모집 인원·요구 스킬만 전송
+- 직군·희망 경력·프로젝트 예산은 전송하지 않음
+- `jobRole` 필수, `headcount` 1~50, `skills` 1~63개
+- 직무 라벨은 `GET /api/v1/meta/job-roles` 결과로 서버 코드로 변환
+
+### 응답과 화면 처리
+
+- `notice`를 결과 화면 상단에 그대로 표시
+- `allMatchable`에 따라 후보 부족 시에만 등록 취소 버튼 표시
+- `items[]`는 `positionIndex` 기준으로 요청 순서에 매핑하며 `jobRole`로 묶지 않음
+- `jobRole` 코드는 직무 메타의 라벨로 변환해 카드 제목에 표시
+- 카드에 모집 인원, 예상 후보 수, 매칭 가능 또는 후보 부족 상태 표시
+- 등록 수정은 안내 후 Step 3으로 이동하며 입력 상태 유지
+- 등록 취소는 확인 후 Context를 초기화하고 클라이언트 홈으로 이동
+- 입력한 내용으로 등록하기는 API 호출 없이 Step 6으로 이동
+
+## 프로젝트 모집 조건 메타
+
+Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
+
+| Method | Path | 용도 |
+| --- | --- | --- |
+| GET | `/api/v1/meta/job-categories` | 직군 목록 |
+| GET | `/api/v1/meta/job-roles` | 직무 목록 |
+| GET | `/api/v1/meta/skills` | 스킬 자동완성 전체 목록 |
+
+### 화면 처리
+
+- 직군·직무·스킬은 화면에 `label`, Context와 API 요청에는 `code`를 저장
+- 직무는 `parentCode`가 선택 직군의 `code`와 같은 항목만 표시
+- 직군을 변경하면 기존 직무 선택을 초기화
+- 스킬 63개는 검색 파라미터 없이 한 번에 받고 클라이언트에서 코드·라벨을 필터링
+- 자유 입력 스킬은 허용하지 않고 메타 목록에서 선택
+- 희망 경력 1~50년, 모집 인원 1~50명, 스킬 1~63개, 모집 포지션 1~100건 검증
+- 선택지 조회 실패 시 진행을 막고 다시 시도 제공
+
+## 프로젝트 상세정보 및 첨부파일
+
+### Step 4 텍스트
+
+- `currentSituation`: 현재 프로젝트 진행 상황, 필수, 최대 1,500자
+- `mainTask`: 주요 담당 업무, 필수, 최대 1,500자
+- `detailScope`: 세부 업무 범위, 선택, 최대 1,500자
+- `extraNote`: 기타 전달사항 및 우대사항, 선택, 최대 1,500자
+- 작성 가이드·예시·글자 수 카운터는 프론트 고정 UI
+
+### 파일 업로드
+
+- Method / Path: `POST /api/v1/files?purpose=PROJECT_FILE`
+- Content-Type: `multipart/form-data`, part 이름 `file`
+- 성공 응답: `{ fileId, originalName, sizeBytes }`
+- 허용 확장자: PDF, JPG, JPEG, PNG
+- 파일당 최대 100MB, 프로젝트당 최대 10개
+- 업로드 응답을 Context에 보관하고 Step 6 등록 요청에 `fileIds: number[]`로 전송
+- 파일 크기는 `sizeBytes`를 KB 또는 MB 표시값으로 변환
+- 10개 도달 시 업로드 클릭·드롭 비활성화
+
+### 첨부 삭제
+
+- Method / Path: `DELETE /api/v1/files/{fileId}`
+- X 버튼을 누르면 삭제 API 성공 후 Context와 화면 목록에서 제거
+- 실패 시 파일 목록을 유지하고 서버 메시지 표시
+
 ## 변경 이력
 
+- 2026-08-10: 등록 성공 응답 기반 완료 화면, 프로젝트 목록·상세 조회 서비스 및 결제 정산 ID 전달 추가
+- 2026-08-10: Step 6 `POST /api/v1/projects` 최종 등록 호출 및 전체 폼 변환 추가, 실제 응답 미검증
+- 2026-08-10: 프로젝트 상세정보 필드와 첨부 업로드·삭제 API 연동 코드 추가, 실제 응답 미검증
+- 2026-08-10: 프로젝트 사전 검수 요청·응답 및 직무 메타 연동 코드 추가, 실제 응답 미검증
+- 2026-08-10: 프로젝트 등록 안내 동의 및 클라이언트 역할 제한 계약 추가, 실제 응답 미검증
 - 2026-08-09: 프리랜서 소셜 로그인 시작·콜백·추가 회원가입 코드 추가, 실제 응답 미검증
 - 2026-08-09: 회원가입 메타·약관 조회, 중복 확인, 이메일 인증, 일반 회원가입 제출 코드 추가, 실제 응답 미검증
