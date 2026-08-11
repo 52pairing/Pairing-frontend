@@ -424,8 +424,20 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `POST /api/v1/projects/{projectId}/recruit-extensions`
 - `POST /api/v1/projects/{projectId}/recruit-close`
 - `POST /api/v1/projects/{projectId}/completion`
-- 수정 `PUT`은 수정 폼 연결 전이라 현재 메뉴만 표시하고 요청하지 않음
+- `PUT /api/v1/projects/{projectId}` 요청 타입과 서비스 함수를 추가함. 수정 폼 연결 전이라 현재 메뉴에서는 아직 요청하지 않음
+- 수정 요청은 등록 본문에서 `noticeAgreed`를 제외하고 `positions[]`에 `positionId`(`number | null`)를 포함한 전체 교체 방식
 - 실제 네트워크 응답: 미검증
+
+## 클라이언트 프로젝트 계약 목록
+
+- 서비스 위치: `src/features/client/myprojects/contract/services/contracts.ts`
+- `GET /api/v1/contracts?projectId={projectId}&page={page}&size={size}`
+- 응답 `data`는 `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last` 페이지 객체
+- 항목 필드: `contractId`, `contractNo`, `projectTitle`, `counterpartName`, `status`, `totalAmount`, `startDate`, `endDate`, `signatureRequired`, `payUnit`, `payAmount`
+- 계약 탭의 기존 하드코딩 목록을 제거하고 로딩·오류·빈 상태와 실제 목록을 표시
+- `signatureRequired`로 현재 사용자 서명 필요 여부를 표시
+- 제공된 예시에서 확인된 `DRAFT`, `HOURLY`만 한글 라벨로 변환하고 미확인 코드는 원본 표시
+- `projectId` 필터 쿼리의 백엔드 지원 여부와 실제 네트워크 응답: 미검증
 - 2026-08-10: 프로젝트 상세정보 필드와 첨부 업로드·삭제 API 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 사전 검수 요청·응답 및 직무 메타 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 등록 안내 동의 및 클라이언트 역할 제한 계약 추가, 실제 응답 미검증

@@ -2,10 +2,20 @@ import { apiCall } from "@/lib/api";
 import type {
   ClientProjectDetailResponse,
   MatchingRequestPage,
+  ProjectUpdateRequest,
 } from "@/features/client/myprojects/types/projectDetail";
 
 export const getClientProjectDetail = (projectId: number) =>
   apiCall<ClientProjectDetailResponse>(`/api/v1/projects/${projectId}`);
+
+export const updateClientProject = (
+  projectId: number,
+  request: ProjectUpdateRequest,
+) =>
+  apiCall<ClientProjectDetailResponse>(`/api/v1/projects/${projectId}`, {
+    method: "PUT",
+    body: JSON.stringify(request),
+  });
 
 export const getProjectMatchingRequests = (projectId: number) => {
   const query = new URLSearchParams({

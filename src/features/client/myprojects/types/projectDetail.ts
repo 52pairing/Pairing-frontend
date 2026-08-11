@@ -49,6 +49,30 @@ export interface ClientProjectDetailResponse {
   payableSettlementId: number | null;
 }
 
+export interface ProjectUpdateRequest {
+  title: string;
+  startDesiredDate: string;
+  startNegotiable: boolean;
+  periodValue: number;
+  periodUnit: string;
+  budgetAmount: number;
+  workStyle: string;
+  workForm: string;
+  positions: Array<{
+    positionId: number | null;
+    jobCategory: string;
+    jobRole: string;
+    minCareerYears: number;
+    headcount: number;
+    skills: string[];
+  }>;
+  currentSituation: string;
+  mainTask: string;
+  detailScope: string | null;
+  extraNote: string | null;
+  fileIds: number[];
+}
+
 export interface MatchingRequestItem {
   matchingRequestId?: number;
   counterpartName: string;
