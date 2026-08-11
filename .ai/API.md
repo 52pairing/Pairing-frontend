@@ -351,6 +351,8 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 ## 변경 이력
 
+- 2026-08-11: 공통 401 refresh·1회 재시도·세션 종료 처리, 보호 경로 및 임시 비밀번호 가드 추가, 실제 응답 미검증
+- 2026-08-11: 마이페이지 비밀번호 변경과 약관 문서 조회 API 연결, 실제 응답 미검증
 - 2026-08-10: 백엔드 2차 답변 반영 — `WORK_FORM`(FULL_TIME/PART_TIME/ANY), 조건 값 라벨 meta API화(`getWorkConditionsMeta` + `formatConditionValue(labels)`, 하드코딩 제거), 협상 자동생성(매칭 수락)·프리랜서 현황 버튼 `status==="NEGOTIATING"` 기반, 헤더 종 배지 제거. 실제 네트워크 응답 미검증
 - 2026-08-10: 백엔드 확정 답변 반영 — 필드명(`projectTitle`, 조건 `type`), 값 전부 문자열·금액 원단위 월단가, `waitingForMe` 기반 승인/재지시 패널, 조건 코드 7종·라벨 매핑, `/mine` 페이지 필드, 빨간점=매칭 API `newProposalCount`(프리랜서 현황 버튼). 실제 네트워크 응답 미검증
 - 2026-08-10: 협상 목록(`/mine`)·헤더 종 배지(`waiting-count`) 연동, 협상방 라우트 `[negotiationId]` 전환, 실제 응답 미검증

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
+import { AuthSessionGuard } from "@/features/auth/components/AuthSessionGuard";
 import { ToastProvider } from "@/features/common/components/Toast";
 import { ConditionalFooter } from "@/features/common/components/ConditionalFooter";
 import { ThemeProvider } from "@/features/common/theme/ThemeProvider";
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <ToastProvider>
+            <AuthSessionGuard />
             <RoleGuard>{children}</RoleGuard>
           </ToastProvider>
           <ConditionalFooter />

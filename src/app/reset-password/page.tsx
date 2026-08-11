@@ -44,6 +44,12 @@ function ResetPasswordPageContent() {
         return;
       }
 
+      if (error instanceof ApiException && error.errorCode === "AU_026") {
+        setMessage(`${error.message} 비밀번호 찾기를 다시 요청해 주세요.`);
+        setStep("invalid");
+        return;
+      }
+
       // 그 외(네트워크 오류 등)는 재시도 가능하도록 잠금 해제
       submitted.current = false;
       setStep("idle");

@@ -27,6 +27,43 @@ export class ApiException extends Error {
   }
 }
 
+export type AuthSessionEndReason = "expired" | "duplicate";
+export const AUTH_SESSION_END_EVENT = "auth:session-end";
+
+let refreshRequest: Promise<void> | null = null;
+
+const notifySessionEnd = (reason: AuthSessionEndReason) => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent<AuthSessionEndReason>(AUTH_SESSION_END_EVENT, {
+        detail: reason,
+      }),
+    );
+  }
+};
+
+const requestRefresh = async () => {
+  if (!refreshRequest) {
+    refreshRequest = (async () => {
+      const response = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) return;
+
+      const error = (await response.json()) as ApiErrorBody;
+      notifySessionEnd(error.errorCode === "AU_015" ? "duplicate" : "expired");
+      throw new ApiException(error.errorCode, error.message, response.status);
+    })().finally(() => {
+      refreshRequest = null;
+    });
+  }
+
+  return refreshRequest;
+};
+
 /**
  * 공통 API 클라이언트
  * - 쿠키 기반 인증 요청 처리 (credentials: "include")
@@ -40,17 +77,24 @@ export async function apiCall<T>(
   const isFormData = init.body instanceof FormData;
 
   // 공통 API 주소와 요청 옵션을 적용하여 서버 요청
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    credentials: "include",
-    headers: {
-      ...(!isFormData ? { "Content-Type": "application/json" } : {}),
-      ...init.headers,
-    },
-  });
+  const request = () =>
+    fetch(`${API_BASE}${path}`, {
+      ...init,
+      credentials: "include",
+      headers: {
+        ...(!isFormData ? { "Content-Type": "application/json" } : {}),
+        ...init.headers,
+      },
+    });
 
-  // 백엔드 응답 JSON 변환
-  const body = await res.json();
+  let res = await request();
+  let body = await res.json();
+
+  if (!res.ok && (body as ApiErrorBody).errorCode === "GLOBAL_009") {
+    await requestRefresh();
+    res = await request();
+    body = await res.json();
+  }
 
   // 요청 성공 시 실제 데이터만 반환
   if (res.ok) {
@@ -59,6 +103,9 @@ export async function apiCall<T>(
 
   // 요청 실패 시 백엔드 에러 정보를 공통 예외로 변환
   const error = body as ApiErrorBody;
+
+  if (error.errorCode === "GLOBAL_010") notifySessionEnd("expired");
+  if (error.errorCode === "GLOBAL_011") notifySessionEnd("duplicate");
 
   throw new ApiException(
     error.errorCode,

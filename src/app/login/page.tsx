@@ -12,7 +12,7 @@ import { ApiException } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 type LoginAlert =
   | { type: "locked" }
@@ -38,6 +38,12 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl");
   const toast = useToast();
+
+  useEffect(() => {
+    if (searchParams.get("passwordChanged") === "true") {
+      toast.success("비밀번호가 변경되었습니다. 새 비밀번호로 다시 로그인해 주세요.");
+    }
+  }, [searchParams, toast]);
 
   const [role, setRole] = useState<LoginRole>("CLIENT");
   const [email, setEmail] = useState("");
