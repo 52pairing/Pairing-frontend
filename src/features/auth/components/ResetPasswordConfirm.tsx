@@ -13,10 +13,10 @@ export const ResetPasswordConfirm = ({
   onConfirm,
 }: ResetPasswordConfirmProps) => (
   <div className="flex flex-col items-center text-center">
-    <h1 className="text-lg font-bold text-[#111827]">
+    <h1 className="text-lg font-bold text-theme-primary">
       비밀번호 재설정을 계속하시겠어요?
     </h1>
-    <p className="mt-2 text-sm font-medium text-gray-500">
+    <p className="mt-2 text-sm font-medium text-theme-secondary">
       아래 버튼을 누르면 본인 확인이 완료되고, 임시 비밀번호가 메일로
       발송됩니다.
     </p>
@@ -29,7 +29,7 @@ export const ResetPasswordConfirm = ({
       type="button"
       onClick={onConfirm}
       disabled={isLoading}
-      className="mt-6 h-11 w-full rounded-md bg-[#0b1f3a] text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 enabled:hover:bg-[#102b50]"
+      className="mt-6 h-11 w-full rounded-md bg-brand text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 enabled:hover:bg-brand"
     >
       {isLoading ? "확인 중..." : "임시 비밀번호 받기"}
     </button>

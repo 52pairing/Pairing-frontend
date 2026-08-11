@@ -4,6 +4,23 @@ import "./globals.css";
 import { RoleGuard } from "@/features/auth/components/RoleGuard";
 import { ToastProvider } from "@/features/common/components/Toast";
 import { ConditionalFooter } from "@/features/common/components/ConditionalFooter";
+import { ThemeProvider } from "@/features/common/theme/ThemeProvider";
+
+const themeInitScript = `
+  (() => {
+    try {
+      const saved = localStorage.getItem("pairing-theme");
+      const preference = saved === "light" || saved === "dark" || saved === "system" ? saved : "system";
+      const theme = preference === "system"
+        ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+        : preference;
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    } catch {
+      document.documentElement.dataset.theme = "light";
+    }
+  })();
+`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,14 +40,20 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="ko"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full flex flex-col">
-        <ToastProvider>
-          <RoleGuard>{children}</RoleGuard>
-        </ToastProvider>
-        <ConditionalFooter />
+        <ThemeProvider>
+          <ToastProvider>
+            <RoleGuard>{children}</RoleGuard>
+          </ToastProvider>
+          <ConditionalFooter />
+        </ThemeProvider>
       </body>
     </html>
   );

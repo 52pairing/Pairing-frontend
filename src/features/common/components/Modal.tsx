@@ -122,7 +122,7 @@ export const Modal = ({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-theme-overlay"
         aria-hidden="true"
         onClick={closeOnOverlayClick ? onClose : undefined}
       />
@@ -133,7 +133,7 @@ export const Modal = ({
         aria-labelledby={labelledBy}
         aria-describedby={describedBy}
         tabIndex={-1}
-        className={`relative z-10 flex flex-col ${MODAL_SIZE[size]} rounded-2xl bg-white p-6 shadow-xl outline-none`}
+        className={`relative z-10 flex flex-col ${MODAL_SIZE[size]} rounded-2xl bg-surface p-6 text-theme-primary shadow-xl outline-none`}
       >
         {children}
       </div>
@@ -175,7 +175,7 @@ type ConfirmVariant = "primary" | "danger";
 
 // 확인 버튼 색상 (시안 기준값 — 추후 디자인 토큰으로 교체 예정)
 const CONFIRM_STYLE: Record<ConfirmVariant, string> = {
-  primary: "bg-[#2c3e5d] text-white hover:bg-[#24334d]",
+  primary: "bg-brand text-brand-contrast hover:bg-brand-hover",
   danger: "bg-red-600 text-white hover:bg-red-700",
 };
 
@@ -237,7 +237,7 @@ export const ConfirmModal = ({
           {/* 제목·설명 모두 가운데 정렬 */}
           <h2
             id={titleId}
-            className="w-full text-center text-lg font-bold text-gray-900"
+            className="w-full text-center text-lg font-bold text-theme-primary"
           >
             {title}
           </h2>
@@ -245,7 +245,7 @@ export const ConfirmModal = ({
           {description ? (
             <p
               id={descriptionId}
-              className="mt-3 w-full text-center text-sm leading-relaxed text-gray-500"
+              className="mt-3 w-full text-center text-sm leading-relaxed text-theme-secondary"
             >
               {description}
             </p>
@@ -257,7 +257,7 @@ export const ConfirmModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="flex-1 rounded-lg border border-theme bg-surface px-4 py-3 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
             >
               {cancelText}
             </button>

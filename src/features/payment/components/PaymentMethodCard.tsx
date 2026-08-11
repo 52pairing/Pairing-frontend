@@ -18,14 +18,14 @@ export function PaymentMethodCard({
       aria-pressed={selected}
       className={`w-full cursor-pointer rounded-[11px] border px-4 py-3.5 text-left transition ${
         selected
-          ? "border-[#17365d] bg-[#eef3f8]"
-          : "border-[#dce2e8] bg-white hover:bg-[#f8fafc]"
+          ? "border-brand bg-[#eef3f8]"
+          : "border-theme bg-surface hover:bg-surface-subtle"
       }`}
     >
-      <span className="block text-[13px] font-bold text-[#111827]">
+      <span className="block text-[13px] font-bold text-theme-primary">
         {method.issuer}
       </span>
-      <span className="mt-1 block text-[11px] font-semibold text-[#98a2b3]">
+      <span className="mt-1 block text-[11px] font-semibold text-theme-muted">
         {method.maskedNumber}
       </span>
     </button>

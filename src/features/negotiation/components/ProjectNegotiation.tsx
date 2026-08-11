@@ -64,7 +64,7 @@ export function ProjectNegotiation() {
 
   if (items.length === 0) {
     return (
-      <div className="mt-4 flex h-[200px] items-center justify-center rounded-[14px] border border-[#dfe4ea] bg-white text-[12px] text-[#98a2b3]">
+      <div className="mt-4 flex h-[200px] items-center justify-center rounded-[14px] border border-theme bg-surface text-[12px] text-theme-muted">
         진행 중인 협상이 없습니다.
       </div>
     );
@@ -96,7 +96,7 @@ export function NegotiationActions() {
             className={`flex h-[36px] w-[36px] cursor-pointer items-center justify-center rounded-full border text-[15px] font-bold transition ${
               isRerollInfoOpen
                 ? "border-[#3478f6] bg-[#eff5ff] text-[#3478f6]"
-                : "border-[#dfe3e8] bg-white text-[#98a2b3] hover:bg-[#f9fafb]"
+                : "border-theme bg-surface text-theme-muted hover:bg-[#f9fafb]"
             }`}
           >
             ?
@@ -105,7 +105,7 @@ export function NegotiationActions() {
           {/* 무료 재추천 */}
           <button
             type="button"
-            className="h-[36px] cursor-pointer rounded-[8px] border border-[#dfe3e8] bg-white px-4 text-[12px] font-semibold text-[#667085] transition hover:bg-[#f9fafb]"
+            className="h-[36px] cursor-pointer rounded-[8px] border border-theme bg-surface px-4 text-[12px] font-semibold text-theme-secondary transition hover:bg-[#f9fafb]"
           >
             무료 재추천
           </button>

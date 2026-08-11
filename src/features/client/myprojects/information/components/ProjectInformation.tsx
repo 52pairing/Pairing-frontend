@@ -43,15 +43,15 @@ export function ProjectInformation({
 
   return (
     <>
-      <section className="mt-6 rounded-[14px] border border-[#dfe4ea] bg-white px-7 py-6">
+      <section className="mt-6 rounded-[14px] border border-theme bg-surface px-7 py-6">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-[14px] font-extrabold">기본 정보</h2>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-[#667085]">
+            <span className="text-[11px] font-bold text-theme-secondary">
               {project.extensionCount} / 2회 사용
             </span>
             {deadlineLabel ? (
-              <span className="rounded-[8px] border border-[#e4e7ec] bg-white px-4 py-2 text-[11px] font-bold text-[#f04438]">
+              <span className="rounded-[8px] border border-theme bg-surface px-4 py-2 text-[11px] font-bold text-theme-danger">
                 {deadlineLabel}
               </span>
             ) : null}
@@ -67,14 +67,14 @@ export function ProjectInformation({
         </dl>
       </section>
 
-      <section className="mt-4 rounded-[14px] border border-[#dfe4ea] bg-white px-7 py-6">
+      <section className="mt-4 rounded-[14px] border border-theme bg-surface px-7 py-6">
         <h2 className="text-[14px] font-extrabold">모집 포지션</h2>
         <div className="mt-4 space-y-3">
           {project.positions.map((position) => (
-            <article key={position.positionId} className="rounded-[10px] border border-[#e2e7ec] px-4 py-4">
+            <article key={position.positionId} className="rounded-[10px] border border-theme px-4 py-4">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-[13px] font-bold">{jobRoleLabels[position.jobRole] ?? position.jobRole}</h3>
-                <span className="text-[11px] font-semibold text-[#667085]">경력 {position.minCareerYears}년 · {position.headcount}명</span>
+                <span className="text-[11px] font-semibold text-theme-secondary">경력 {position.minCareerYears}년 · {position.headcount}명</span>
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {position.skills.map((skill) => (
@@ -89,13 +89,13 @@ export function ProjectInformation({
       </section>
 
       {project.files.length > 0 ? (
-        <section className="mt-4 rounded-[14px] border border-[#dfe4ea] bg-white px-7 py-6">
+        <section className="mt-4 rounded-[14px] border border-theme bg-surface px-7 py-6">
           <h2 className="text-[14px] font-extrabold">첨부 파일</h2>
           <div className="mt-4 space-y-2">
             {project.files.map((file) => (
-              <a key={file.fileId} href={file.fileUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-[9px] border border-[#e2e7ec] px-4 py-3 text-[12px] hover:bg-[#f8fafc]">
-                <span className="font-semibold text-[#475467]">{file.originalName}</span>
-                <span className="text-[#98a2b3]">{formatFileSize(file.sizeBytes)}</span>
+              <a key={file.fileId} href={file.fileUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-[9px] border border-theme px-4 py-3 text-[12px] hover:bg-surface-subtle">
+                <span className="font-semibold text-theme-secondary">{file.originalName}</span>
+                <span className="text-theme-muted">{formatFileSize(file.sizeBytes)}</span>
               </a>
             ))}
           </div>
@@ -110,8 +110,8 @@ export function ProjectInformation({
 function ProjectDetailInfo({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[10px] font-semibold text-[#98a2b3]">{label}</dt>
-      <dd className="mt-1.5 text-[13px] font-bold text-[#172033]">{value}</dd>
+      <dt className="text-[10px] font-semibold text-theme-muted">{label}</dt>
+      <dd className="mt-1.5 text-[13px] font-bold text-theme-primary">{value}</dd>
     </div>
   );
 }

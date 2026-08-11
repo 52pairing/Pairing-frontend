@@ -17,6 +17,7 @@ AI 도구는 작업을 시작하기 전에 아래 문서를 순서대로 확인�
 
    * Git·Issue·PR 작업: `docs/ai/git-issue-pr-guide.md`
    * 테스트·검증: `docs/ai/testing-guide.md`
+   * 다크모드·테마 작업: `docs/ai/dark-mode-guide.md`
    * API 연동: `.ai/API.md`
    * 이전 작업 이어받기: `.ai/HANDOFF.md`
    * 과거 완료 작업 확인: `.ai/WORKLOG.md`

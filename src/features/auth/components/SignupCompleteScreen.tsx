@@ -15,10 +15,10 @@ export function SignupCompleteScreen({
   primaryHref = "/login",
 }: SignupCompleteScreenProps) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-surface">
       <AuthHeader />
       <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-5 py-16">
-        <section className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white px-8 py-9 shadow-sm">
+        <section className="w-full max-w-[440px] rounded-lg border border-theme bg-surface px-8 py-9 shadow-sm">
           <SignupComplete
             title={title}
             description={description}

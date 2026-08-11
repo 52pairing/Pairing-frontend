@@ -12,10 +12,10 @@ export default function SignupPage() {
 
       <main className="flex min-h-[calc(100vh-60px)] flex-col items-center px-5 py-16">
         <div className="mb-10 text-center">
-          <h1 className="text-xl font-bold text-[#111827]">
+          <h1 className="text-xl font-bold text-theme-primary">
             어떤 유형으로 가입하시겠어요?
           </h1>
-          <p className="mt-2 text-sm font-medium text-gray-500">
+          <p className="mt-2 text-sm font-medium text-theme-secondary">
             가입 유형에 따라 이용할 수 있는 서비스가 달라집니다.
           </p>
         </div>
@@ -34,7 +34,7 @@ export default function SignupPage() {
                 aria-hidden="true"
               />
             }
-            iconBgClassName="bg-[#EEF3F8]"
+            iconBgClassName="bg-surface-muted"
             methods={["email"]}
           />
 
@@ -56,9 +56,9 @@ export default function SignupPage() {
           />
         </div>
 
-        <p className="mt-8 text-center text-xs font-medium text-gray-500">
+        <p className="mt-8 text-center text-xs font-medium text-theme-secondary">
           이미 회원이신가요?{" "}
-          <Link href="/login" className="font-bold text-[#0b1f3a]">
+          <Link href="/login" className="font-bold text-brand">
             로그인
           </Link>
         </p>

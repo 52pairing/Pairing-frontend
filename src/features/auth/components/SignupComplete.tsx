@@ -30,19 +30,19 @@ export const SignupComplete = ({
       />
     </span>
 
-    <h1 className="mt-5 text-lg font-bold text-[#111827]">{title}</h1>
-    <p className="mt-2 text-sm font-medium text-gray-500">{description}</p>
+    <h1 className="mt-5 text-lg font-bold text-theme-primary">{title}</h1>
+    <p className="mt-2 text-sm font-medium text-theme-secondary">{description}</p>
 
     <div className="mt-8 flex w-full flex-col gap-3">
       <Link
         href={primaryHref}
-        className="flex h-11 w-full items-center justify-center rounded-md bg-[#142B4A] text-sm font-bold text-white hover:bg-[#0f2138]"
+        className="flex h-11 w-full items-center justify-center rounded-md bg-brand text-sm font-bold text-white hover:bg-[#0f2138]"
       >
         {primaryLabel}
       </Link>
       <Link
         href={secondaryHref}
-        className="flex h-11 w-full items-center justify-center rounded-md border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+        className="flex h-11 w-full items-center justify-center rounded-md border border-theme text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
       >
         {secondaryLabel}
       </Link>

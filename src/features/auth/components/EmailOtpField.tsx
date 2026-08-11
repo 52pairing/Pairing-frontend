@@ -76,10 +76,10 @@ export const EmailOtpField = ({
   if (verified) {
     return (
       <div>
-        <label className="mb-2 block text-sm font-semibold text-[#374151]">
+        <label className="mb-2 block text-sm font-semibold text-theme-secondary">
           이메일 <span className="text-[#356DF3]">*</span>
         </label>
-        <div className="flex h-11 items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-4 text-sm text-gray-700">
+        <div className="flex h-11 items-center justify-between rounded-md border border-theme bg-surface-subtle px-4 text-sm text-theme-secondary">
           <span>{email}</span>
           <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
             <Image
@@ -98,7 +98,7 @@ export const EmailOtpField = ({
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-[#374151]">
+      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
         이메일 <span className="text-[#356DF3]">*</span>
       </label>
 
@@ -113,9 +113,9 @@ export const EmailOtpField = ({
           }}
           onBlur={handleEmailBlur}
           placeholder="이메일 아이디"
-          className="h-11 flex-1 rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+          className="h-11 flex-1 rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
         />
-        <span className="text-sm text-gray-400">@</span>
+        <span className="text-sm text-theme-muted">@</span>
         {isCustomDomain ? (
           <input
             type="text"
@@ -127,7 +127,7 @@ export const EmailOtpField = ({
             }}
             onBlur={handleEmailBlur}
             placeholder="도메인 직접 입력"
-            className="h-11 flex-1 rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            className="h-11 flex-1 rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
           />
         ) : (
           <select
@@ -136,7 +136,7 @@ export const EmailOtpField = ({
               handleDomainSelectChange(e.target.value);
             }}
             onBlur={handleEmailBlur}
-            className="h-11 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-900 outline-none focus:border-[#142B4A]"
+            className="h-11 flex-1 rounded-md border border-theme px-3 text-sm text-theme-primary outline-none focus:border-brand"
           >
             <option value="" disabled>
               도메인 선택
@@ -157,7 +157,7 @@ export const EmailOtpField = ({
         </p>
       ) : null}
       {duplicateCheck.status === "checking" ? (
-        <p className="mt-2 text-xs text-gray-400">중복 확인 중...</p>
+        <p className="mt-2 text-xs text-theme-muted">중복 확인 중...</p>
       ) : null}
       {duplicateCheck.status === "available" ? (
         <p className="mt-2 flex items-center gap-1.5 text-xs text-green-600">
@@ -193,7 +193,7 @@ export const EmailOtpField = ({
             otp.isSending ||
             otp.remainingSendCount === 0
           }
-          className="h-11 rounded-md border border-gray-200 px-4 text-sm font-semibold text-gray-500 transition disabled:cursor-not-allowed disabled:text-gray-300 enabled:hover:bg-gray-50"
+          className="h-11 rounded-md border border-theme px-4 text-sm font-semibold text-theme-secondary transition disabled:cursor-not-allowed disabled:text-theme-muted enabled:hover:bg-surface-subtle"
         >
           {otp.isSending
             ? "발송 중..."
@@ -213,7 +213,7 @@ export const EmailOtpField = ({
               }
               maxLength={6}
               placeholder="인증번호 입력"
-              className="h-11 w-32 rounded-md border border-gray-200 px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+              className="h-11 w-32 rounded-md border border-theme px-3 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
             />
             <span className="text-sm font-semibold text-[#356DF3]">
               {String(Math.floor(otp.secondsLeft / 60)).padStart(2, "0")}:
@@ -236,14 +236,14 @@ export const EmailOtpField = ({
       </div>
 
       {otp.sent ? (
-        <p className="mt-2 text-xs text-gray-400">
+        <p className="mt-2 text-xs text-theme-muted">
           {otp.secondsLeft > 0
             ? "인증번호는 표시된 시간 동안 유효합니다."
             : "인증번호가 만료되었습니다. 다시 발송해 주세요."}
         </p>
       ) : null}
       {otp.remainingSendCount !== null ? (
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-theme-muted">
           1시간 내 남은 발송 횟수: {otp.remainingSendCount}회
         </p>
       ) : null}

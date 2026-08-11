@@ -61,6 +61,8 @@ export function NegotiationRoom() {
   const [reloadKey, setReloadKey] = useState(0);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 액션(시작/승인·재지시/포기) 실패 메시지 — 전체 화면 대신 인라인 배너로 표시
+  const [actionError, setActionError] = useState<string | null>(null);
   // 조건 값 라벨(근무방식/근무형태/기간 단위)은 meta API 로 해결
   const [labels, setLabels] = useState<WorkConditionLabels>(EMPTY_WORK_CONDITION_LABELS);
 
@@ -173,9 +175,16 @@ export function NegotiationRoom() {
     async (conditions: Array<{ conditionType: ConditionType; value: string }>) => {
       if (!negotiationId || isSubmitting) return;
       setIsSubmitting(true);
+      setActionError(null);
       try {
         await startNegotiation(negotiationId, { conditions });
         await Promise.all([refreshDetail(), refreshMessages()]);
+      } catch (error) {
+        setActionError(
+          error instanceof ApiException ? error.message : "협상 시작에 실패했습니다.",
+        );
+        // 실패 후에도 상태 재동기화(예: 이미 제출됨/형식 오류)
+        await refreshDetail();
       } finally {
         setIsSubmitting(false);
       }
@@ -188,9 +197,15 @@ export function NegotiationRoom() {
     async (answers: AnswerInput[]) => {
       if (!negotiationId || isSubmitting || !detail) return;
       setIsSubmitting(true);
+      setActionError(null);
       try {
-        // roundNo 는 현재 라운드 기준(미검증 — 실제 응답 확인 후 확정)
+        // roundNo 는 상세의 totalRound 를 그대로 전송(늦은 응답 필터용)
         await submitAnswers(negotiationId, { roundNo: detail.totalRound, answers });
+        await Promise.all([refreshDetail(), refreshMessages()]);
+      } catch (error) {
+        setActionError(
+          error instanceof ApiException ? error.message : "제출에 실패했습니다.",
+        );
         await Promise.all([refreshDetail(), refreshMessages()]);
       } finally {
         setIsSubmitting(false);
@@ -203,11 +218,16 @@ export function NegotiationRoom() {
   const handleGiveUp = useCallback(async () => {
     if (!negotiationId || isSubmitting) return;
     setIsSubmitting(true);
+    setActionError(null);
     try {
       // reason 은 선택. 화면에 입력란이 없어 생략(서버가 "협상 포기"로 기록)
       await giveUpNegotiation(negotiationId, {});
       setIsCancelOpen(false);
       await refreshDetail();
+    } catch (error) {
+      setActionError(
+        error instanceof ApiException ? error.message : "협상 포기에 실패했습니다.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -216,12 +236,12 @@ export function NegotiationRoom() {
   const goBackToProject = () => router.push(`${projectsBase}/${projectId}`);
 
   return (
-    <div className="flex h-[calc(100dvh-60px)] min-h-0 flex-col overflow-hidden bg-[#f3f4f8] px-6 pb-4 pt-2 text-[#151b2b]">
+    <div className="flex h-[calc(100dvh-60px)] min-h-0 flex-col overflow-hidden bg-[#f3f4f8] px-6 pb-4 pt-2 text-theme-primary">
       <header className="shrink-0">
         <button
           type="button"
           onClick={goBackToProject}
-          className="mb-3 cursor-pointer text-[12px] text-[#98a1b2] hover:text-[#667085]"
+          className="mb-3 cursor-pointer text-[12px] text-[#98a1b2] hover:text-theme-secondary"
         >
           ← 제안 목록
         </button>
@@ -239,13 +259,22 @@ export function NegotiationRoom() {
             <button
               type="button"
               onClick={() => setIsCancelOpen(true)}
-              className="cursor-pointer rounded-[9px] border border-[#ff5757] bg-white px-5 py-2.5 text-[12px] font-semibold text-[#ff4d4f] hover:bg-[#fff5f5]"
+              className="cursor-pointer rounded-[9px] border border-[#ff5757] bg-surface px-5 py-2.5 text-[12px] font-semibold text-[#ff4d4f] hover:bg-[#fff5f5]"
             >
               협상 포기
             </button>
           ) : null}
         </div>
       </header>
+
+      {actionError ? (
+        <div
+          role="alert"
+          className="mt-2 shrink-0 rounded-[8px] border border-[#fecdca] bg-danger-surface px-4 py-2 text-[12px] font-semibold text-theme-danger"
+        >
+          {actionError}
+        </div>
+      ) : null}
 
       {isLoading ? (
         <LoadingState className="flex-1" message="협상 정보를 불러오는 중입니다." />
@@ -286,7 +315,7 @@ export function NegotiationRoom() {
                   채팅으로 이어가기
                 </button>
               ) : (
-                <p className="text-[12px] text-[#667085]">
+                <p className="text-[12px] text-theme-secondary">
                   계약 체결 후 대화를 시작할 수 있어요.
                 </p>
               )

@@ -95,10 +95,10 @@ export function RoleGuard({ children }: RoleGuardProps) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-5 px-4 text-center">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">
+          <h1 className="text-xl font-semibold text-theme-primary">
             로그인 정보를 확인할 수 없습니다
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-gray-500">
+          <p className="mt-2 text-sm leading-relaxed text-theme-secondary">
             잠시 후 다시 시도해 주세요.
           </p>
         </div>
@@ -106,7 +106,7 @@ export function RoleGuard({ children }: RoleGuardProps) {
         <button
           type="button"
           onClick={retry}
-          className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          className="rounded-lg border border-theme bg-surface px-4 py-2 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
         >
           다시 시도
         </button>
@@ -121,7 +121,7 @@ export function RoleGuard({ children }: RoleGuardProps) {
   return (
     <div
       role="status"
-      className="flex min-h-screen items-center justify-center px-4 text-sm text-gray-500"
+        className="flex min-h-screen items-center justify-center px-4 text-sm text-theme-secondary"
     >
       접근 권한을 확인하고 있습니다.
     </div>

@@ -155,13 +155,13 @@ function SocialInfoStep({
 
   return (
     <>
-      <p className="mb-6 rounded-md bg-[#EEF3F8] px-4 py-3 text-xs text-[#374151]">
+      <p className="mb-6 rounded-md bg-surface-muted px-4 py-3 text-xs text-theme-secondary">
         {provider === "kakao" ? "카카오" : "구글"} 계정 연결 완료. 추가
         정보를 입력해 주세요.
       </p>
       <div className="space-y-5">
         <div>
-          <label className="mb-2 block text-sm font-semibold text-[#374151]">
+          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
             이름 <span className="text-[#356DF3]">*</span>
           </label>
           <input
@@ -169,14 +169,14 @@ function SocialInfoStep({
             value={form.name ?? ""}
             onChange={(event) => patch({ name: event.target.value })}
             placeholder="이름을 입력해 주세요."
-            className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
           />
         </div>
         <div>
-          <label className="mb-2 block text-sm font-semibold text-[#374151]">
+          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
             이메일
           </label>
-          <div className="flex h-11 items-center gap-2 rounded-md border border-gray-200 bg-[#F9FAFB] px-4 text-sm text-gray-500">
+          <div className="flex h-11 items-center gap-2 rounded-md border border-theme bg-[#F9FAFB] px-4 text-sm text-theme-secondary">
             <Image
               src={
                 provider === "kakao"
@@ -190,7 +190,7 @@ function SocialInfoStep({
             />
             {form.email}
           </div>
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="mt-2 text-xs text-theme-muted">
             소셜 계정에서 제공된 이메일은 변경할 수 없습니다.
           </p>
         </div>
@@ -223,20 +223,20 @@ function SocialInfoStep({
 
 function MissingSocialSignup() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-surface">
       <AuthHeader />
       <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-5">
-        <section className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white px-8 py-9 text-center shadow-sm">
-          <h1 className="text-lg font-bold text-[#111827]">
+        <section className="w-full max-w-[440px] rounded-lg border border-theme bg-surface px-8 py-9 text-center shadow-sm">
+          <h1 className="text-lg font-bold text-theme-primary">
             소셜 회원가입 정보가 없습니다.
           </h1>
-          <p className="mt-3 text-sm text-gray-500">
+          <p className="mt-3 text-sm text-theme-secondary">
             가입 시간이 만료됐거나 페이지가 새로고침되었습니다. 소셜 로그인을
             다시 시작해 주세요.
           </p>
           <Link
             href="/login"
-            className="mt-6 inline-flex h-11 items-center rounded-md bg-[#142B4A] px-5 text-sm font-bold text-white"
+            className="mt-6 inline-flex h-11 items-center rounded-md bg-brand px-5 text-sm font-bold text-white"
           >
             로그인으로 돌아가기
           </Link>

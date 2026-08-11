@@ -99,9 +99,9 @@ export function FreelancerProjects() {
     : PROJECTS.filter((project) => project.state === activeStatus);
 
   return (
-    <main className="min-h-screen bg-[#f7f8fa] pb-8">
+    <main className="min-h-screen bg-surface-subtle pb-8">
       <div className="mx-auto w-full max-w-[1000px] px-4 pt-6 sm:px-5">
-        <h1 className="text-[20px] font-bold tracking-[-0.6px] text-[#111827]">
+        <h1 className="text-[20px] font-bold tracking-[-0.6px] text-theme-primary">
           프로젝트 제안
         </h1>
         <FreelancerProjectStatusTabs
@@ -120,7 +120,7 @@ export function FreelancerProjects() {
             ))}
           </div>
         ) : (
-          <div className="mt-5 flex h-32 items-center justify-center rounded-xl border border-[#dde3ea] bg-white text-[12px] text-[#98a2b3]">
+          <div className="mt-5 flex h-32 items-center justify-center rounded-xl border border-theme bg-surface text-[12px] text-theme-muted">
             해당 상태의 프로젝트가 없습니다.
           </div>
         )}

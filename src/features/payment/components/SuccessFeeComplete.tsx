@@ -24,29 +24,29 @@ export function SuccessFeeComplete({ role }: SuccessFeeCompleteProps) {
     : "/freelancer/contracts";
 
   return (
-    <main className="min-h-[calc(100dvh-60px)] bg-[#f7f8fa] px-5 py-8 text-[#172033]">
+    <main className="min-h-[calc(100dvh-60px)] bg-surface-subtle px-5 py-8 text-theme-primary">
       <div className="mx-auto w-full max-w-[1040px] text-center">
         <div className="mx-auto flex h-[58px] w-[58px] items-center justify-center rounded-full bg-[#d9fbe8] text-[25px] font-bold">✓</div>
-        <h1 className="mt-5 text-[20px] font-extrabold tracking-[-0.04em] text-[#16a05d]">모든 정산이 완료되었습니다.</h1>
-        <p className="mt-3 text-[12px] font-semibold text-[#667085]">프로젝트 검수와 성공보수 수수료 결제가 완료되어 프로젝트가 최종 종료되었습니다.</p>
+        <h1 className="mt-5 text-[20px] font-extrabold tracking-[-0.04em] text-theme-success">모든 정산이 완료되었습니다.</h1>
+        <p className="mt-3 text-[12px] font-semibold text-theme-secondary">프로젝트 검수와 성공보수 수수료 결제가 완료되어 프로젝트가 최종 종료되었습니다.</p>
 
-        <section className="mt-7 rounded-xl border border-[#dce2e8] bg-white px-6 py-6 text-left">
+        <section className="mt-7 rounded-xl border border-theme bg-surface px-6 py-6 text-left">
           <h2 className="text-[13px] font-bold">최종 정산 요약</h2>
           <dl className="mt-4">
             {SETTLEMENT_ROWS.map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between gap-5 border-b border-[#e5e9ef] py-3 text-[11px] last:border-b-0">
-                <dt className="font-semibold text-[#98a2b3]">{label}</dt>
-                <dd className="font-bold text-[#172033]">{value}</dd>
+              <div key={label} className="flex items-center justify-between gap-5 border-b border-theme py-3 text-[11px] last:border-b-0">
+                <dt className="font-semibold text-theme-muted">{label}</dt>
+                <dd className="font-bold text-theme-primary">{value}</dd>
               </div>
             ))}
           </dl>
         </section>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Link href={historyHref} className="flex h-11 items-center justify-center rounded-lg border border-[#dce2e8] bg-white text-[12px] font-semibold text-[#667085] hover:bg-[#f8fafc]">전체 정산 내역 보기</Link>
-          <button type="button" onClick={() => window.print()} className="h-11 rounded-lg border border-[#dce2e8] bg-white text-[12px] font-semibold text-[#667085] hover:bg-[#f8fafc]">계약서 다운로드</button>
+          <Link href={historyHref} className="flex h-11 items-center justify-center rounded-lg border border-theme bg-surface text-[12px] font-semibold text-theme-secondary hover:bg-surface-subtle">전체 정산 내역 보기</Link>
+          <button type="button" onClick={() => window.print()} className="h-11 rounded-lg border border-theme bg-surface text-[12px] font-semibold text-theme-secondary hover:bg-surface-subtle">계약서 다운로드</button>
         </div>
-        <button type="button" className="mt-3 h-11 w-full rounded-lg bg-[#17365d] text-[12px] font-bold text-white hover:bg-[#102a49]">
+        <button type="button" className="mt-3 h-11 w-full rounded-lg bg-brand text-[12px] font-bold text-white hover:bg-brand">
           {role === "client" ? "프리랜서 평가하기" : "클라이언트 평가하기"}
         </button>
       </div>

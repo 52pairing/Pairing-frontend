@@ -6,7 +6,7 @@ export default function ClientProjectsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] items-center justify-center text-sm text-[#667085]">
+        <div className="flex min-h-[60vh] items-center justify-center text-sm text-theme-secondary">
           프로젝트 목록을 불러오고 있습니다.
         </div>
       }

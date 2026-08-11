@@ -17,7 +17,7 @@ export const FindEmailResult = ({ accounts }: FindEmailResultProps) => (
   <div className="flex flex-col items-center text-center">
     <CheckCircleIcon />
 
-    <h1 className="mt-5 text-lg font-bold text-[#111827]">
+    <h1 className="mt-5 text-lg font-bold text-theme-primary">
       입력하신 정보와 일치하는 이메일입니다.
     </h1>
 
@@ -25,12 +25,12 @@ export const FindEmailResult = ({ accounts }: FindEmailResultProps) => (
       {accounts.map((account) => (
         <div
           key={account.role}
-          className="rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-left"
+          className="rounded-md border border-theme bg-surface-subtle px-4 py-3 text-left"
         >
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-theme-muted">
             {ROLE_LABEL[account.role]} 계정
           </p>
-          <p className="mt-1 text-sm font-bold text-[#0b1f3a]">
+          <p className="mt-1 text-sm font-bold text-brand">
             {account.maskedEmail}
           </p>
         </div>
@@ -39,14 +39,14 @@ export const FindEmailResult = ({ accounts }: FindEmailResultProps) => (
 
     <Link
       href="/login"
-      className="mt-6 flex h-11 w-full items-center justify-center rounded-md bg-[#0b1f3a] text-sm font-bold text-white hover:bg-[#102b50]"
+      className="mt-6 flex h-11 w-full items-center justify-center rounded-md bg-brand text-sm font-bold text-white hover:bg-brand"
     >
       로그인하러 가기
     </Link>
 
     <Link
       href="/login/findpassword"
-      className="mt-3 flex h-11 w-full items-center justify-center rounded-md border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+      className="mt-3 flex h-11 w-full items-center justify-center rounded-md border border-theme text-sm font-semibold text-gray-600 hover:bg-surface-subtle"
     >
       비밀번호 찾기
     </Link>

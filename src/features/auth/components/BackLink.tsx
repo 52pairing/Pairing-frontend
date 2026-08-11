@@ -14,7 +14,7 @@ interface BackLinkProps {
 // 인증 플로우 화면 상단의 "‹ ~로 돌아가기"
 export const BackLink = ({ label, href, onClick }: BackLinkProps) => {
   const className =
-    "mb-5 inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-900";
+    "mb-5 inline-flex items-center gap-1 text-xs font-medium text-theme-secondary hover:text-theme-primary";
 
   const content = (
     <>

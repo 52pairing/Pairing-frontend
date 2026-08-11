@@ -136,12 +136,12 @@ function BasicStep({
 
   return (
     <>
-      <p className="mb-6 rounded-md bg-[#EEF3F8] px-4 py-3 text-xs text-[#374151]">
+      <p className="mb-6 rounded-md bg-surface-muted px-4 py-3 text-xs text-theme-secondary">
         프리랜서 회원은 만 18세 이상만 가입할 수 있습니다.
       </p>
       <div className="space-y-5">
         <div>
-          <label className="mb-2 block text-sm font-semibold text-[#374151]">
+          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
             이름 <span className="text-[#356DF3]">*</span>
           </label>
           <input
@@ -149,7 +149,7 @@ function BasicStep({
             value={form.name ?? ""}
             onChange={(event) => patch({ name: event.target.value })}
             placeholder="이름을 입력해 주세요."
-            className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
           />
         </div>
         <BirthDateSelect

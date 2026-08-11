@@ -37,15 +37,15 @@ export const RoleSelectCard = ({
     useSocialLoginStart("/freelancer");
 
   return (
-    <article className="flex w-full flex-col items-center rounded-lg border border-gray-200 bg-white px-8 py-10 text-center">
+    <article className="flex w-full flex-col items-center rounded-lg border border-theme bg-surface px-8 py-10 text-center">
       <span
         className={`flex h-16 w-16 items-center justify-center rounded-full ${iconBgClassName}`}
       >
         {icon}
       </span>
 
-      <h2 className="mt-5 text-lg font-bold text-[#111827]">{title}</h2>
-      <p className="mt-2 text-sm text-gray-500">{description}</p>
+      <h2 className="mt-5 text-lg font-bold text-theme-primary">{title}</h2>
+      <p className="mt-2 text-sm text-theme-secondary">{description}</p>
 
       <div className="mt-6 flex items-center justify-center gap-4">
         {methods.map((method) =>
@@ -54,7 +54,7 @@ export const RoleSelectCard = ({
               key={method}
               href={href}
               aria-label={`${METHOD_LABEL[method]}로 ${title} 가입`}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#142B4A] transition hover:brightness-110"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-brand transition hover:brightness-110"
             >
               <Image
                 src="/icons/EmailIcon-white.svg"
@@ -89,7 +89,7 @@ export const RoleSelectCard = ({
         )}
       </div>
 
-      <p className="mt-3 text-xs text-gray-400">
+      <p className="mt-3 text-xs text-theme-muted">
         {loadingProvider
           ? `${METHOD_LABEL[loadingProvider]} 인증 화면으로 이동 중입니다.`
           : "가입 방법을 선택해 주세요."}

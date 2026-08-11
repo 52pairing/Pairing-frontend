@@ -54,15 +54,15 @@ function StepNode({
 }) {
   const circleClass =
     state === "upcoming"
-      ? "border border-[#d9e0e7] bg-white font-semibold text-[#98a2b3]"
-      : "bg-[#17365d] font-bold text-white";
+      ? "border border-[#d9e0e7] bg-surface font-semibold text-theme-muted"
+      : "bg-brand font-bold text-white";
 
   const labelClass =
     state === "active"
-      ? "font-bold text-[#17365d]"
+      ? "font-bold text-brand"
       : state === "completed"
-        ? "font-medium text-[#8b95a5]"
-        : "font-medium text-[#98a2b3]";
+        ? "font-medium text-theme-muted"
+        : "font-medium text-theme-muted";
 
   return (
     <div className="flex w-[78px] shrink-0 flex-col items-center">
@@ -82,7 +82,7 @@ function StepLine({ completed = false }: { completed?: boolean }) {
   return (
     <div
       className={`mt-[16px] h-[2px] flex-1 ${
-        completed ? "bg-[#17365d]" : "bg-[#e6eaf0]"
+        completed ? "bg-brand" : "bg-[#e6eaf0]"
       }`}
     />
   );

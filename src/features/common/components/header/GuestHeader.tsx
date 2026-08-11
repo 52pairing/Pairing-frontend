@@ -12,7 +12,7 @@ export function GuestHeader() {
   return (
     <HeaderShell
       nav={guestNavItems.map((item) => (
-        <Link key={item.href} href={item.href} className="hover:text-gray-950">
+        <Link key={item.href} href={item.href} className="hover:text-theme-primary">
           {item.label}
         </Link>
       ))}
@@ -20,13 +20,13 @@ export function GuestHeader() {
         <>
           <Link
             href="/login"
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+            className="rounded-md border border-theme bg-surface px-4 py-2 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
           >
             로그인
           </Link>
           <Link
             href="/signup"
-            className="rounded-md bg-[#142B4A] px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+            className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-brand-contrast hover:bg-brand-hover"
           >
             회원가입
           </Link>

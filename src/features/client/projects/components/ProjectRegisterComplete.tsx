@@ -82,16 +82,16 @@ export function ProjectRegisterComplete() {
   };
 
   return (
-    <main className="min-h-[calc(100dvh-60px)] bg-[#f7f8fa] text-[#111827]">
+    <main className="min-h-[calc(100dvh-60px)] bg-surface-subtle text-theme-primary">
       <div className="mx-auto w-full max-w-[980px] px-6 py-4">
         <div className="mx-auto mt-10 max-w-[720px] text-center">
           <h1 className="mt-5 text-[24px] font-extrabold tracking-[-0.04em]">프로젝트 등록 완료!</h1>
-          <p className="mt-3 text-[13px] font-medium leading-6 text-[#667085]">
-            <span className="font-bold text-[#111827]">{registeredProject.title}</span> 프로젝트가 등록되었습니다.
+          <p className="mt-3 text-[13px] font-medium leading-6 text-theme-secondary">
+            <span className="font-bold text-theme-primary">{registeredProject.title}</span> 프로젝트가 등록되었습니다.
             <br />AI 추천을 시작하려면 착수금 결제가 필요합니다.
           </p>
 
-          <section className="mt-8 rounded-[14px] border border-[#e5e9ef] bg-white px-8 py-7 text-left">
+          <section className="mt-8 rounded-[14px] border border-theme bg-surface px-8 py-7 text-left">
             <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
               <SummaryItem label="프로젝트명" value={registeredProject.title} />
               <SummaryItem label="모집 포지션" value={positions || "-"} />
@@ -113,7 +113,7 @@ export function ProjectRegisterComplete() {
             <ActionButton onClick={() => leaveCompletePage("/client/projects")}>내 프로젝트로 이동</ActionButton>
             <ActionButton onClick={() => leaveCompletePage(`/client/projects/${registeredProject.projectId}`)}>프로젝트 상세보기</ActionButton>
             {registeredProject.payableSettlementId != null ? (
-              <button type="button" onClick={() => setIsPaymentModalOpen(true)} className="flex h-[46px] items-center justify-center rounded-[9px] bg-[#17365d] px-6 text-[12px] font-bold text-white hover:bg-[#102a49]">착수금 결제하기</button>
+              <button type="button" onClick={() => setIsPaymentModalOpen(true)} className="flex h-[46px] items-center justify-center rounded-[9px] bg-brand px-6 text-[12px] font-bold text-white hover:bg-brand">착수금 결제하기</button>
             ) : null}
           </div>
         </div>
@@ -136,9 +136,9 @@ export function ProjectRegisterComplete() {
 }
 
 function ActionButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="flex h-[46px] items-center justify-center rounded-[9px] border border-[#c3ccd8] bg-white px-6 text-[12px] font-bold text-[#344054] hover:bg-[#f8fafc]">{children}</button>;
+  return <button type="button" onClick={onClick} className="flex h-[46px] items-center justify-center rounded-[9px] border border-[#c3ccd8] bg-surface px-6 text-[12px] font-bold text-theme-secondary hover:bg-surface-subtle">{children}</button>;
 }
 
 function SummaryItem({ label, value }: { label: string; value: React.ReactNode }) {
-  return <div><p className="text-[12px] font-medium text-[#98a2b3]">{label}</p><div className="mt-1.5 text-[13px] font-bold text-[#111827]">{value}</div></div>;
+  return <div><p className="text-[12px] font-medium text-theme-muted">{label}</p><div className="mt-1.5 text-[13px] font-bold text-theme-primary">{value}</div></div>;
 }

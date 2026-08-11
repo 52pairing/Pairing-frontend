@@ -60,7 +60,7 @@ function ResetPasswordPageContent() {
       <AuthHeader />
 
       <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-5 py-16">
-        <section className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white px-8 py-9 shadow-sm">
+        <section className="w-full max-w-[440px] rounded-lg border border-theme bg-surface px-8 py-9 shadow-sm">
           {!token ? (
             <ResetPasswordInvalid message="잘못된 접근입니다. 비밀번호 찾기를 다시 진행해 주세요." />
           ) : step === "done" ? (

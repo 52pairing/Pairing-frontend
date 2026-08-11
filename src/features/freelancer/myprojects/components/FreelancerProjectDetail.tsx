@@ -67,7 +67,7 @@ export function FreelancerProjectDetail() {
   const project = PROJECT_DETAILS[params.projectId as keyof typeof PROJECT_DETAILS] ?? PROJECT_DETAILS["1"];
 
   return (
-    <main className="min-h-screen bg-[#f7f8fa] px-4 py-6 text-[#172033] sm:px-5">
+    <main className="min-h-screen bg-surface-subtle px-4 py-6 text-theme-primary sm:px-5">
       <div className="mx-auto w-full max-w-[1000px]">
         <Link
           href="/freelancer/projects"
@@ -76,12 +76,12 @@ export function FreelancerProjectDetail() {
           <span aria-hidden="true">←</span> 제안 목록
         </Link>
 
-        <section className="mt-5 rounded-xl border border-[#dde3ea] bg-white px-6 py-7">
+        <section className="mt-5 rounded-xl border border-theme bg-surface px-6 py-7">
           <h1 className="text-[16px] font-bold tracking-[-0.4px]">{project.title}</h1>
-          <p className="mt-3 text-[11px] font-semibold text-[#64748b]">{project.company}</p>
+          <p className="mt-3 text-[11px] font-semibold text-theme-secondary">{project.company}</p>
         </section>
 
-        <section className="mt-4 rounded-xl border border-[#dde3ea] bg-white px-6 py-6">
+        <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-6">
           <h2 className="text-[14px] font-bold">프로젝트 정보</h2>
           <dl className="mt-5 grid grid-cols-1 gap-x-20 gap-y-4 text-[11px] sm:grid-cols-2">
             <DetailInfo label="역할" value={project.role} />
@@ -93,16 +93,16 @@ export function FreelancerProjectDetail() {
           </dl>
         </section>
 
-        <section className="mt-4 rounded-xl border border-[#dde3ea] bg-white px-6 py-6">
+        <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-6">
           <h2 className="text-[14px] font-bold">상세 정보</h2>
           <dl className="mt-5 space-y-4 text-[11px]">
             <DetailInfo label="프로젝트 상황" value={project.summary} />
             <DetailInfo label="담당 업무" value={project.responsibilities} />
             <div>
-              <dt className="text-[#98a2b3]">요구 기술</dt>
+              <dt className="text-theme-muted">요구 기술</dt>
               <dd className="mt-3 flex flex-wrap gap-2">
                 {project.skills.map((skill) => (
-                  <span key={skill} className="rounded-md bg-[#eef3f8] px-3 py-1.5 font-semibold text-[#183858]">
+                  <span key={skill} className="rounded-md bg-[#eef3f8] px-3 py-1.5 font-semibold text-brand">
                     {skill}
                   </span>
                 ))}
@@ -115,11 +115,11 @@ export function FreelancerProjectDetail() {
           <button
             type="button"
             onClick={() => setIsRejectOpen(true)}
-            className="h-9 rounded-lg border border-[#f04438] bg-white px-5 text-[11px] font-bold text-[#f04438] hover:bg-[#fff5f4]"
+            className="h-9 rounded-lg border border-[#f04438] bg-surface px-5 text-[11px] font-bold text-theme-danger hover:bg-danger-surface"
           >
             거절
           </button>
-          <button type="button" className="h-9 rounded-lg bg-[#132d4f] px-5 text-[11px] font-bold text-white hover:bg-[#0f2541]">
+          <button type="button" className="h-9 rounded-lg bg-brand px-5 text-[11px] font-bold text-white hover:bg-brand">
             수락 및 협상 시작
           </button>
         </div>
@@ -137,8 +137,8 @@ export function FreelancerProjectDetail() {
 function DetailInfo({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid grid-cols-[90px_1fr] gap-3">
-      <dt className="text-[#98a2b3]">{label}</dt>
-      <dd className="font-semibold text-[#172033]">{value}</dd>
+      <dt className="text-theme-muted">{label}</dt>
+      <dd className="font-semibold text-theme-primary">{value}</dd>
     </div>
   );
 }

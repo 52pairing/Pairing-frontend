@@ -28,13 +28,13 @@ export default function ForbiddenPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-16 text-center">
-      <p className="text-6xl font-bold text-gray-900">403</p>
+      <p className="text-6xl font-bold text-theme-primary">403</p>
 
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">
+        <h1 className="text-xl font-semibold text-theme-primary">
           접근 권한이 없습니다
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-gray-500">
+        <p className="mt-2 text-sm leading-relaxed text-theme-secondary">
           현재 계정으로 이용할 수 없는 페이지입니다.
           <br />
           계정 유형에 맞는 홈으로 이동해 주세요.
@@ -43,7 +43,7 @@ export default function ForbiddenPage() {
 
       <Link
         href={homePath}
-        className="mt-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+        className="mt-2 rounded-lg border border-theme bg-surface px-4 py-2 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
       >
         내 홈으로
       </Link>

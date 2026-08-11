@@ -1,6 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ThemeControl } from "@/features/common/theme/ThemeControl";
+import { ThemeLogo } from "@/features/common/theme/ThemeLogo";
 
 interface HeaderShellProps {
   nav: ReactNode;
@@ -11,24 +12,18 @@ interface HeaderShellProps {
 // 높이 60px, 로고, 가운데 메뉴, 오른쪽 액션 영역 배치만 담당
 export function HeaderShell({ nav, actions }: HeaderShellProps) {
   return (
-    <header className="top-0 z-40 h-[60px] border-b border-gray-200 bg-white">
-      <div className="mx-auto flex h-full items-center justify-between px-8">
+    <header className="top-0 z-40 h-[60px] border-b border-theme bg-surface">
+      <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-8">
         <Link href="/" aria-label="Pairing 홈" className="flex items-center">
-          <Image
-            src="/images/Pairing_Logo.png"
-            alt="Pairing"
-            width={110}
-            height={32}
-            priority
-            className="h-8 w-auto object-contain"
-          />
+          <ThemeLogo priority />
         </Link>
 
-        <nav className="hidden items-center gap-12 text-sm font-semibold text-[#374151] md:flex">
+        <nav className="hidden items-center gap-12 text-sm font-semibold text-theme-secondary md:flex">
           {nav}
         </nav>
 
         <div className="flex min-w-[180px] items-center justify-end gap-3">
+          <ThemeControl />
           {actions}
         </div>
       </div>

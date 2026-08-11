@@ -18,7 +18,7 @@ interface SignupStepperProps {
 export function SignupStepper({ title, currentStep, labels }: SignupStepperProps) {
   return (
     <div>
-      <h1 className="mb-6 text-center text-lg font-bold text-[#111827]">
+      <h1 className="mb-6 text-center text-lg font-bold text-theme-primary">
         {title}
       </h1>
 
@@ -59,16 +59,16 @@ function StepNode({
 }) {
   const circleClass =
     state === "upcoming"
-      ? "border border-[#E4E7EC] bg-white font-semibold text-[#9CA3AF]"
+      ? "border border-[#E4E7EC] bg-surface font-semibold text-[#9CA3AF]"
       : state === "active"
         ? "bg-[#356DF3] font-bold text-white"
-        : "bg-[#142B4A] font-bold text-white";
+        : "bg-brand font-bold text-white";
 
   const labelClass =
     state === "active"
       ? "font-bold text-[#356DF3]"
       : state === "completed"
-        ? "font-medium text-[#374151]"
+        ? "font-medium text-theme-secondary"
         : "font-medium text-[#9CA3AF]";
 
   return (
@@ -99,7 +99,7 @@ function StepLine({ completed = false }: { completed?: boolean }) {
   return (
     <div
       className={`mt-[16px] h-[2px] flex-1 ${
-        completed ? "bg-[#142B4A]" : "bg-[#E4E7EC]"
+        completed ? "bg-brand" : "bg-[#E4E7EC]"
       }`}
     />
   );

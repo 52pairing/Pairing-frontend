@@ -4,7 +4,7 @@ import { StepArrow, StepCheckIcon } from "@/features/common/components/SharedUI"
 export function FreelancerMain() {
   return (
     <main
-      className="min-h-screen bg-[#f7f8fa] text-[#172033]"
+      className="min-h-screen bg-surface-subtle text-theme-primary"
       style={{
         fontFamily:
           '"Pretendard", "Noto Sans KR", Arial, Helvetica, sans-serif',
@@ -42,7 +42,7 @@ export function FreelancerMain() {
               HOW IT WORKS
             </p>
 
-            <h2 className="mt-[7px] text-[17px] font-extrabold tracking-[-0.04em] text-[#172033]">
+            <h2 className="mt-[7px] text-[17px] font-extrabold tracking-[-0.04em] text-theme-primary">
               페어링에서 프로젝트가 성사되는 방법
             </h2>
           </div>
@@ -50,16 +50,16 @@ export function FreelancerMain() {
           {/* 진행 카드 */}
           <div className="mt-[34px] grid items-center gap-3 md:grid-cols-[1fr_18px_1fr_18px_1fr]">
             {/* STEP 1 */}
-            <article className="flex min-h-[166px] flex-col items-center justify-center rounded-[12px] border border-[#e1e6ec] bg-white px-5 text-center">
+            <article className="flex min-h-[166px] flex-col items-center justify-center rounded-[12px] border border-theme bg-surface px-5 text-center">
               <p className="text-[7px] font-extrabold tracking-[0.1em] text-[#3975ef]">
                 STEP 1
               </p>
 
-              <h3 className="mt-[9px] text-[11px] font-extrabold text-[#172033]">
+              <h3 className="mt-[9px] text-[11px] font-extrabold text-theme-primary">
                 프로젝트 요청 받기
               </h3>
 
-              <p className="mt-[10px] text-[8px] leading-[1.8] text-[#667085]">
+              <p className="mt-[10px] text-[8px] leading-[1.8] text-theme-secondary">
                 클라이언트가 AI 추천 결과를 통해 프리랜서에게 직접 프로젝트를
                 제안합니다.
               </p>
@@ -68,16 +68,16 @@ export function FreelancerMain() {
             <StepArrow />
 
             {/* STEP 2 */}
-            <article className="flex min-h-[166px] flex-col items-center justify-center rounded-[12px] border border-[#e1e6ec] bg-white px-5 text-center">
+            <article className="flex min-h-[166px] flex-col items-center justify-center rounded-[12px] border border-theme bg-surface px-5 text-center">
               <p className="text-[7px] font-extrabold tracking-[0.1em] text-[#3975ef]">
                 STEP 2
               </p>
 
-              <h3 className="mt-[9px] text-[11px] font-extrabold text-[#172033]">
+              <h3 className="mt-[9px] text-[11px] font-extrabold text-theme-primary">
                 조건 협상 진행
               </h3>
 
-              <p className="mt-[10px] text-[8px] leading-[1.8] text-[#667085]">
+              <p className="mt-[10px] text-[8px] leading-[1.8] text-theme-secondary">
                 AI 협상 채널에서 급여·기간·범위를 최대 15라운드 내
                 조율합니다.
               </p>
@@ -86,16 +86,16 @@ export function FreelancerMain() {
             <StepArrow />
 
             {/* STEP 3 */}
-            <article className="flex min-h-[166px] flex-col items-center justify-center rounded-[12px] border border-[#e1e6ec] bg-white px-5 text-center">
+            <article className="flex min-h-[166px] flex-col items-center justify-center rounded-[12px] border border-theme bg-surface px-5 text-center">
               <p className="text-[7px] font-extrabold tracking-[0.1em] text-[#3975ef]">
                 STEP 3
               </p>
 
-              <h3 className="mt-[9px] text-[11px] font-extrabold text-[#172033]">
+              <h3 className="mt-[9px] text-[11px] font-extrabold text-theme-primary">
                 계약 성사
               </h3>
 
-              <p className="mt-[10px] text-[8px] leading-[1.8] text-[#667085]">
+              <p className="mt-[10px] text-[8px] leading-[1.8] text-theme-secondary">
                 협상이 완료되면 표준 계약서가 자동 생성됩니다. 서명 후 즉시
                 착수금이 처리됩니다.
               </p>
@@ -111,7 +111,7 @@ export function FreelancerMain() {
                 GRADE BENEFITS
               </p>
 
-              <h2 className="mt-[7px] text-[17px] font-extrabold tracking-[-0.04em] text-[#172033]">
+              <h2 className="mt-[7px] text-[17px] font-extrabold tracking-[-0.04em] text-theme-primary">
                 등급별 혜택 안내
               </h2>
 
@@ -122,7 +122,7 @@ export function FreelancerMain() {
 
             <Link
               href="/freelancer/grade"
-              className="flex h-[28px] shrink-0 items-center gap-2 rounded-md border border-[#dfe4ea] bg-white px-3 text-[8px] font-bold text-[#334155] transition hover:bg-[#f8fafc]"
+              className="flex h-[28px] shrink-0 items-center gap-2 rounded-md border border-theme bg-surface px-3 text-[8px] font-bold text-[#334155] transition hover:bg-surface-subtle"
             >
               등급 안내 자세히 보기
               <span className="text-[12px]" aria-hidden="true">
@@ -131,11 +131,11 @@ export function FreelancerMain() {
             </Link>
           </div>
 
-          <div className="mt-[17px] hidden overflow-hidden rounded-[12px] border border-[#e1e6ec] bg-white md:block">
+          <div className="mt-[17px] hidden overflow-hidden rounded-[12px] border border-theme bg-surface md:block">
             <table className="w-full table-fixed border-collapse text-left">
               {/* Header */}
               <thead className="bg-[#eaf1f7]">
-                <tr className="h-[31px] text-[8px] font-bold text-[#344054]">
+                <tr className="h-[31px] text-[8px] font-bold text-theme-secondary">
                   <th className="w-[11%] px-3">등급</th>
                   <th className="w-[16%] px-3">승급 조건</th>
                   <th className="w-[16%] px-3">등급 유지</th>
@@ -145,21 +145,21 @@ export function FreelancerMain() {
               </thead>
 
               <tbody>
-                <tr className="border-t border-[#edf0f3] align-top">
+                <tr className="border-t border-theme align-top">
                   {/* 등급 */}
                   <td className="px-3 py-4">
-                    <span className="inline-flex rounded-full bg-[#eef2f6] px-[10px] py-[5px] text-[8px] font-bold text-[#64748b]">
+                    <span className="inline-flex rounded-full bg-surface-muted px-[10px] py-[5px] text-[8px] font-bold text-theme-secondary">
                       주니어
                     </span>
                   </td>
 
                   {/* 승급조건 */}
-                  <td className="px-3 py-4 text-[8px] font-semibold leading-[1.7] text-[#111827]">
+                  <td className="px-3 py-4 text-[8px] font-semibold leading-[1.7] text-theme-primary">
                     디폴트 (가입 즉시)
                   </td>
 
                   {/* 등급 유지 */}
-                  <td className="px-3 py-4 text-[8px] leading-[1.7] text-[#596579]">
+                  <td className="px-3 py-4 text-[8px] leading-[1.7] text-theme-secondary">
                     6개월 내 프로젝트 경험 유지
                   </td>
 
@@ -176,12 +176,12 @@ export function FreelancerMain() {
 
                   {/* 수수료 */}
                   <td className="px-3 py-4">
-                    <span className="inline-flex rounded-md bg-[#f0f3f6] px-[10px] py-[5px] text-[8px] font-semibold text-[#64748b]">
+                    <span className="inline-flex rounded-md bg-surface-muted px-[10px] py-[5px] text-[8px] font-semibold text-theme-secondary">
                       기본 수수료
                     </span>
                   </td>
                 </tr>
-                <tr className="border-t border-[#edf0f3] align-top">
+                <tr className="border-t border-theme align-top">
                   {/* 등급 */}
                   <td className="px-3 py-4">
                     <span className="inline-flex rounded-full bg-[#eaf3ff] px-[10px] py-[5px] text-[8px] font-bold text-[#3978ef]">
@@ -190,14 +190,14 @@ export function FreelancerMain() {
                   </td>
 
                   {/* 승급조건 */}
-                  <td className="px-3 py-4 text-[8px] font-semibold leading-[1.7] text-[#111827]">
+                  <td className="px-3 py-4 text-[8px] font-semibold leading-[1.7] text-theme-primary">
                     별점 3점↑
                     <br />
                     + 완료 5건↑
                   </td>
 
                   {/* 등급 유지 */}
-                  <td className="px-3 py-4 text-[8px] leading-[1.7] text-[#596579]">
+                  <td className="px-3 py-4 text-[8px] leading-[1.7] text-theme-secondary">
                     6개월 내 프로젝트 경험 유지
                   </td>
 
@@ -216,13 +216,13 @@ export function FreelancerMain() {
 
                   {/* 수수료 */}
                   <td className="px-3 py-4">
-                    <span className="inline-flex rounded-md bg-[#f0f3f6] px-[10px] py-[5px] text-[8px] font-semibold text-[#64748b]">
+                    <span className="inline-flex rounded-md bg-surface-muted px-[10px] py-[5px] text-[8px] font-semibold text-theme-secondary">
                       기본 수수료
                     </span>
                   </td>
                 </tr>
 
-                <tr className="border-t border-[#edf0f3] align-top">
+                <tr className="border-t border-theme align-top">
                   {/* 등급 */}
                   <td className="px-3 py-4">
                     <span className="inline-flex rounded-full bg-[#f2eaff] px-[10px] py-[5px] text-[8px] font-bold text-[#8b5cf6]">
@@ -231,14 +231,14 @@ export function FreelancerMain() {
                   </td>
 
                   {/* 승급조건 */}
-                  <td className="px-3 py-4 text-[8px] font-semibold leading-[1.7] text-[#111827]">
+                  <td className="px-3 py-4 text-[8px] font-semibold leading-[1.7] text-theme-primary">
                     별점 4점↑
                     <br />
                     + 완료 10건↑
                   </td>
 
                   {/* 등급 유지 */}
-                  <td className="px-3 py-4 text-[8px] leading-[1.7] text-[#596579]">
+                  <td className="px-3 py-4 text-[8px] leading-[1.7] text-theme-secondary">
                     6개월 내 프로젝트 경험 유지
                   </td>
 
@@ -270,27 +270,27 @@ export function FreelancerMain() {
 
           <div className="mt-4 space-y-3 md:hidden">
             {/* 주니어 */}
-            <article className="rounded-xl border border-[#e1e6ec] bg-white p-4">
+            <article className="rounded-xl border border-theme bg-surface p-4">
               <div className="flex items-center justify-between">
-                <span className="rounded-full bg-[#eef2f6] px-3 py-1 text-[11px] font-bold text-[#64748b]">
+                <span className="rounded-full bg-surface-muted px-3 py-1 text-[11px] font-bold text-theme-secondary">
                   주니어
                 </span>
 
-                <span className="rounded-md bg-[#f0f3f6] px-2 py-1 text-[10px] text-[#64748b]">
+                <span className="rounded-md bg-surface-muted px-2 py-1 text-[10px] text-theme-secondary">
                   기본 수수료
                 </span>
               </div>
 
-              <div className="mt-4 border-t border-[#edf0f3] pt-4">
-                <p className="text-[10px] text-[#98a2b3]">승급 조건</p>
-                <p className="mt-1 text-[11px] font-semibold text-[#111827]">
+              <div className="mt-4 border-t border-theme pt-4">
+                <p className="text-[10px] text-theme-muted">승급 조건</p>
+                <p className="mt-1 text-[11px] font-semibold text-theme-primary">
                   디폴트 (가입 즉시)
                 </p>
               </div>
 
               <div className="mt-4">
-                <p className="text-[10px] text-[#98a2b3]">등급 유지</p>
-                <p className="mt-1 text-[11px] text-[#475467]">
+                <p className="text-[10px] text-theme-muted">등급 유지</p>
+                <p className="mt-1 text-[11px] text-theme-secondary">
                   6개월 내 프로젝트 경험 유지
                 </p>
               </div>
@@ -303,27 +303,27 @@ export function FreelancerMain() {
             </article>
 
             {/* 시니어 */}
-            <article className="rounded-xl border border-[#e1e6ec] bg-white p-4">
+            <article className="rounded-xl border border-theme bg-surface p-4">
               <div className="flex items-center justify-between">
                 <span className="rounded-full bg-[#eaf3ff] px-3 py-1 text-[11px] font-bold text-[#3978ef]">
                   시니어
                 </span>
 
-                <span className="rounded-md bg-[#f0f3f6] px-2 py-1 text-[10px] text-[#64748b]">
+                <span className="rounded-md bg-surface-muted px-2 py-1 text-[10px] text-theme-secondary">
                   기본 수수료
                 </span>
               </div>
 
-              <div className="mt-4 border-t border-[#edf0f3] pt-4">
-                <p className="text-[10px] text-[#98a2b3]">승급 조건</p>
-                <p className="mt-1 text-[11px] font-semibold text-[#111827]">
+              <div className="mt-4 border-t border-theme pt-4">
+                <p className="text-[10px] text-theme-muted">승급 조건</p>
+                <p className="mt-1 text-[11px] font-semibold text-theme-primary">
                   별점 3점↑ + 완료 5건↑
                 </p>
               </div>
 
               <div className="mt-4">
-                <p className="text-[10px] text-[#98a2b3]">등급 유지</p>
-                <p className="mt-1 text-[11px] text-[#475467]">
+                <p className="text-[10px] text-theme-muted">등급 유지</p>
+                <p className="mt-1 text-[11px] text-theme-secondary">
                   6개월 내 프로젝트 경험 유지
                 </p>
               </div>
@@ -337,7 +337,7 @@ export function FreelancerMain() {
             </article>
 
             {/* 마스터 */}
-            <article className="rounded-xl border border-[#e1e6ec] bg-white p-4">
+            <article className="rounded-xl border border-theme bg-surface p-4">
               <div className="flex items-center justify-between gap-2">
                 <span className="rounded-full bg-[#f2eaff] px-3 py-1 text-[11px] font-bold text-[#8b5cf6]">
                   마스터
@@ -348,16 +348,16 @@ export function FreelancerMain() {
                 </span>
               </div>
 
-              <div className="mt-4 border-t border-[#edf0f3] pt-4">
-                <p className="text-[10px] text-[#98a2b3]">승급 조건</p>
-                <p className="mt-1 text-[11px] font-semibold text-[#111827]">
+              <div className="mt-4 border-t border-theme pt-4">
+                <p className="text-[10px] text-theme-muted">승급 조건</p>
+                <p className="mt-1 text-[11px] font-semibold text-theme-primary">
                   별점 4점↑ + 완료 10건↑
                 </p>
               </div>
 
               <div className="mt-4">
-                <p className="text-[10px] text-[#98a2b3]">등급 유지</p>
-                <p className="mt-1 text-[11px] text-[#475467]">
+                <p className="text-[10px] text-theme-muted">등급 유지</p>
+                <p className="mt-1 text-[11px] text-theme-secondary">
                   6개월 내 프로젝트 경험 유지
                 </p>
               </div>

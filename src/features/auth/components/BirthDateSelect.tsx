@@ -44,7 +44,7 @@ export const BirthDateSelect = ({
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-[#374151]">
+      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
         생년월일 <span className="text-[#356DF3]">*</span>
       </label>
 
@@ -52,7 +52,7 @@ export const BirthDateSelect = ({
         <select
           value={year}
           onChange={(e) => onYearChange(e.target.value)}
-          className="h-11 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-900 outline-none focus:border-[#142B4A]"
+          className="h-11 flex-1 rounded-md border border-theme px-3 text-sm text-theme-primary outline-none focus:border-brand"
         >
           <option value="" disabled>
             년
@@ -67,7 +67,7 @@ export const BirthDateSelect = ({
         <select
           value={month}
           onChange={(e) => onMonthChange(e.target.value)}
-          className="h-11 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-900 outline-none focus:border-[#142B4A]"
+          className="h-11 flex-1 rounded-md border border-theme px-3 text-sm text-theme-primary outline-none focus:border-brand"
         >
           <option value="" disabled>
             월
@@ -82,7 +82,7 @@ export const BirthDateSelect = ({
         <select
           value={day}
           onChange={(e) => onDayChange(e.target.value)}
-          className="h-11 flex-1 rounded-md border border-gray-200 px-3 text-sm text-gray-900 outline-none focus:border-[#142B4A]"
+          className="h-11 flex-1 rounded-md border border-theme px-3 text-sm text-theme-primary outline-none focus:border-brand"
         >
           <option value="" disabled>
             일

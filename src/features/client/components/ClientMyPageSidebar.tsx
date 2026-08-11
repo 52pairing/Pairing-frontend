@@ -17,7 +17,7 @@ interface ClientMyPageSidebarProps {
 
 export function ClientMyPageSidebar({ activeMenu }: ClientMyPageSidebarProps) {
   return (
-    <aside className="w-full shrink-0 rounded-xl border border-[#dde3ea] bg-white py-2 sm:w-[215px]">
+    <aside className="w-full shrink-0 rounded-xl border border-theme bg-surface py-2 sm:w-[215px]">
       <nav aria-label="클라이언트 마이페이지 메뉴">
         <ul>
           {CLIENT_MY_PAGE_MENU.map((menu) => {
@@ -30,8 +30,8 @@ export function ClientMyPageSidebar({ activeMenu }: ClientMyPageSidebarProps) {
                   aria-current={isActive ? "page" : undefined}
                   className={`flex h-12 items-center px-5 text-[13px] font-semibold transition-colors ${
                     isActive
-                      ? "bg-[#edf2f7] text-[#17365d]"
-                      : "text-[#667085] hover:bg-[#f8fafc] hover:text-[#344054]"
+                      ? "bg-[#edf2f7] text-brand"
+                      : "text-theme-secondary hover:bg-surface-subtle hover:text-theme-secondary"
                   }`}
                 >
                   {menu.label}
@@ -43,7 +43,7 @@ export function ClientMyPageSidebar({ activeMenu }: ClientMyPageSidebarProps) {
             <Link
               href="/client/mypage/cancel"
               aria-current={activeMenu === "cancel" ? "page" : undefined}
-              className={`flex h-12 items-center px-5 text-[13px] font-semibold text-[#f04438] transition-colors hover:bg-[#fff5f4] ${activeMenu === "cancel" ? "bg-[#fff5f4]" : ""}`}
+              className={`flex h-12 items-center px-5 text-[13px] font-semibold text-theme-danger transition-colors hover:bg-danger-surface ${activeMenu === "cancel" ? "bg-danger-surface" : ""}`}
             >
               회원 탈퇴
             </Link>

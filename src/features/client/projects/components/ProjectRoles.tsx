@@ -142,18 +142,18 @@ export function ProjectRoles() {
     <ProjectRegisterShell currentStep={STEP} backHref="/client" backLabel="홈으로">
       <div className="mx-auto mt-12 max-w-[720px]">
         <header>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-[#111827]">직군별 모집 인원 설정</h1>
-          <p className="mt-2 text-[12px] font-medium text-[#667085]">모집이 필요한 직군과 조건을 직군별로 설정해주세요.</p>
+          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-theme-primary">직군별 모집 인원 설정</h1>
+          <p className="mt-2 text-[12px] font-medium text-theme-secondary">모집이 필요한 직군과 조건을 직군별로 설정해주세요.</p>
         </header>
 
-        <div className="mt-4 flex min-h-[40px] items-center rounded-[8px] border border-[#e1e6ec] bg-[#f7f8fa] px-4">
-          <p className="text-[11px] font-bold text-[#344054]">총 모집 인원 {recruits.reduce((sum, item) => sum + item.count, 0)}명</p>
+        <div className="mt-4 flex min-h-[40px] items-center rounded-[8px] border border-theme bg-surface-subtle px-4">
+          <p className="text-[11px] font-bold text-theme-secondary">총 모집 인원 {recruits.reduce((sum, item) => sum + item.count, 0)}명</p>
         </div>
 
         {metaError ? (
-          <div className="mt-4 flex items-center justify-between rounded-[8px] border border-[#fda29b] bg-[#fff5f4] px-4 py-3">
-            <p className="text-[11px] font-semibold text-[#b42318]">{metaError}</p>
-            <button type="button" onClick={() => void loadMeta()} className="text-[11px] font-bold text-[#b42318] underline">다시 시도</button>
+          <div className="mt-4 flex items-center justify-between rounded-[8px] border border-[#fda29b] bg-danger-surface px-4 py-3">
+            <p className="text-[11px] font-semibold text-theme-danger">{metaError}</p>
+            <button type="button" onClick={() => void loadMeta()} className="text-[11px] font-bold text-theme-danger underline">다시 시도</button>
           </div>
         ) : null}
 
@@ -175,7 +175,7 @@ export function ProjectRoles() {
           type="button"
           disabled={!meta || recruits.length >= MAX_RECRUITS}
           onClick={() => setRecruits((current) => [...current, createRecruit(Date.now())])}
-          className="flex h-[43px] w-full items-center justify-center gap-2 rounded-b-[10px] border border-t-0 border-[#e1e6ec] bg-white text-[11px] font-semibold text-[#667085] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:bg-[#f8fafc] disabled:text-[#b8c0cc]"
+          className="flex h-[43px] w-full items-center justify-center gap-2 rounded-b-[10px] border border-t-0 border-theme bg-surface text-[11px] font-semibold text-theme-secondary transition hover:bg-surface-subtle disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-[#b8c0cc]"
         >
           <span className="text-[18px] font-light">+</span> 모집 직군 추가
         </button>
@@ -221,10 +221,10 @@ function RecruitCard({ index, recruit, meta, canDelete, onChange, onDelete }: {
   };
 
   return (
-    <section className="overflow-visible rounded-[11px] border border-[#e1e6ec] bg-white">
+    <section className="overflow-visible rounded-[11px] border border-theme bg-surface">
       <div className="flex h-[46px] items-center justify-between rounded-t-[11px] bg-[#f5f6f8] px-5">
-        <h2 className="text-[12px] font-extrabold text-[#111827]">모집 직군 {index + 1}</h2>
-        {canDelete ? <button type="button" onClick={onDelete} className="text-[10px] font-medium text-[#667085]">삭제</button> : null}
+        <h2 className="text-[12px] font-extrabold text-theme-primary">모집 직군 {index + 1}</h2>
+        {canDelete ? <button type="button" onClick={onDelete} className="text-[10px] font-medium text-theme-secondary">삭제</button> : null}
       </div>
       <div className="grid gap-x-8 gap-y-6 px-5 py-6 md:grid-cols-2">
         <Field label="직군">
@@ -247,7 +247,7 @@ function RecruitCard({ index, recruit, meta, canDelete, onChange, onDelete }: {
               const option = jobs.find((item) => item.code === event.target.value);
               onChange({ job: option?.code ?? "", jobLabel: option?.label });
             }}
-            className="h-[43px] w-full rounded-[8px] border border-[#dce2e8] bg-white px-4 text-[11px] font-semibold outline-none"
+            className="h-[43px] w-full rounded-[8px] border border-theme bg-surface px-4 text-[11px] font-semibold outline-none"
           >
             <option value="">{recruit.category ? "직무를 선택해주세요" : "직군을 먼저 선택"}</option>
             {jobs.map((job) => <option key={job.code} value={job.code}>{job.label}</option>)}
@@ -256,8 +256,8 @@ function RecruitCard({ index, recruit, meta, canDelete, onChange, onDelete }: {
 
         <Field label="희망 경력">
           <div className="flex items-center gap-2">
-            <input type="number" min={1} max={MAX_EXPERIENCE} value={recruit.experience} onChange={(e) => onChange({ experience: Math.min(MAX_EXPERIENCE, Math.max(1, Number(e.target.value))) })} className="h-[40px] w-[66px] rounded-[8px] border border-[#dce2e8] text-center text-[12px] font-bold outline-none" />
-            <span className="text-[11px] font-semibold text-[#667085]">년 이상</span>
+            <input type="number" min={1} max={MAX_EXPERIENCE} value={recruit.experience} onChange={(e) => onChange({ experience: Math.min(MAX_EXPERIENCE, Math.max(1, Number(e.target.value))) })} className="h-[40px] w-[66px] rounded-[8px] border border-theme text-center text-[12px] font-bold outline-none" />
+            <span className="text-[11px] font-semibold text-theme-secondary">년 이상</span>
           </div>
         </Field>
 
@@ -266,7 +266,7 @@ function RecruitCard({ index, recruit, meta, canDelete, onChange, onDelete }: {
             <CountButton onClick={() => onChange({ count: Math.max(1, recruit.count - 1) })}>−</CountButton>
             <span className="min-w-[18px] text-center text-[13px] font-bold">{recruit.count}</span>
             <CountButton onClick={() => onChange({ count: Math.min(MAX_HEADCOUNT, recruit.count + 1) })}>+</CountButton>
-            <span className="text-[11px] font-semibold text-[#667085]">명</span>
+            <span className="text-[11px] font-semibold text-theme-secondary">명</span>
           </div>
         </Field>
 
@@ -275,7 +275,7 @@ function RecruitCard({ index, recruit, meta, canDelete, onChange, onDelete }: {
           {recruit.skills.length ? (
             <div className="mt-3 flex flex-wrap gap-2">
               {recruit.skills.map((code) => (
-                <button key={code} type="button" onClick={() => onChange({ skills: recruit.skills.filter((item) => item !== code) })} className="flex h-[29px] items-center gap-2 rounded-[6px] border border-[#bfcfe1] bg-[#edf4fb] px-3 text-[10px] font-bold text-[#17365d]">
+                <button key={code} type="button" onClick={() => onChange({ skills: recruit.skills.filter((item) => item !== code) })} className="flex h-[29px] items-center gap-2 rounded-[6px] border border-[#bfcfe1] bg-[#edf4fb] px-3 text-[10px] font-bold text-brand">
                   {recruit.skillLabels?.[code] ?? code}<span className="text-[#8898aa]">×</span>
                 </button>
               ))}
@@ -290,17 +290,17 @@ function RecruitCard({ index, recruit, meta, canDelete, onChange, onDelete }: {
               onBlur={() => setIsSkillListOpen(false)}
               onChange={(e) => { setSkillInput(e.target.value); setIsSkillListOpen(true); }}
               placeholder="스킬 검색 (예: React, Python...)"
-              className="h-[41px] w-full rounded-[8px] border border-[#dce2e8] px-4 text-[11px] font-semibold outline-none disabled:bg-[#f8fafc]"
+              className="h-[41px] w-full rounded-[8px] border border-theme px-4 text-[11px] font-semibold outline-none disabled:bg-surface-subtle"
             />
             {isSkillListOpen && filteredSkills.length ? (
-              <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-[8px] border border-[#dce2e8] bg-white py-1 shadow-lg">
+              <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-[8px] border border-theme bg-surface py-1 shadow-lg">
                 {filteredSkills.map((skill) => (
                   <button key={skill.code} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => selectSkill(skill)} className="block w-full px-4 py-2 text-left text-[11px] font-semibold hover:bg-[#f4f7fa]">{skill.label}</button>
                 ))}
               </div>
             ) : null}
           </div>
-          <p className="mt-2 text-[10px] text-[#98a2b3]">필수 1개 · 최대 {MAX_SKILLS}개</p>
+          <p className="mt-2 text-[10px] text-theme-muted">필수 1개 · 최대 {MAX_SKILLS}개</p>
         </div>
       </div>
     </section>
@@ -311,8 +311,8 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   return <div><ProjectRequiredLabel>{label}</ProjectRequiredLabel><div className="mt-3">{children}</div></div>;
 }
 function OptionButton({ children, selected, onClick }: { children: ReactNode; selected: boolean; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className={`flex h-[38px] min-w-[59px] items-center justify-center rounded-[8px] border px-4 text-[11px] font-semibold ${selected ? "border-[#17365d] bg-[#eef3f8] text-[#17365d]" : "border-[#dce2e8] bg-white text-[#667085]"}`}>{children}</button>;
+  return <button type="button" onClick={onClick} className={`flex h-[38px] min-w-[59px] items-center justify-center rounded-[8px] border px-4 text-[11px] font-semibold ${selected ? "border-brand bg-[#eef3f8] text-brand" : "border-theme bg-surface text-theme-secondary"}`}>{children}</button>;
 }
 function CountButton({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="flex h-[33px] w-[33px] items-center justify-center rounded-[8px] border border-[#dce2e8] bg-white text-[16px] font-bold">{children}</button>;
+  return <button type="button" onClick={onClick} className="flex h-[33px] w-[33px] items-center justify-center rounded-[8px] border border-theme bg-surface text-[16px] font-bold">{children}</button>;
 }

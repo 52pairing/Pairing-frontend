@@ -72,22 +72,22 @@ export function SocialCallbackContent() {
 
 export function SocialCallbackStatus({ error = "" }: { error?: string }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-surface">
       <AuthHeader />
       <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-5">
-        <section className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white px-8 py-9 text-center shadow-sm">
-          <h1 className="text-lg font-bold text-[#111827]">
+        <section className="w-full max-w-[440px] rounded-lg border border-theme bg-surface px-8 py-9 text-center shadow-sm">
+          <h1 className="text-lg font-bold text-theme-primary">
             {error ? "소셜 로그인을 완료하지 못했습니다." : "로그인 처리 중"}
           </h1>
           <p
-            className={`mt-3 text-sm ${error ? "text-red-500" : "text-gray-500"}`}
+            className={`mt-3 text-sm ${error ? "text-red-500" : "text-theme-secondary"}`}
           >
             {error || "인증 정보를 확인하고 있습니다. 잠시만 기다려 주세요."}
           </p>
           {error ? (
             <a
               href="/login"
-              className="mt-6 inline-flex h-11 items-center rounded-md bg-[#142B4A] px-5 text-sm font-bold text-white"
+              className="mt-6 inline-flex h-11 items-center rounded-md bg-brand px-5 text-sm font-bold text-white"
             >
               로그인으로 돌아가기
             </a>

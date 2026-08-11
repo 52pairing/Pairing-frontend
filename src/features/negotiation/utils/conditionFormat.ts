@@ -119,16 +119,3 @@ export const formatConditionValue = (
       return value;
   }
 };
-
-/**
- * 마지노선 입력(만원 등) → 서버 전송 문자열 변환.
- * AMOUNT 만 만원→원 변환하고, 나머지 종류는 입력 문자열을 그대로 보낸다.
- * (PERIOD/START_DATE 등은 아직 형식별 전용 입력 UI가 없어 원문 전송 — 후속 보강)
- */
-export const toServerValue = (
-  type: ConditionType | string,
-  input: string,
-): string => {
-  if (type === "AMOUNT") return manwonToWonString(input);
-  return input.trim();
-};

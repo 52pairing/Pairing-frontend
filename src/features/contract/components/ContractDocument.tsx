@@ -60,11 +60,11 @@ export function ContractDocument({ role }: ContractDocumentProps) {
 
   return (
     <main className="min-h-screen bg-[#f3f5fa] text-[#182235]">
-      <header className="border-b border-[#e8ebf0] bg-white">
+      <header className="border-b border-[#e8ebf0] bg-surface">
         <div className="mx-auto flex h-[52px] max-w-[860px] items-center gap-3 px-5">
-          <Link href=".." className="text-[13px] font-medium text-[#9aa4b2] hover:text-[#667085]">&lt; 계약 상세로</Link>
+          <Link href=".." className="text-[13px] font-medium text-theme-muted hover:text-theme-secondary">&lt; 계약 상세로</Link>
           <span className="text-[#c7ced8]">|</span>
-          <h1 className="text-[15px] font-bold text-[#172033]">계약서 미리보기</h1>
+          <h1 className="text-[15px] font-bold text-theme-primary">계약서 미리보기</h1>
         </div>
       </header>
 
@@ -73,10 +73,10 @@ export function ContractDocument({ role }: ContractDocumentProps) {
           계약서 내용을 최종 확인해 주세요. 전자 서명 후에는 수정이 불가합니다.
         </div>
 
-        <article className="rounded-[15px] bg-white px-10 py-8 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+        <article className="rounded-[15px] bg-surface px-10 py-8 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
           <div className="text-center">
             <h2 className="text-[22px] font-bold tracking-[-0.02em]">프리랜서 용역 계약서</h2>
-            <p className="mt-2 text-[12px] text-[#98a2b3]">계약 번호: CNT-2026-00127 · 작성일: 2026.08.07</p>
+            <p className="mt-2 text-[12px] text-theme-muted">계약 번호: CNT-2026-00127 · 작성일: 2026.08.07</p>
           </div>
 
           <SectionTitle title="당사자 표시" className="mt-8" />
@@ -97,9 +97,9 @@ export function ContractDocument({ role }: ContractDocumentProps) {
           <InfoRows rows={[["지급 계좌", "카카오뱅크 3333-01-2345678 (예금주 : 김민준)"]]} />
 
           <ArticleTitle title="제6조 (플랫폼 이용 수수료)" />
-          <p className="mt-3 text-[14px] leading-7 text-[#667085]">① 갑·을은 각각 플랫폼에 수수료를 지급한다.</p>
+          <p className="mt-3 text-[14px] leading-7 text-theme-secondary">① 갑·을은 각각 플랫폼에 수수료를 지급한다.</p>
           <FeeTable />
-          <p className="mt-3 text-[14px] text-[#667085]">② 등급별 차등 적용: 다이아·마스터 등급은 각 1%씩 인하한다.</p>
+          <p className="mt-3 text-[14px] text-theme-secondary">② 등급별 차등 적용: 다이아·마스터 등급은 각 1%씩 인하한다.</p>
 
           <InfoSection title="제7조 (근무 조건)" rows={[["근무 방식", "혼합"], ["근무 형태", "풀타임"]]} />
           {ARTICLES.slice(1, 4).map((article) => <Article key={article.title} {...article} />)}
@@ -110,16 +110,16 @@ export function ContractDocument({ role }: ContractDocumentProps) {
           <ContractSection title="제15조 (특약사항)">별도의 특약사항 없음</ContractSection>
 
           <SectionTitle title="서명" className="mt-11" />
-          <div className="mt-5 max-w-[380px] rounded-[12px] border border-[#e5e7eb] px-7 py-6">
-            <p className="text-center text-[14px] text-[#98a2b3]">갑 (클라이언트)</p>
+          <div className="mt-5 max-w-[380px] rounded-[12px] border border-theme px-7 py-6">
+            <p className="text-center text-[14px] text-theme-muted">갑 (클라이언트)</p>
             <p className="mt-2 text-center text-[17px] font-bold">카카오 주식회사</p>
-            <p className="mt-1 text-center text-[13px] text-[#98a2b3]">대표자 정신아</p>
+            <p className="mt-1 text-center text-[13px] text-theme-muted">대표자 정신아</p>
             <div className="mt-7 flex justify-center"><div className="flex h-[88px] w-[88px] items-center justify-center rounded-full border border-dashed border-[#d6dbe3] text-[13px] text-[#a8b0bd]">전자서명</div></div>
           </div>
         </article>
 
         <div className="mt-5 flex gap-3">
-          <button type="button" className="h-[46px] w-[240px] cursor-pointer rounded-[11px] border border-[#e5e7eb] bg-white text-[14px] font-semibold text-[#667085] transition hover:bg-[#f8fafc]">취소하기</button>
+          <button type="button" className="h-[46px] w-[240px] cursor-pointer rounded-[11px] border border-theme bg-surface text-[14px] font-semibold text-theme-secondary transition hover:bg-surface-subtle">취소하기</button>
           <button type="button" onClick={completeContract} className="h-[46px] flex-1 cursor-pointer rounded-[11px] bg-[#163760] text-[14px] font-bold text-white transition hover:bg-[#122d4f]">전자 서명 및 계약 체결</button>
         </div>
       </div>
@@ -144,15 +144,15 @@ function ArticleTitle({ title }: { title: string }) {
 }
 
 function PartyCard({ title, rows }: { title: string; rows: string[][] }) {
-  return <div className="rounded-[12px] bg-[#f8fafc] px-5 py-4"><p className="mb-2 text-[13px] font-semibold text-[#98a2b3]">{title}</p><InfoRows rows={rows} compact /></div>;
+  return <div className="rounded-[12px] bg-surface-subtle px-5 py-4"><p className="mb-2 text-[13px] font-semibold text-theme-muted">{title}</p><InfoRows rows={rows} compact /></div>;
 }
 
 function InfoRows({ rows, compact = false }: { rows: string[][]; compact?: boolean }) {
-  return <div>{rows.map(([label, value]) => <div key={label} className={`grid ${compact ? "grid-cols-[110px_1fr]" : "grid-cols-[150px_1fr]"} border-b border-[#e6ebf1] py-2.5 last:border-b-0`}><span className="text-[13px] text-[#98a2b3]">{label}</span><span className="text-[14px] font-semibold leading-6 text-[#344054]">{value}</span></div>)}</div>;
+  return <div>{rows.map(([label, value]) => <div key={label} className={`grid ${compact ? "grid-cols-[110px_1fr]" : "grid-cols-[150px_1fr]"} border-b border-[#e6ebf1] py-2.5 last:border-b-0`}><span className="text-[13px] text-theme-muted">{label}</span><span className="text-[14px] font-semibold leading-6 text-theme-secondary">{value}</span></div>)}</div>;
 }
 
 function ContractSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return <section><ArticleTitle title={title} /><p className="mt-3 text-[14px] leading-7 text-[#667085]">{children}</p></section>;
+  return <section><ArticleTitle title={title} /><p className="mt-3 text-[14px] leading-7 text-theme-secondary">{children}</p></section>;
 }
 
 function InfoSection({ title, rows }: { title: string; rows: string[][] }) {
@@ -160,11 +160,11 @@ function InfoSection({ title, rows }: { title: string; rows: string[][] }) {
 }
 
 function Article({ title, lines }: { title: string; lines: string[] }) {
-  return <section><ArticleTitle title={title} /><ol className="mt-3 space-y-1 text-[14px] leading-7 text-[#667085]">{lines.map((line) => <li key={line}>{line}</li>)}</ol></section>;
+  return <section><ArticleTitle title={title} /><ol className="mt-3 space-y-1 text-[14px] leading-7 text-theme-secondary">{lines.map((line) => <li key={line}>{line}</li>)}</ol></section>;
 }
 
 function FeeTable() {
   const headers = ["구분", "1억 미만 — 갑", "1억 미만 — 을", "1억 이상 — 갑", "1억 이상 — 을"];
   const rows = [["착수금 수수료", "3%", "4%", "2%", "4%"], ["성공보수 수수료", "7%", "6%", "6%", "6%"]];
-  return <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[680px] border-collapse text-center text-[13px]"><thead><tr className="bg-[#f5f7fb]">{headers.map((header) => <th key={header} className="border border-[#d9dee7] px-3 py-2.5 font-semibold text-[#384250]">{header}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row[0]}>{row.map((cell, columnIndex) => <td key={`${row[0]}-${columnIndex}`} className="border border-[#d9dee7] px-3 py-2.5 text-[#667085]">{cell}</td>)}</tr>)}</tbody></table></div>;
+  return <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[680px] border-collapse text-center text-[13px]"><thead><tr className="bg-[#f5f7fb]">{headers.map((header) => <th key={header} className="border border-theme px-3 py-2.5 font-semibold text-[#384250]">{header}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row[0]}>{row.map((cell, columnIndex) => <td key={`${row[0]}-${columnIndex}`} className="border border-theme px-3 py-2.5 text-theme-secondary">{cell}</td>)}</tr>)}</tbody></table></div>;
 }
