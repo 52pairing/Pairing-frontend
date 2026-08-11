@@ -46,6 +46,7 @@ export interface ClientProjectDetailResponse {
   positions: ProjectDetailPosition[];
   files: ProjectDetailFile[];
   createdAt: string | null;
+  closedAt: string | null;
   payableSettlementId: number | null;
 }
 

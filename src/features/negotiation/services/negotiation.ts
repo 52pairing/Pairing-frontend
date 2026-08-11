@@ -66,6 +66,20 @@ export const submitAnswers = async (
   });
 };
 
+/**
+ * 협상 중 내 마지노선 수정.
+ * 요청 형식은 start 와 동일. 성공 응답 data 는 상세(NegotiationDetail)와 동일 형태라
+ * 그대로 상태에 반영하면 되고 재조회 불필요. 라운드 변화 없음.
+ */
+export const updateFloors = (
+  negotiationId: NegotiationId,
+  body: StartNegotiationRequest,
+) =>
+  apiCall<NegotiationDetail>(`${BASE}/${negotiationId}/floors`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+
 /** 협상 포기 → status=FAILED, 상대 알림 */
 export const giveUpNegotiation = async (
   negotiationId: NegotiationId,

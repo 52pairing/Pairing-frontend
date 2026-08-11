@@ -65,6 +65,7 @@ export function ClientProjectDetail() {
   const [pendingAction, setPendingAction] = useState<ProjectAction | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isCompletionPaymentPromptOpen, setIsCompletionPaymentPromptOpen] = useState(false);
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const fromTab = searchParams.get("fromTab");
   const projectListHref = fromTab ? `/client/projects?tab=${encodeURIComponent(fromTab)}` : "/client/projects";
@@ -119,15 +120,22 @@ export function ClientProjectDetail() {
 
   const executeAction = async () => {
     if (!project || !pendingAction || isProcessing) return;
+    const action = pendingAction;
     setIsProcessing(true);
     setErrorMessage("");
     try {
-      if (pendingAction === "cancelRegistration") await cancelProjectRegistration(project.projectId);
-      if (pendingAction === "extendRecruitment") await extendProjectRecruitment(project.projectId);
-      if (pendingAction === "closeRecruitment") await closeProjectRecruitment(project.projectId);
-      if (pendingAction === "complete") await completeClientProject(project.projectId);
+      if (action === "cancelRegistration") await cancelProjectRegistration(project.projectId);
+      if (action === "extendRecruitment") await extendProjectRecruitment(project.projectId);
+      if (action === "closeRecruitment") await closeProjectRecruitment(project.projectId);
+      const completedProject = action === "complete"
+        ? await completeClientProject(project.projectId)
+        : null;
       setPendingAction(null);
       await loadProject();
+      if (completedProject?.payableSettlementId != null) {
+        setProject(completedProject);
+        setIsCompletionPaymentPromptOpen(true);
+      }
     } catch (error) {
       setPendingAction(null);
       setErrorMessage(error instanceof Error ? error.message : "프로젝트 상태를 변경하지 못했습니다.");
@@ -191,10 +199,11 @@ export function ClientProjectDetail() {
 
         <ProjectDetailTabs activeTab={activeTab} onTabChange={setActiveTab} rightContent={<div className="flex items-center gap-2">{activeTab === "추천 후보" ? <CandidateRerollActions projectId={project.projectId} /> : activeTab === "협상" ? <NegotiationActions /> : null}{actionMenu}</div>} />
 
-        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} /> : activeTab === "추천 후보" ? <RecommendedCandidates projectId={project.projectId} /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : <ProjectProgress projectId={params.projectId} isAllComplete={project.status === "COMPLETION_PENDING" || project.status === "CLOSED"} />}
+        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} /> : activeTab === "추천 후보" ? <RecommendedCandidates projectId={project.projectId} /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : <ProjectProgress project={project} jobRoleLabels={jobRoleLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} />}
       </div>
 
       <ConfirmModal open={pendingAction !== null} title={pendingAction ? ACTION_MODAL[pendingAction].title : ""} description={pendingAction ? ACTION_MODAL[pendingAction].description : ""} confirmText={isProcessing ? "처리 중..." : pendingAction ? ACTION_MODAL[pendingAction].confirmText : "확인"} cancelText="취소" onClose={() => !isProcessing && setPendingAction(null)} onConfirm={() => void executeAction()} closeOnOverlayClick={!isProcessing} />
+      <ConfirmModal open={isCompletionPaymentPromptOpen} title="프로젝트가 완료되었습니다." description="성공보수를 결제하시겠습니까?" confirmText="성공보수 결제" cancelText="취소" onClose={() => setIsCompletionPaymentPromptOpen(false)} onConfirm={() => { setIsCompletionPaymentPromptOpen(false); setIsPaymentOpen(true); }} />
       <PaymentMethodModal open={isPaymentOpen} payment={{ settlementId: project.payableSettlementId ?? undefined, type: project.status === "COMPLETION_PENDING" ? "SUCCESS_FEE" : "UPFRONT_FEE", title: project.status === "COMPLETION_PENDING" ? "성공보수 수수료" : "착수금 수수료", description: project.title, amount: 0 }} onClose={() => setIsPaymentOpen(false)} onPay={completePayment} />
     </main>
   );

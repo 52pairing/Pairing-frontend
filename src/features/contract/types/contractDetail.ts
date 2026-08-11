@@ -1,4 +1,11 @@
-export type ContractDetailStatus = "DRAFT" | "SIGN_PENDING" | "SIGNED";
+export type ContractDetailStatus =
+  | "DRAFT"
+  | "SIGN_PENDING"
+  | "SIGNED"
+  | "IN_PROGRESS"
+  | "COMPLETION_PENDING"
+  | "COMPLETED"
+  | "TERMINATED";
 export type ContractPartyRole = "CLIENT" | "FREELANCER";
 export type ContractSignatureStatus = "PENDING" | "SIGNED" | "REJECTED";
 
