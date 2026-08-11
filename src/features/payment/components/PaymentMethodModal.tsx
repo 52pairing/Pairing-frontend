@@ -64,8 +64,9 @@ export function PaymentMethodModal({
     Promise.all([getSettlement(settlementId), getMyPaymentMethods()])
       .then(([settlementResponse, methods]) => {
         if (cancelled) return;
+        const cards = methods.filter((method) => method.methodType === "CARD");
         setSettlement(settlementResponse);
-        setCard(methods.find((method) => method.methodType === "CARD") ?? null);
+        setCard(cards[0] ?? null);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -158,6 +159,15 @@ export function PaymentMethodModal({
               <p className="mt-1 text-[24px] font-extrabold text-brand">
                 {amount.toLocaleString("ko-KR")}<span className="ml-0.5 text-[12px]">원</span>
               </p>
+              {settlement?.phase === "SUCCESS_FEE" ? (
+                <dl className="mt-4 space-y-2 border-t border-theme pt-3 text-[11px]">
+                  <PaymentDetailRow label="계약 금액" value={`${settlement.baseAmount.toLocaleString("ko-KR")}원`} />
+                  <PaymentDetailRow label="성공보수 수수료" value={`${settlement.feeAmount.toLocaleString("ko-KR")}원`} />
+                  <PaymentDetailRow label="계산 기준" value={`${settlement.feeRate}%${settlement.gradeDiscount > 0 ? ` · 등급 할인 ${settlement.gradeDiscount}%` : ""}`} />
+                  <PaymentDetailRow label="최종 결제 금액" value={`${settlement.feeAmount.toLocaleString("ko-KR")}원`} />
+                  {settlement.dueDate ? <PaymentDetailRow label="납부 기한" value={settlement.dueDate.replaceAll("-", ".")} /> : null}
+                </dl>
+              ) : null}
             </div>
 
             <p className="mt-6 border-b border-theme pb-3 text-[12px] font-bold text-theme-secondary">신용·체크카드</p>
@@ -206,4 +216,8 @@ export function PaymentMethodModal({
       />
     </>
   );
+}
+
+function PaymentDetailRow({ label, value }: { label: string; value: string }) {
+  return <div className="flex items-center justify-between gap-4"><dt className="font-medium text-theme-muted">{label}</dt><dd className="text-right font-bold text-theme-primary">{value}</dd></div>;
 }

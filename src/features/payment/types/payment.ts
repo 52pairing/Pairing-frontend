@@ -22,7 +22,11 @@ export interface SettlementResponse {
   projectId: number;
   projectTitle: string;
   phase: SettlementPhase;
+  baseAmount: number;
+  feeRate: number;
+  gradeDiscount: number;
   feeAmount: number;
+  dueDate: string | null;
   payable: boolean;
   status: SettlementStatus;
   approvalNo?: string | null;
@@ -37,6 +41,19 @@ export interface AccountPaymentMethod {
   cardBrand: string | null;
   cardLast4: string | null;
   cardHolder: string | null;
+  bankName: string | null;
+  accountLast4: string | null;
+  accountHolder: string | null;
+}
+
+export interface SettlementPageResponse {
+  content: SettlementResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
 }
 
 export interface SuccessFeePaymentSummary {

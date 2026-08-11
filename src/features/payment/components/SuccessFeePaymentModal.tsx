@@ -48,7 +48,7 @@ export function SuccessFeePaymentModal({
       <dl className="mt-5 space-y-3 rounded-xl bg-[#f5f2ff] px-5 py-5 text-[12px]">
         <PaymentRow label="프로젝트" value={summary.projectTitle} accent />
         <PaymentRow label="계약 기간" value={summary.duration} />
-        <PaymentRow label="총 계약 금액" value={`${summary.contractAmount.toLocaleString("ko-KR")}원`} />
+        <PaymentRow label="프로젝트 예산" value={`${summary.contractAmount.toLocaleString("ko-KR")}원`} />
         <PaymentRow
           label="성공보수 수수료율"
           value={summary.discountLabel ? `${summary.baseRate}% → ${summary.discountLabel} = ${appliedRate}%` : `${appliedRate}%`}

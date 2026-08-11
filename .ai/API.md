@@ -368,7 +368,10 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `GET /api/v1/settlements/{settlementId}`: 프로젝트명, 결제 단계, 결제 금액, 결제 가능 여부, 상태, 프로젝트 ID 조회
 - `GET /api/v1/accounts/me/payment-methods`: 로그인 계정 결제수단 조회
 - 결제수단 중 `methodType: CARD`만 표시하고 `BANK_ACCOUNT`는 제외
+- 응답은 카드와 계좌가 함께 포함된 배열이며 삭제된 결제수단은 제외됨
 - 계정당 카드 1장 정책에 따라 선택 목록 없이 `displayName`을 그대로 표시
+- 카드 필드: `paymentMethodId`, `displayName`, `cardBrand`, `cardLast4`, `cardHolder`
+- 계좌 필드 `bankName`, `accountLast4`, `accountHolder`는 타입에 반영하지만 수수료 결제 UI에서는 사용하지 않음
 - 카드사 로고나 전체 카드번호를 추측하지 않음
 - 정산 `feeAmount`를 상단 금액과 결제 버튼에 동일하게 사용
 - `payable: false`, 카드 없음, 조회 실패 시 결제 버튼 비활성화
@@ -385,6 +388,28 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `MATCHING` 상태는 `모집 중`으로 표시
 - 내 프로젝트 보기 버튼은 `/client/projects?tab=MATCHING`으로 이동
 - 등록 응답의 `payableSettlementId`가 null이면 착수금 결제 버튼을 표시하지 않음
+
+### 프로젝트 완료 후 성공보수 안내
+
+- `POST /api/v1/projects/{projectId}/completion` 성공 후 응답의 `payableSettlementId` 확인
+- 결제할 정산이 있으면 `프로젝트가 완료되었습니다. 성공보수를 결제하시겠습니까?` 확인 모달 표시
+- 취소 시 완료 상태만 유지하고, 결제 선택 시 기존 `PaymentMethodModal`을 `SUCCESS_FEE`로 열기
+- `GET /api/v1/settlements/{payableSettlementId}` 응답에서 `projectTitle`, `baseAmount`, `feeAmount`, `feeRate`, `gradeDiscount`, `dueDate` 표시
+- 성공보수 기준 금액과 최종 결제 금액은 프론트에서 계산하지 않고 응답값 그대로 사용
+- 계산 기준은 `{feeRate}%`와 `gradeDiscount > 0`일 때 `등급 할인 {gradeDiscount}%` 표시
+- 실제 완료 후 정산 생성·조회·결제 흐름: 미검증
+
+### 프로젝트 최종 완료 요약
+
+- 화면: `/client/projects/{projectId}/success-fee/complete`
+- `GET /api/v1/projects/{projectId}`로 등록일, 시작일, 기간, 계약 인원과 프로젝트 예산 표시
+- 프로젝트 상세 타입에 종료 처리 시각 `closedAt` 추가
+- 금액 라벨은 `총 계약 금액`이 아니라 `프로젝트 예산` 사용
+- `GET /api/v1/settlements/mine?projectId={projectId}&page=0&size=10`의 `content[]`에서 `DEPOSIT`, `SUCCESS_FEE`를 구분해 수수료 2줄 표시
+- `GET /api/v1/contracts?projectId={projectId}&page=0&size={confirmedHeadcount 이상}`에서 `COMPLETED` 계약 프리랜서 표시
+- 계약 카드에 `counterpartName`, `jobRole`, `payAmount`, 완료 배지 표시
+- 리뷰 조회 및 작성 영역은 담당 범위에서 제외
+- 실제 종료 프로젝트·정산·계약 조합 응답: 미검증
 
 ## 클라이언트 내 프로젝트 목록
 
@@ -466,6 +491,19 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 공통 `apiBlob`에서 쿠키 인증, 토큰 갱신과 세션 종료 오류 처리
 - `DRAFT`에서는 PDF 버튼을 숨기고 그 외 상태에서 다운로드 가능
 - 실제 상세·PDF 네트워크 응답: 미검증
+
+## 클라이언트 계약 진행 현황
+
+- 화면 위치: `src/features/client/myprojects/progress/components/ProjectProgress.tsx`
+- 우측 프로젝트 정보와 상태 스텝퍼는 상위 상세 화면이 조회한 `GET /api/v1/projects/{projectId}` 응답 사용
+- `GET /api/v1/contracts?projectId={projectId}&page=0&size=100`으로 프로젝트 계약 목록 조회
+- `IN_PROGRESS`, `COMPLETION_PENDING`, `COMPLETED`, `TERMINATED` 계약만 진행 현황 카드로 표시
+- 카드에 `counterpartName`, `jobRole`, `payAmount`, `status` 표시하고 아바타 이니셜은 상대방 이름 첫 글자로 생성
+- 계약 상세 링크는 실제 `contractId` 사용
+- 계약 목록에는 `negotiationId`가 없어 카드별 `GET /api/v1/contracts/{contractId}`로 조회
+- 채팅 버튼은 `GET /api/v1/chat-rooms/by-negotiation/{negotiationId}`의 `chatRoomId`를 받아 `/chat?chatRoomId={chatRoomId}`로 이동
+- 현재 `/chat` 화면은 `chatRoomId` 쿼리를 사용하지 않는 더미 구현이라 실제 채팅방 선택은 후속 연동 필요
+- 실제 진행 계약·채팅방 조회 응답: 미검증
 
 ### 전자서명
 
