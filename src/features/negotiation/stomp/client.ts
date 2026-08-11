@@ -17,7 +17,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 const resolveBrokerUrl = (): string => {
   // http → ws, https → wss (프로토콜 앞부분만 치환)
   const wsBase = API_BASE.replace(/^http/i, "ws");
-  return `${wsBase}/ws`;
+  // 배포 ALB가 /api/* 만 백엔드로 라우팅해서 핸드셰이크 경로는 /api/ws 여야 한다.
+  // (백엔드는 /ws 와 /api/ws 둘 다 열려 있어 로컬도 그대로 동작)
+  return `${wsBase}/api/ws`;
 };
 
 interface Registration {
