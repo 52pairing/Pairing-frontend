@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Spinner } from "@/features/common/components/Loading";
 import { NegotiationResultCard } from "@/features/negotiation/components/NegotiationResultCard";
 import type {
   ConditionType,
@@ -90,7 +91,7 @@ export function NegotiationChatFlow({
 
         {/* 실시간 로그 */}
         <div className="mt-2">
-          {messages.length === 0 && !isFailed && !isComplete ? (
+          {messages.length === 0 && !isFailed && !isComplete && !isSubmitting ? (
             <TimelineDivider label="아직 협상 로그가 없습니다" />
           ) : null}
           {messages.map((message) => (
@@ -101,6 +102,8 @@ export function NegotiationChatFlow({
               labels={labels}
             />
           ))}
+          {/* AI 대리인 협상(Gemini 왕복, 10~20초) 대기 표시 — 누른 사람 화면에만 */}
+          {isSubmitting ? <AgentTypingBubble /> : null}
         </div>
 
         {/* 상태별 화면 */}
@@ -306,6 +309,34 @@ function TimelineDivider({ label }: { label: string }) {
       <div className="h-px flex-1 bg-[#e7eaf0]" />
       <span className="whitespace-nowrap text-[10px] text-[#a5adbb]">{label}</span>
       <div className="h-px flex-1 bg-[#e7eaf0]" />
+    </div>
+  );
+}
+
+// AI 대리인 협상 대기 말풍선 (요청 처리 중 로그 하단에 표시)
+function AgentTypingBubble() {
+  return (
+    <div className="mt-5 flex justify-start">
+      <div className="flex max-w-[420px] items-start gap-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8878e8] text-[10px] font-bold text-white">
+          AI
+        </span>
+        <div className="rounded-[12px] border border-theme bg-surface px-4 py-2.5 text-[12px] leading-5 text-[#283142]">
+          <span className="flex items-center gap-2">
+            <span className="flex items-center gap-1" aria-hidden="true">
+              {[0, 1, 2].map((index) => (
+                <span
+                  key={index}
+                  className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8878e8]"
+                  style={{ animationDelay: `${index * 0.15}s` }}
+                />
+              ))}
+            </span>
+            AI 대리인이 협상 중입니다
+          </span>
+          <small className="mt-1 block text-theme-muted">10~20초 정도 걸립니다</small>
+        </div>
+      </div>
     </div>
   );
 }
@@ -538,9 +569,16 @@ function SetupPanel({
           type="button"
           disabled={!canStart || isSubmitting}
           onClick={handleStart}
-          className="mt-5 h-[42px] w-full cursor-pointer rounded-[9px] bg-[#8878e8] text-[12px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
+          className="mt-5 flex h-[42px] w-full cursor-pointer items-center justify-center gap-2 rounded-[9px] bg-[#8878e8] text-[12px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
         >
-          협상 시작
+          {isSubmitting ? (
+            <>
+              <Spinner size="sm" label="협상 중" />
+              AI 대리인이 협상 중…
+            </>
+          ) : (
+            "협상 시작"
+          )}
         </button>
       </section>
     </div>
@@ -602,10 +640,11 @@ function ConditionActionPanel({
           각 조건에 대한 의견을 선택해 주세요.
         </p>
 
-        {/* 승인 대기 조건 (수락/거절) */}
+        {/* 승인 대기 조건 — 상대방이 제안한 값을 수락/거절 */}
         {pending.map((condition) => (
           <div key={condition.conditionId} className="mt-4">
-            <p className="text-[11px] text-theme-muted">
+            <p className="text-[10px] font-semibold text-theme-muted">상대방 제안</p>
+            <p className="mt-0.5 text-[13px] font-bold text-theme-primary">
               {conditionLabel(condition.type)}{" "}
               {formatConditionValue(condition.type, condition.proposedValue ?? opponentValue(condition, viewerRole), labels)}
             </p>
@@ -670,9 +709,18 @@ function ConditionActionPanel({
             type="button"
             disabled={!canSubmit || isSubmitting}
             onClick={handleSubmit}
-            className="h-[40px] w-full cursor-pointer rounded-[8px] bg-[#8878e8] text-[12px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
+            className="flex h-[40px] w-full cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-[#8878e8] text-[12px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
           >
-            {hasRejected ? "다시 협상" : "확인"}
+            {isSubmitting ? (
+              <>
+                <Spinner size="sm" label="협상 중" />
+                AI 대리인이 협상 중…
+              </>
+            ) : hasRejected ? (
+              "다시 협상"
+            ) : (
+              "확인"
+            )}
           </button>
           {hasRejected ? (
             <button
