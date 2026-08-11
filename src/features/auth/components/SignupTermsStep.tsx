@@ -35,12 +35,12 @@ export function SignupTermsStep({
 
   return (
     <>
-      <p className="mb-6 text-sm font-semibold text-[#111827]">
+      <p className="mb-6 text-sm font-semibold text-theme-primary">
         서비스 이용을 위한 약관에 동의해 주세요.
       </p>
 
       {isLoading ? (
-        <p className="text-sm text-gray-400">약관을 불러오는 중...</p>
+        <p className="text-sm text-theme-muted">약관을 불러오는 중...</p>
       ) : null}
 
       {isError ? (

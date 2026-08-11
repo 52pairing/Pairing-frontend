@@ -40,8 +40,8 @@ export function SuccessFeePaymentModal({
   return (
     <>
       <Modal open={open} onClose={closePaymentModal} labelledBy={titleId} describedBy={descriptionId} size="lg">
-      <h2 id={titleId} className="text-[20px] font-extrabold text-[#111827]">성공보수 수수료 결제</h2>
-      <p id={descriptionId} className="mt-2 text-[12px] font-semibold text-[#667085]">
+      <h2 id={titleId} className="text-[20px] font-extrabold text-theme-primary">성공보수 수수료 결제</h2>
+      <p id={descriptionId} className="mt-2 text-[12px] font-semibold text-theme-secondary">
         프로젝트가 완료되었습니다. 성공보수 수수료를 결제하면 계약이 종료됩니다.
       </p>
 
@@ -68,8 +68,8 @@ export function SuccessFeePaymentModal({
       </div>
 
       <div className="mt-6 flex justify-end gap-2">
-        <button type="button" onClick={closePaymentModal} className="h-11 rounded-lg border border-[#dce2e8] bg-white px-5 text-[12px] font-semibold text-[#667085] hover:bg-[#f8fafc]">취소</button>
-        <button type="button" onClick={() => setIsConfirmOpen(true)} disabled={!selectedMethodId} className="h-11 rounded-lg bg-[#17365d] px-6 text-[12px] font-bold text-white hover:bg-[#102a49] disabled:bg-[#a7b0bf]">결제하기</button>
+        <button type="button" onClick={closePaymentModal} className="h-11 rounded-lg border border-theme bg-surface px-5 text-[12px] font-semibold text-theme-secondary hover:bg-surface-subtle">취소</button>
+        <button type="button" onClick={() => setIsConfirmOpen(true)} disabled={!selectedMethodId} className="h-11 rounded-lg bg-brand px-6 text-[12px] font-bold text-white hover:bg-brand disabled:bg-[#a7b0bf]">결제하기</button>
       </div>
       </Modal>
       <ConfirmModal
@@ -88,8 +88,8 @@ export function SuccessFeePaymentModal({
 function PaymentRow({ label, value, accent = false, emphasis = false }: { label: string; value: string; accent?: boolean; emphasis?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <dt className={accent ? "font-bold text-[#7c3aed]" : "font-semibold text-[#667085]"}>{label}</dt>
-      <dd className={`text-right font-bold ${emphasis ? "text-[16px] text-[#7c3aed]" : "text-[#172033]"}`}>{value}</dd>
+      <dt className={accent ? "font-bold text-[#7c3aed]" : "font-semibold text-theme-secondary"}>{label}</dt>
+      <dd className={`text-right font-bold ${emphasis ? "text-[16px] text-[#7c3aed]" : "text-theme-primary"}`}>{value}</dd>
     </div>
   );
 }

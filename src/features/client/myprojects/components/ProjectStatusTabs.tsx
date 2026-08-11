@@ -13,7 +13,7 @@ export function ProjectStatusTabs({
   onTabChange,
 }: ProjectStatusTabsProps) {
   return (
-    <div className="mt-7 border-b border-[#e5e9ef]">
+    <div className="mt-7 border-b border-theme">
       <div className="flex h-[48px] items-end gap-2">
         {CLIENT_PROJECT_TABS.map(({ tab, label }) => {
           const isActive = tab === activeTab;
@@ -26,7 +26,7 @@ export function ProjectStatusTabs({
               className={`relative flex h-full min-w-[82px] cursor-pointer items-center justify-center px-2 text-[13px] font-semibold transition ${
                 isActive
                   ? "text-[#122d50]"
-                  : "text-[#9aa4b2] hover:text-[#667085]"
+                  : "text-theme-muted hover:text-theme-secondary"
               }`}
             >
               {label}

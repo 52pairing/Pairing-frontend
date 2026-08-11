@@ -132,12 +132,12 @@ function CompanyStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
 
   return (
     <>
-      <p className="mb-6 rounded-md bg-[#EEF3F8] px-4 py-3 text-xs text-[#374151]">
+      <p className="mb-6 rounded-md bg-surface-muted px-4 py-3 text-xs text-theme-secondary">
         클라이언트 회원가입은 국내 사업자등록번호를 보유한 기업만 가능합니다.
       </p>
       <div className="space-y-5">
         <div>
-          <label className="mb-2 block text-sm font-semibold text-[#374151]">
+          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
             기업명 <span className="text-[#356DF3]">*</span>
           </label>
           <input
@@ -145,7 +145,7 @@ function CompanyStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
             value={form.companyName ?? ""}
             onChange={(event) => patch({ companyName: event.target.value })}
             placeholder="기업명을 입력해 주세요."
-            className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
           />
         </div>
         <BusinessRegistrationNumberField
@@ -167,7 +167,7 @@ function CompanyStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
         <div>
           <label
             htmlFor="company-address"
-            className="mb-2 block text-sm font-semibold text-[#374151]"
+            className="mb-2 block text-sm font-semibold text-theme-secondary"
           >
             기업 주소 <span className="text-[#356DF3]">*</span>
           </label>
@@ -178,7 +178,7 @@ function CompanyStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
             onChange={(event) => patch({ address: event.target.value })}
             maxLength={255}
             placeholder="기업 주소를 입력해 주세요."
-            className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
           />
         </div>
       </div>
@@ -203,7 +203,7 @@ function ManagerStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
     <>
       <div className="space-y-5">
         <div>
-          <label className="mb-2 block text-sm font-semibold text-[#374151]">
+          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
             이름(대표자명) <span className="text-[#356DF3]">*</span>
           </label>
           <input
@@ -213,7 +213,7 @@ function ManagerStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
               patch({ representativeName: event.target.value })
             }
             placeholder="이름을 입력해 주세요."
-            className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
           />
         </div>
         <PhoneNumberField

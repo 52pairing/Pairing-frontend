@@ -41,7 +41,7 @@ export const PhoneNumberField = ({
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-[#374151]">
+      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
         {label} <span className="text-[#356DF3]">*</span>
       </label>
       <input
@@ -55,10 +55,10 @@ export const PhoneNumberField = ({
         }}
         onBlur={handleBlur}
         placeholder="010-0000-0000"
-        className={`h-11 w-full rounded-md border px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A] ${
+        className={`h-11 w-full rounded-md border px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand ${
           value && !isFormatValid
             ? "border-red-400"
-            : "border-gray-200"
+            : "border-theme"
         }`}
       />
       {value && !isFormatValid ? (
@@ -67,7 +67,7 @@ export const PhoneNumberField = ({
         </p>
       ) : null}
       {duplicateCheck.status === "checking" ? (
-        <p className="mt-2 text-xs text-gray-400">중복 확인 중...</p>
+        <p className="mt-2 text-xs text-theme-muted">중복 확인 중...</p>
       ) : null}
       {duplicateCheck.status === "available" ? (
         <p className="mt-2 flex items-center gap-1.5 text-xs text-green-600">

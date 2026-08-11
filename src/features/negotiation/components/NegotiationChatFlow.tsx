@@ -12,8 +12,8 @@ import type {
 import {
   conditionLabel,
   formatConditionValue,
+  manwonToWonString,
   senderLabel,
-  toServerValue,
   type WorkConditionLabels,
 } from "@/features/negotiation/utils/conditionFormat";
 
@@ -21,10 +21,14 @@ import {
  * 협상방 대화 플로우 (실데이터 구동)
  *
  * 로그·조건 배지·라운드·상태 화면은 서버 응답(detail/messages)으로 렌더링한다.
- * 인라인 패널 노출은 백엔드가 내려주는 `waitingForMe`로 판정한다.
- *  - totalRound === 0        → 시작(마지노선 입력) 패널
- *  - waitingForMe === true   → 승인/재지시 패널 (조건별 status 로 분기)
- *  - 그 외                    → 대리인 진행 중 대기
+ * 인라인 패널 노출 판정:
+ *  - totalRound === 0 && myFloor 없음  → 마지노선 입력 폼 + [협상 시작]
+ *  - totalRound === 0 && myFloor 있음  → "상대 입력 대기" 안내 (폼 다시 안 띄움)
+ *  - totalRound >= 1 && waitingForMe   → 승인/재지시 패널 (조건별 status 분기)
+ *  - 그 외                              → 대리인 진행 중 대기
+ *
+ * 마지노선(start)과 재지시(answers.proposedValue) 값은 조건 종류별 전용 입력 위젯이
+ * 서버 형식(금액=원, 기간="N MONTH", 근무방식/형태=enum 코드, 날짜="yyyy-MM-dd")으로 만든다.
  */
 
 export interface AnswerInput {
@@ -62,11 +66,17 @@ export function NegotiationChatFlow({
   const conditions = detail.conditions ?? [];
   const isFailed = detail.status === "FAILED";
   const isComplete = detail.status === "AGREED";
-  const isSetup = detail.status === "IN_PROGRESS" && detail.totalRound === 0;
-  const showActionPanel = detail.status === "IN_PROGRESS" && detail.waitingForMe;
+  // 내 마지노선을 이미 냈는지 (내 것만 conditions[].myFloor 로 내려옴)
+  const hasSubmittedFloor = conditions.some((condition) => condition.myFloor != null);
+  const isSetup =
+    detail.status === "IN_PROGRESS" && detail.totalRound === 0 && !hasSubmittedFloor;
+  const isWaitingOpponentFloor =
+    detail.status === "IN_PROGRESS" && detail.totalRound === 0 && hasSubmittedFloor;
+  const showActionPanel =
+    detail.status === "IN_PROGRESS" && detail.totalRound >= 1 && detail.waitingForMe;
 
   return (
-    <main className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] bg-white">
+    <main className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] bg-surface">
       <div className="shrink-0">
         <NegotiationHeader
           status={detail.status}
@@ -114,6 +124,8 @@ export function NegotiationChatFlow({
             isSubmitting={isSubmitting}
             onStart={onStart}
           />
+        ) : isWaitingOpponentFloor ? (
+          <WaitingNotice label="상대방이 조건을 입력하면 협상이 시작됩니다." />
         ) : showActionPanel ? (
           <ConditionActionPanel
             conditions={conditions}
@@ -124,11 +136,7 @@ export function NegotiationChatFlow({
             onGiveUp={onGiveUp}
           />
         ) : (
-          <div className="mt-8 flex justify-center">
-            <p className="rounded-full bg-[#f2f4f8] px-4 py-2 text-[11px] text-[#7d8799]">
-              대리인이 협상을 진행하고 있습니다…
-            </p>
-          </div>
+          <WaitingNotice label="대리인이 협상을 진행하고 있습니다…" />
         )}
       </div>
     </main>
@@ -151,7 +159,50 @@ const buildAgreedSummary = (
   return parts.length > 0 ? parts.join(" · ") : "모든 조건에 합의했습니다.";
 };
 
+// 내 관점에서 "상대 희망값". 프리랜서면 클라 값, 클라면 프리랜서 값.
+const opponentValue = (
+  condition: NegotiationCondition,
+  viewerRole: "CLIENT" | "FREELANCER",
+): string | null =>
+  viewerRole === "CLIENT" ? condition.freelancerValue : condition.clientValue;
+
+// 마지노선 입력 라벨. 단가·기간은 역할에 따라 최소/최대 의미가 반대다.
+const floorFieldLabel = (
+  type: ConditionType,
+  viewerRole: "CLIENT" | "FREELANCER",
+): string => {
+  const isFreelancer = viewerRole === "FREELANCER";
+  switch (type) {
+    case "AMOUNT":
+      return isFreelancer
+        ? "최소 단가 (이 금액 미만은 거절)"
+        : "최대 단가 (이 금액 초과는 거절)";
+    case "PERIOD":
+      return isFreelancer ? "최소 기간" : "최대 기간";
+    case "WORK_STYLE":
+      return "허용 가능한 근무 방식";
+    case "WORK_FORM":
+      return "허용 가능한 근무 형태";
+    case "START_DATE":
+      return "희망 시작일";
+    default:
+      return conditionLabel(type);
+  }
+};
+
+// Record<code,label> → 정렬 유지된 옵션 배열
+const toOptions = (map: Record<string, string>): Array<{ code: string; label: string }> =>
+  Object.entries(map).map(([code, label]) => ({ code, label }));
+
 // ── 프레젠테이션 컴포넌트 ────────────────────────────────────────────────
+
+function WaitingNotice({ label }: { label: string }) {
+  return (
+    <div className="mt-8 flex justify-center">
+      <p className="rounded-full bg-[#f2f4f8] px-4 py-2 text-[11px] text-[#7d8799]">{label}</p>
+    </div>
+  );
+}
 
 function NegotiationHeader({
   status,
@@ -170,9 +221,9 @@ function NegotiationHeader({
         <h2 className="text-[16px] font-bold">AI 협상 로그</h2>
         <p className="mt-1 text-[11px] text-[#9ba3b2]">AI 에이전트 간 협상 과정</p>
       </div>
-      <div className="flex items-center gap-3 text-[11px] font-semibold text-[#667085]">
+      <div className="flex items-center gap-3 text-[11px] font-semibold text-theme-secondary">
         <span>라운드 {round} / {maxRound}</span>
-        <span className={`rounded-full border px-3 py-1.5 ${isFailed ? "border-[#fecdca] bg-[#fef3f2] text-[#d92d20]" : isComplete ? "border-[#abefc6] bg-[#ecfdf3] text-[#039855]" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}>
+        <span className={`rounded-full border px-3 py-1.5 ${isFailed ? "border-[#fecdca] bg-danger-surface text-theme-danger" : isComplete ? "border-[#abefc6] bg-success-surface text-theme-success" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}>
           {isFailed ? "× 협상 결렬" : isComplete ? "✓ 협상 완료" : "♙ 협상 중"}
         </span>
       </div>
@@ -190,7 +241,7 @@ function ConditionBadges({ conditions }: { conditions: NegotiationCondition[] })
         return (
           <span
             key={condition.conditionId}
-            className={`rounded-full border px-3 py-1.5 text-[11px] font-bold ${isAgreed ? "border-[#abefc6] bg-[#ecfdf3] text-[#039855]" : isRejected ? "border-[#fecdca] bg-[#fef3f2] text-[#d92d20]" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}
+            className={`rounded-full border px-3 py-1.5 text-[11px] font-bold ${isAgreed ? "border-[#abefc6] bg-success-surface text-theme-success" : isRejected ? "border-[#fecdca] bg-danger-surface text-theme-danger" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}
           >
             {conditionLabel(condition.type)}{" "}
             {isAgreed ? "합의🔒" : isRejected ? "재협상" : "진행중"}
@@ -234,7 +285,7 @@ function MessageItem({
           <p className={`mb-1 text-[10px] text-[#a5adbb] ${isMine ? "text-right" : ""}`}>
             {senderLabel(message.senderType)}
           </p>
-          <div className={`rounded-[12px] px-4 py-2.5 text-[12px] leading-5 ${isMine ? "bg-[#8878e8] text-white" : "border border-[#e1e5eb] bg-white text-[#283142]"}`}>
+          <div className={`rounded-[12px] px-4 py-2.5 text-[12px] leading-5 ${isMine ? "bg-[#8878e8] text-white" : "border border-theme bg-surface text-[#283142]"}`}>
             {message.content}
             {message.reason ? (
               <small className="mt-1 block opacity-80">근거: {message.reason}</small>
@@ -259,18 +310,166 @@ function TimelineDivider({ label }: { label: string }) {
   );
 }
 
+// ── 조건 종류별 입력 위젯 ─────────────────────────────────────────────────
+// 각 위젯은 사용자 입력을 서버 전송 형식 문자열로 변환해 onChange 로 올린다("" = 미입력).
+
+const INPUT_CLASS =
+  "h-[38px] w-full rounded-[8px] border border-[#e2e5ea] px-3 text-[12px] outline-none focus:border-[#8878e8]";
+
+function ConditionFloorField({
+  condition,
+  labels,
+  onChange,
+}: {
+  condition: NegotiationCondition;
+  labels: WorkConditionLabels;
+  onChange: (serverValue: string) => void;
+}) {
+  switch (condition.type) {
+    case "AMOUNT":
+      return <AmountField onChange={onChange} />;
+    case "PERIOD":
+      return <PeriodField options={toOptions(labels.periodUnits)} onChange={onChange} />;
+    case "WORK_STYLE":
+      return <CodeSelectField options={toOptions(labels.workStyles)} onChange={onChange} />;
+    case "WORK_FORM":
+      return <CodeSelectField options={toOptions(labels.workForms)} onChange={onChange} />;
+    case "START_DATE":
+      return <DateField onChange={onChange} />;
+    default:
+      return <PlainTextField onChange={onChange} />;
+  }
+}
+
+// 금액: 만원 입력 → 원 단위 문자열
+function AmountField({ onChange }: { onChange: (value: string) => void }) {
+  const [manwon, setManwon] = useState("");
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="number"
+        min="0"
+        value={manwon}
+        onChange={(event) => {
+          const next = event.target.value;
+          setManwon(next);
+          onChange(next.trim() === "" ? "" : manwonToWonString(next));
+        }}
+        placeholder="예: 480"
+        className={INPUT_CLASS}
+      />
+      <span className="whitespace-nowrap text-[10px] text-theme-muted">만 원</span>
+    </div>
+  );
+}
+
+// 기간: 숫자 + 단위(meta periodUnits) → "N MONTH"
+function PeriodField({
+  options,
+  onChange,
+}: {
+  options: Array<{ code: string; label: string }>;
+  onChange: (value: string) => void;
+}) {
+  const [amount, setAmount] = useState("");
+  const [unit, setUnit] = useState(options[0]?.code ?? "MONTH");
+  const emit = (nextAmount: string, nextUnit: string) =>
+    onChange(nextAmount.trim() === "" ? "" : `${nextAmount} ${nextUnit}`);
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="number"
+        min="1"
+        value={amount}
+        onChange={(event) => {
+          setAmount(event.target.value);
+          emit(event.target.value, unit);
+        }}
+        placeholder="예: 4"
+        className={INPUT_CLASS}
+      />
+      <select
+        value={unit}
+        onChange={(event) => {
+          setUnit(event.target.value);
+          emit(amount, event.target.value);
+        }}
+        className="h-[38px] rounded-[8px] border border-[#e2e5ea] px-2 text-[12px] outline-none focus:border-[#8878e8]"
+      >
+        {options.length === 0 ? <option value="MONTH">개월</option> : null}
+        {options.map((option) => (
+          <option key={option.code} value={option.code}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// 근무 방식/형태: meta 코드 드롭다운 → 코드 전송
+function CodeSelectField({
+  options,
+  onChange,
+}: {
+  options: Array<{ code: string; label: string }>;
+  onChange: (value: string) => void;
+}) {
+  const [code, setCode] = useState("");
+  return (
+    <select
+      value={code}
+      onChange={(event) => {
+        setCode(event.target.value);
+        onChange(event.target.value);
+      }}
+      className={INPUT_CLASS}
+    >
+      <option value="" disabled>
+        선택
+      </option>
+      {options.map((option) => (
+        <option key={option.code} value={option.code}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+// 시작일: 날짜 입력 (yyyy-MM-dd 그대로 전송)
+function DateField({ onChange }: { onChange: (value: string) => void }) {
+  const [date, setDate] = useState("");
+  return (
+    <input
+      type="date"
+      value={date}
+      onChange={(event) => {
+        setDate(event.target.value);
+        onChange(event.target.value);
+      }}
+      className={INPUT_CLASS}
+    />
+  );
+}
+
+// 자유 텍스트 (SCOPE/OTHER)
+function PlainTextField({ onChange }: { onChange: (value: string) => void }) {
+  const [text, setText] = useState("");
+  return (
+    <input
+      value={text}
+      onChange={(event) => {
+        setText(event.target.value);
+        onChange(event.target.value.trim());
+      }}
+      placeholder="입력"
+      className={INPUT_CLASS}
+    />
+  );
+}
+
 // ── 인라인 액션 패널 ─────────────────────────────────────────────────────
-
-// 금액 조건은 만원 단위 입력을 안내한다.
-const inputSuffix = (type: NegotiationCondition["type"]): string =>
-  type === "AMOUNT" ? "만 원" : "";
-
-// 내 관점에서 "상대 희망값". 프리랜서면 클라 값, 클라면 프리랜서 값.
-const opponentValue = (
-  condition: NegotiationCondition,
-  viewerRole: "CLIENT" | "FREELANCER",
-): string | null =>
-  viewerRole === "CLIENT" ? condition.freelancerValue : condition.clientValue;
 
 function SetupPanel({
   conditions,
@@ -285,6 +484,7 @@ function SetupPanel({
   isSubmitting: boolean;
   onStart: (values: Array<{ conditionType: ConditionType; value: string }>) => void;
 }) {
+  // 조건별 "서버 전송 형식" 값 저장 (위젯이 변환해서 올려줌)
   const [values, setValues] = useState<Record<number, string>>({});
 
   const canStart = conditions.every(
@@ -292,48 +492,47 @@ function SetupPanel({
   );
 
   const handleStart = () => {
-    const payload = conditions.map((condition) => ({
-      conditionType: condition.type,
-      value: toServerValue(condition.type, values[condition.conditionId] ?? ""),
-    }));
-    onStart(payload);
+    onStart(
+      conditions.map((condition) => ({
+        conditionType: condition.type,
+        value: values[condition.conditionId] ?? "",
+      })),
+    );
   };
 
   return (
     <div className="mt-6 flex justify-end">
-      <section className="w-[360px] rounded-[14px] border border-[#e1e5eb] bg-white p-4 shadow-sm">
+      <section className="w-[360px] rounded-[14px] border border-theme bg-surface p-4 shadow-sm">
         <p className="text-[12px] leading-5 text-[#283142]">
-          협상 전 조건별 최소(마지노선)를 입력해 주세요.
+          협상 전 마지노선을 입력해 주세요. 이 선을 넘는 조건은 대리인이 자동 거절합니다.
         </p>
         <div className="mt-4 flex flex-col gap-3">
-          {conditions.map((condition) => (
-            <div key={condition.conditionId}>
-              <label className="text-[10px] font-bold text-[#667085]">
-                {conditionLabel(condition.type)}
-              </label>
-              <div className="mt-2 flex items-center gap-2">
-                <input
-                  value={values[condition.conditionId] ?? ""}
-                  onChange={(event) =>
-                    setValues((prev) => ({
-                      ...prev,
-                      [condition.conditionId]: event.target.value,
-                    }))
-                  }
-                  placeholder={
-                    formatConditionValue(condition.type, opponentValue(condition, viewerRole), labels) ||
-                    "최소값 입력"
-                  }
-                  className="h-[38px] w-full rounded-[8px] border border-[#e2e5ea] px-3 text-[12px] outline-none focus:border-[#8878e8]"
-                />
-                {inputSuffix(condition.type) ? (
-                  <span className="whitespace-nowrap text-[10px] text-[#98a2b3]">
-                    {inputSuffix(condition.type)}
-                  </span>
+          {conditions.map((condition) => {
+            const hint = formatConditionValue(
+              condition.type,
+              opponentValue(condition, viewerRole),
+              labels,
+            );
+            return (
+              <div key={condition.conditionId}>
+                <label className="text-[10px] font-bold text-theme-secondary">
+                  {floorFieldLabel(condition.type, viewerRole)}
+                </label>
+                <div className="mt-2">
+                  <ConditionFloorField
+                    condition={condition}
+                    labels={labels}
+                    onChange={(value) =>
+                      setValues((prev) => ({ ...prev, [condition.conditionId]: value }))
+                    }
+                  />
+                </div>
+                {hint ? (
+                  <p className="mt-1 text-[10px] text-theme-muted">상대 희망: {hint}</p>
                 ) : null}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <button
           type="button"
@@ -367,6 +566,7 @@ function ConditionActionPanel({
   onGiveUp: () => void;
 }) {
   const [decisions, setDecisions] = useState<Record<number, Decision>>({});
+  // 재지시 새 마지노선 (서버 전송 형식)
   const [floors, setFloors] = useState<Record<number, string>>({});
 
   const pending = conditions.filter((condition) => condition.status === "PENDING");
@@ -387,7 +587,7 @@ function ConditionActionPanel({
       ...rejected.map((condition) => ({
         conditionId: condition.conditionId,
         accepted: false,
-        proposedValue: toServerValue(condition.type, floors[condition.conditionId] ?? ""),
+        proposedValue: floors[condition.conditionId] ?? "",
       })),
     ];
     onSubmit(answers);
@@ -397,7 +597,7 @@ function ConditionActionPanel({
 
   return (
     <div className="mt-6 flex justify-end">
-      <section className="w-[340px] rounded-[14px] border border-[#e1e5eb] bg-white p-4 shadow-sm">
+      <section className="w-[340px] rounded-[14px] border border-theme bg-surface p-4 shadow-sm">
         <p className="text-[12px] font-semibold leading-5">
           각 조건에 대한 의견을 선택해 주세요.
         </p>
@@ -405,7 +605,7 @@ function ConditionActionPanel({
         {/* 승인 대기 조건 (수락/거절) */}
         {pending.map((condition) => (
           <div key={condition.conditionId} className="mt-4">
-            <p className="text-[11px] text-[#98a2b3]">
+            <p className="text-[11px] text-theme-muted">
               {conditionLabel(condition.type)}{" "}
               {formatConditionValue(condition.type, condition.proposedValue ?? opponentValue(condition, viewerRole), labels)}
             </p>
@@ -435,7 +635,7 @@ function ConditionActionPanel({
             className="mt-4 rounded-[10px] border border-[#f7c65f] bg-[#fff9e8] p-3"
           >
             <div className="flex justify-between text-[11px] font-bold text-[#d97706]">
-              <span>{conditionLabel(condition.type)}</span>
+              <span>{floorFieldLabel(condition.type, viewerRole)}</span>
               <span className="rounded bg-[#fff0b8] px-2 py-1">재입력 필요</span>
             </div>
             {condition.myFloor != null ? (
@@ -443,20 +643,14 @@ function ConditionActionPanel({
                 직전 마지노선: {formatConditionValue(condition.type, condition.myFloor, labels)}
               </p>
             ) : null}
-            <div className="mt-3 flex items-center gap-2">
-              <input
-                value={floors[condition.conditionId] ?? ""}
-                onChange={(event) =>
-                  setFloors((prev) => ({ ...prev, [condition.conditionId]: event.target.value }))
+            <div className="mt-3">
+              <ConditionFloorField
+                condition={condition}
+                labels={labels}
+                onChange={(value) =>
+                  setFloors((prev) => ({ ...prev, [condition.conditionId]: value }))
                 }
-                className="h-[36px] w-full rounded-[7px] border border-[#f5b942] bg-white px-3 text-[11px] outline-none"
-                placeholder="새 마지노선 입력"
               />
-              {inputSuffix(condition.type) ? (
-                <span className="whitespace-nowrap text-[10px] text-[#667085]">
-                  {inputSuffix(condition.type)}
-                </span>
-              ) : null}
             </div>
           </div>
         ))}
@@ -464,8 +658,8 @@ function ConditionActionPanel({
         {/* 이미 합의된 조건 */}
         {agreed.map((condition) => (
           <div key={condition.conditionId} className="mt-4">
-            <p className="text-[11px] text-[#98a2b3]">{conditionLabel(condition.type)}</p>
-            <div className="mt-2 rounded-[8px] border border-[#86efac] bg-[#ecfdf3] py-2 text-center text-[11px] font-bold text-[#16a34a]">
+            <p className="text-[11px] text-theme-muted">{conditionLabel(condition.type)}</p>
+            <div className="mt-2 rounded-[8px] border border-[#86efac] bg-success-surface py-2 text-center text-[11px] font-bold text-[#16a34a]">
               ♙ 이미 합의
             </div>
           </div>
@@ -484,7 +678,7 @@ function ConditionActionPanel({
             <button
               type="button"
               onClick={onGiveUp}
-              className="h-[40px] cursor-pointer rounded-[8px] border border-[#f04438] bg-white px-4 text-[12px] font-bold text-[#f04438] hover:bg-[#fff5f4]"
+              className="h-[40px] cursor-pointer rounded-[8px] border border-[#f04438] bg-surface px-4 text-[12px] font-bold text-theme-danger hover:bg-danger-surface"
             >
               협상 포기
             </button>
@@ -508,7 +702,7 @@ function DecisionButton({
     <button
       type="button"
       onClick={onClick}
-      className={`h-[36px] cursor-pointer rounded-[7px] border text-[11px] font-bold ${selected ? "border-[#8b7cf6] bg-[#f2f0ff] text-[#7969dc]" : "border-[#dfe3e8] bg-white text-[#667085]"}`}
+      className={`h-[36px] cursor-pointer rounded-[7px] border text-[11px] font-bold ${selected ? "border-[#8b7cf6] bg-[#f2f0ff] text-[#7969dc]" : "border-theme bg-surface text-theme-secondary"}`}
     >
       {label}
     </button>

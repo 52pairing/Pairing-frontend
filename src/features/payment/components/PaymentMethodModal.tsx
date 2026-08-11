@@ -141,36 +141,36 @@ export function PaymentMethodModal({
         size="lg"
       >
         <div className="flex items-center justify-between">
-          <h2 id={titleId} className="text-[18px] font-extrabold text-[#111827]">
+          <h2 id={titleId} className="text-[18px] font-extrabold text-theme-primary">
             결제 수단 선택
           </h2>
-          <button type="button" onClick={closePaymentModal} aria-label="결제 모달 닫기" className="text-[22px] leading-none text-[#98a2b3] hover:text-[#475467]">×</button>
+          <button type="button" onClick={closePaymentModal} aria-label="결제 모달 닫기" className="text-[22px] leading-none text-theme-muted hover:text-theme-secondary">×</button>
         </div>
 
         {isLoading ? (
-          <div className="flex min-h-52 items-center justify-center text-sm text-[#667085]">결제 정보를 불러오고 있습니다.</div>
+          <div className="flex min-h-52 items-center justify-center text-sm text-theme-secondary">결제 정보를 불러오고 있습니다.</div>
         ) : (
           <>
-            <div id={descriptionId} className="mt-4 rounded-[12px] bg-[#f7f8fa] px-5 py-4">
-              <p className="text-[11px] font-semibold text-[#98a2b3]">
+            <div id={descriptionId} className="mt-4 rounded-[12px] bg-surface-subtle px-5 py-4">
+              <p className="text-[11px] font-semibold text-theme-muted">
                 {settlement?.projectTitle ?? payment.description} · {settlement ? PHASE_LABEL[settlement.phase] : payment.title}
               </p>
-              <p className="mt-1 text-[24px] font-extrabold text-[#17365d]">
+              <p className="mt-1 text-[24px] font-extrabold text-brand">
                 {amount.toLocaleString("ko-KR")}<span className="ml-0.5 text-[12px]">원</span>
               </p>
             </div>
 
-            <p className="mt-6 border-b border-[#e5e9ef] pb-3 text-[12px] font-bold text-[#667085]">신용·체크카드</p>
+            <p className="mt-6 border-b border-theme pb-3 text-[12px] font-bold text-theme-secondary">신용·체크카드</p>
 
             <div className="mt-4">
-              <p className="mb-2 text-[11px] font-medium text-[#98a2b3]">등록된 카드</p>
+              <p className="mb-2 text-[11px] font-medium text-theme-muted">등록된 카드</p>
               {isApiPayment ? (
                 card ? (
-                  <div className="rounded-[11px] border border-[#17365d] bg-[#eef3f8] px-4 py-4">
-                    <p className="text-[13px] font-bold text-[#111827]">{card.displayName}</p>
+                  <div className="rounded-[11px] border border-brand bg-[#eef3f8] px-4 py-4">
+                    <p className="text-[13px] font-bold text-theme-primary">{card.displayName}</p>
                   </div>
                 ) : (
-                  <p className="rounded-[11px] border border-[#fda29b] bg-[#fff5f4] px-4 py-4 text-[12px] font-semibold text-[#b42318]">등록된 카드가 없습니다.</p>
+                  <p className="rounded-[11px] border border-[#fda29b] bg-danger-surface px-4 py-4 text-[12px] font-semibold text-theme-danger">등록된 카드가 없습니다.</p>
                 )
               ) : (
                 <div className="space-y-2">
@@ -181,12 +181,12 @@ export function PaymentMethodModal({
               )}
             </div>
 
-            {errorMessage ? <p role="alert" className="mt-4 text-[11px] font-semibold text-[#b42318]">{errorMessage}</p> : null}
-            {settlement && !settlement.payable && !errorMessage ? <p className="mt-4 text-[11px] font-semibold text-[#b42318]">현재 결제할 수 없는 정산 건입니다.</p> : null}
+            {errorMessage ? <p role="alert" className="mt-4 text-[11px] font-semibold text-theme-danger">{errorMessage}</p> : null}
+            {settlement && !settlement.payable && !errorMessage ? <p className="mt-4 text-[11px] font-semibold text-theme-danger">현재 결제할 수 없는 정산 건입니다.</p> : null}
 
-            <div className="mt-5 flex gap-2 border-t border-[#e5e9ef] pt-4">
-              <button type="button" onClick={closePaymentModal} disabled={isPaying} className="h-[48px] flex-1 rounded-[10px] border border-[#dce2e8] bg-white text-[13px] font-semibold text-[#667085] disabled:cursor-wait">취소</button>
-              <button type="button" onClick={() => setIsConfirmOpen(true)} disabled={!canPay} className="h-[48px] flex-[2] rounded-[10px] bg-[#17365d] text-[13px] font-bold text-white hover:bg-[#102a49] disabled:cursor-not-allowed disabled:bg-[#a7b0bf]">
+            <div className="mt-5 flex gap-2 border-t border-theme pt-4">
+              <button type="button" onClick={closePaymentModal} disabled={isPaying} className="h-[48px] flex-1 rounded-[10px] border border-theme bg-surface text-[13px] font-semibold text-theme-secondary disabled:cursor-wait">취소</button>
+              <button type="button" onClick={() => setIsConfirmOpen(true)} disabled={!canPay} className="h-[48px] flex-[2] rounded-[10px] bg-brand text-[13px] font-bold text-white hover:bg-brand disabled:cursor-not-allowed disabled:bg-[#a7b0bf]">
                 {isPaying ? "결제 중..." : `${amount.toLocaleString("ko-KR")}원 결제하기`}
               </button>
             </div>

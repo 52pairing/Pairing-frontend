@@ -26,7 +26,7 @@ export function ProjectRegisterShell({
 }) {
   return (
     <main
-      className="min-h-screen bg-[#f7f8fa] text-[#111827]"
+      className="min-h-screen bg-surface-subtle text-theme-primary"
       style={{
         fontFamily:
           '"Pretendard", "Noto Sans KR", Arial, Helvetica, sans-serif',
@@ -36,14 +36,14 @@ export function ProjectRegisterShell({
         {backHref ? (
           <Link
             href={backHref}
-            className="flex w-fit items-center gap-1 text-[12px] font-medium text-[#7b8797] transition hover:text-[#475467]"
+            className="flex w-fit items-center gap-1 text-[12px] font-medium text-[#7b8797] transition hover:text-theme-secondary"
           >
             <ChevronLeftIcon size={13} />
             {backLabel}
           </Link>
         ) : null}
 
-        <section className="mt-10 rounded-[16px] border border-[#dde2e8] bg-white px-10 pb-10 pt-14 shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
+        <section className="mt-10 rounded-[16px] border border-theme bg-surface px-10 pb-10 pt-14 shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
           <ProjectStepper currentStep={currentStep} />
 
           {children}

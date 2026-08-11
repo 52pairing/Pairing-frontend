@@ -46,7 +46,7 @@ export const TermsChecklist = ({
     <div className="space-y-3">
       <label
         className={`flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 ${
-          emphasizeAll ? "border-[#142B4A] bg-[#F7F8FA]" : "border-gray-200"
+          emphasizeAll ? "border-brand bg-surface-subtle" : "border-theme"
         }`}
       >
         <input
@@ -55,7 +55,7 @@ export const TermsChecklist = ({
           onChange={toggleAll}
           className="h-4 w-4 accent-[#142B4A]"
         />
-        <span className="text-sm font-bold text-[#111827]">전체 동의</span>
+        <span className="text-sm font-bold text-theme-primary">전체 동의</span>
       </label>
 
       <div className="space-y-2">
@@ -71,10 +71,10 @@ export const TermsChecklist = ({
                 onChange={() => toggleItem(item.termsId)}
                 className="h-4 w-4 accent-[#142B4A]"
               />
-              <span className="text-sm text-[#374151]">
+              <span className="text-sm text-theme-secondary">
                 {item.title}{" "}
                 <span
-                  className={item.required ? "text-[#356DF3]" : "text-gray-400"}
+                  className={item.required ? "text-[#356DF3]" : "text-theme-muted"}
                 >
                   {item.required ? "(필수)" : "(선택)"}
                 </span>
@@ -84,7 +84,7 @@ export const TermsChecklist = ({
             <button
               type="button"
               onClick={() => setViewingTermsId(item.termsId)}
-              className="text-xs text-gray-400 underline hover:text-gray-600"
+              className="text-xs text-theme-muted underline hover:text-gray-600"
             >
               보기
             </button>
@@ -104,9 +104,9 @@ export const TermsChecklist = ({
       >
         {viewingItem ? (
           <div className="flex max-h-[70vh] flex-col">
-            <h2 id={titleId} className="text-base font-bold text-[#111827]">
+            <h2 id={titleId} className="text-base font-bold text-theme-primary">
               {viewingItem.title}{" "}
-              <span className="text-xs font-normal text-gray-400">
+              <span className="text-xs font-normal text-theme-muted">
                 {viewingItem.version}
               </span>
             </h2>
@@ -116,7 +116,7 @@ export const TermsChecklist = ({
             <button
               type="button"
               onClick={() => setViewingTermsId(null)}
-              className="mt-6 h-11 w-full rounded-md bg-[#142B4A] text-sm font-bold text-white hover:bg-[#0f2138]"
+              className="mt-6 h-11 w-full rounded-md bg-brand text-sm font-bold text-white hover:bg-[#0f2138]"
             >
               닫기
             </button>

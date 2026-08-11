@@ -172,11 +172,11 @@ export function ProjectBasicInfo() {
     <ProjectRegisterShell currentStep={STEP} backHref="/client" backLabel="홈으로">
       <div className="mx-auto mt-12 max-w-[700px]">
         <header>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-[#111827]">
+          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-theme-primary">
             프로젝트 기본 정보
           </h1>
 
-          <p className="mt-2 text-[12px] font-medium text-[#667085]">
+          <p className="mt-2 text-[12px] font-medium text-theme-secondary">
             프로젝트의 기본 조건을 입력해주세요.
           </p>
         </header>
@@ -190,10 +190,10 @@ export function ProjectBasicInfo() {
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
             placeholder="예) 쇼핑몰 관리자 페이지 프론트엔드 개발"
-            className="mt-3 h-[43px] w-full rounded-[8px] border border-[#dce2e8] bg-white px-4 text-[12px] font-semibold text-[#111827] outline-none transition placeholder:font-medium placeholder:text-[#8e97a5] focus:border-[#17365d]"
+            className="mt-3 h-[43px] w-full rounded-[8px] border border-theme bg-surface px-4 text-[12px] font-semibold text-theme-primary outline-none transition placeholder:font-medium placeholder:text-[#8e97a5] focus:border-brand"
           />
 
-          <p className="mt-2 text-[10px] text-[#98a2b3]">
+          <p className="mt-2 text-[10px] text-theme-muted">
             프로젝트의 목적이나 작업 내용이 드러나도록 작성해주세요.
           </p>
         </div>
@@ -210,7 +210,7 @@ export function ProjectBasicInfo() {
                 min={today}
                 aria-invalid={startDate.length > 0 && !isStartDateValid}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="h-[43px] w-full rounded-[8px] border border-[#dce2e8] bg-white px-3 text-[11px] text-[#344054] outline-none"
+                className="h-[43px] w-full rounded-[8px] border border-theme bg-surface px-3 text-[11px] text-theme-secondary outline-none"
               />
             </div>
 
@@ -223,7 +223,7 @@ export function ProjectBasicInfo() {
                 className="h-[15px] w-[15px] cursor-pointer accent-[#17365d]"
               />
 
-              <span className="text-[11px] font-medium text-[#667085]">
+              <span className="text-[11px] font-medium text-theme-secondary">
                 시작일 협의 가능
               </span>
 
@@ -235,13 +235,13 @@ export function ProjectBasicInfo() {
             </label>
 
             {startDate.length > 0 && !isStartDateValid ? (
-              <p role="alert" className="mt-2 text-[10px] font-semibold text-[#b42318]">
+              <p role="alert" className="mt-2 text-[10px] font-semibold text-theme-danger">
                 프로젝트 시작 희망일은 오늘 이후 날짜로 선택해주세요.
               </p>
             ) : (
               <p
                 className={`mt-2 text-[10px] font-semibold ${
-                  startDate.length === 0 ? "text-[#b42318]" : "text-[#667085]"
+                  startDate.length === 0 ? "text-theme-danger" : "text-theme-secondary"
                 }`}
               >
                 시작 희망일은 협의 가능 여부와 관계없이 필수입니다. 오늘 이후
@@ -262,14 +262,14 @@ export function ProjectBasicInfo() {
               max="24"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
-              className="h-[41px] w-[66px] rounded-[8px] border border-[#dce2e8] bg-white px-3 text-center text-[12px] font-semibold text-[#344054] outline-none focus:border-[#17365d]"
+              className="h-[41px] w-[66px] rounded-[8px] border border-theme bg-surface px-3 text-center text-[12px] font-semibold text-theme-secondary outline-none focus:border-brand"
             />
 
             <select
               value={periodUnit}
               onChange={(e) => setPeriodUnit(e.target.value)}
               disabled={!workConditions}
-              className="h-[41px] min-w-[88px] rounded-[8px] border border-[#dce2e8] bg-white px-3 text-[11px] font-bold text-[#344054] outline-none disabled:bg-[#f8fafc]"
+              className="h-[41px] min-w-[88px] rounded-[8px] border border-theme bg-surface px-3 text-[11px] font-bold text-theme-secondary outline-none disabled:bg-surface-subtle"
             >
               <option value="">단위 선택</option>
               {workConditions?.periodUnits.map((option) => (
@@ -280,7 +280,7 @@ export function ProjectBasicInfo() {
             </select>
           </div>
 
-          <p className="mt-2 text-[10px] text-[#98a2b3]">
+          <p className="mt-2 text-[10px] text-theme-muted">
             최대 24개월 또는 24주
           </p>
         </div>
@@ -296,10 +296,10 @@ export function ProjectBasicInfo() {
               value={budget}
               onChange={handleBudgetChange}
               placeholder="3,000"
-              className="h-[43px] w-[185px] rounded-[8px] border border-[#dce2e8] bg-white px-4 text-right text-[13px] font-bold text-[#111827] outline-none placeholder:text-[#8e97a5] focus:border-[#17365d]"
+              className="h-[43px] w-[185px] rounded-[8px] border border-theme bg-surface px-4 text-right text-[13px] font-bold text-theme-primary outline-none placeholder:text-[#8e97a5] focus:border-brand"
             />
 
-            <span className="text-[11px] font-bold text-[#667085]">만원</span>
+            <span className="text-[11px] font-bold text-theme-secondary">만원</span>
           </div>
 
           {/* 입력 후 표시 */}
@@ -309,13 +309,13 @@ export function ProjectBasicInfo() {
             </p>
           )}
 
-          <p className="mt-2 text-[10px] text-[#98a2b3]">
+          <p className="mt-2 text-[10px] text-theme-muted">
             전체 프로젝트 기준 총예산 · 최소 500만원 · 최대 10억원(100,000만원) · 부가세 별도 ·
             만 원 단위 입력
           </p>
 
           {!isBudgetValid && (budget.length > 0 || budgetValidationRequested) ? (
-            <p role="alert" className="mt-2 text-[10px] font-semibold text-[#b42318]">
+            <p role="alert" className="mt-2 text-[10px] font-semibold text-theme-danger">
               프로젝트 전체 예산은 500만원 이상 100,000만원 이하로 입력해주세요.
             </p>
           ) : null}
@@ -356,12 +356,12 @@ export function ProjectBasicInfo() {
         </div>
 
         {metaError ? (
-          <div className="mt-6 flex items-center justify-between rounded-[8px] border border-[#fda29b] bg-[#fff5f4] px-4 py-3">
-            <p className="text-[11px] font-semibold text-[#b42318]">{metaError}</p>
+          <div className="mt-6 flex items-center justify-between rounded-[8px] border border-[#fda29b] bg-danger-surface px-4 py-3">
+            <p className="text-[11px] font-semibold text-theme-danger">{metaError}</p>
             <button
               type="button"
               onClick={() => void loadWorkConditions()}
-              className="text-[11px] font-bold text-[#b42318] underline"
+              className="text-[11px] font-bold text-theme-danger underline"
             >
               다시 시도
             </button>
@@ -393,8 +393,8 @@ function SelectButton({
       onClick={onClick}
       className={`flex h-[40px] min-w-[62px] items-center justify-center rounded-[8px] border px-5 text-[11px] font-semibold transition ${
         selected
-          ? "border-[#17365d] bg-[#eef3f8] text-[#17365d]"
-          : "border-[#dce2e8] bg-white text-[#667085] hover:bg-[#f8fafc]"
+          ? "border-brand bg-[#eef3f8] text-brand"
+          : "border-theme bg-surface text-theme-secondary hover:bg-surface-subtle"
       }`}
     >
       {children}

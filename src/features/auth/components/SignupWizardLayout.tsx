@@ -17,7 +17,7 @@ export function SignupWizardLayout({
   children,
 }: SignupWizardLayoutProps) {
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
+    <div className="min-h-screen bg-surface-subtle">
       <AuthHeader />
 
       <main className="mx-auto max-w-[560px] px-5 py-12">
@@ -27,7 +27,7 @@ export function SignupWizardLayout({
           labels={labels}
         />
 
-        <section className="mt-8 rounded-lg border border-gray-200 bg-white px-8 py-9 shadow-sm">
+        <section className="mt-8 rounded-lg border border-theme bg-surface px-8 py-9 shadow-sm">
           {children}
         </section>
       </main>

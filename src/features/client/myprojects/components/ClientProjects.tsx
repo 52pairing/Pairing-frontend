@@ -137,23 +137,23 @@ export function ClientProjects() {
   const projects = projectPage?.content ?? [];
 
   return (
-    <main className="min-h-screen bg-[#f7f8fa]">
+    <main className="min-h-screen bg-surface-subtle">
       <div className="mx-auto w-full max-w-[1120px] px-5 pb-16 pt-5">
-        <h1 className="text-[23px] font-bold tracking-[-0.6px] text-[#111827]">
+        <h1 className="text-[23px] font-bold tracking-[-0.6px] text-theme-primary">
           내 프로젝트
         </h1>
 
         <ProjectStatusTabs activeTab={activeTab} onTabChange={changeTab} />
 
         {errorMessage ? (
-          <div role="alert" className="mt-6 flex h-[150px] flex-col items-center justify-center gap-3 rounded-[14px] border border-[#fda29b] bg-white text-[12px] font-medium text-[#b42318]">
+          <div role="alert" className="mt-6 flex h-[150px] flex-col items-center justify-center gap-3 rounded-[14px] border border-[#fda29b] bg-surface text-[12px] font-medium text-theme-danger">
             <p>{errorMessage}</p>
             <button type="button" onClick={() => void loadProjects()} className="rounded-[8px] border border-[#b42318] px-4 py-2 font-bold">
               다시 시도
             </button>
           </div>
         ) : isLoading ? (
-          <div className="mt-6 flex h-[150px] items-center justify-center rounded-[14px] border border-[#dde3ea] bg-white text-[12px] font-medium text-[#667085]">
+          <div className="mt-6 flex h-[150px] items-center justify-center rounded-[14px] border border-theme bg-surface text-[12px] font-medium text-theme-secondary">
             프로젝트를 불러오고 있습니다.
           </div>
         ) : projects.length > 0 ? (
@@ -187,20 +187,20 @@ export function ClientProjects() {
 
             {projectPage && projectPage.totalPages > 1 ? (
               <nav aria-label="프로젝트 목록 페이지" className="flex items-center justify-center gap-3 py-7">
-                <button type="button" disabled={projectPage.first} onClick={() => setPage((current) => Math.max(0, current - 1))} className="rounded-[8px] border border-[#dce2e8] bg-white px-4 py-2 text-[12px] font-semibold text-[#667085] disabled:cursor-not-allowed disabled:opacity-40">
+                <button type="button" disabled={projectPage.first} onClick={() => setPage((current) => Math.max(0, current - 1))} className="rounded-[8px] border border-theme bg-surface px-4 py-2 text-[12px] font-semibold text-theme-secondary disabled:cursor-not-allowed disabled:opacity-40">
                   이전
                 </button>
-                <span className="text-[12px] font-semibold text-[#667085]">
+                <span className="text-[12px] font-semibold text-theme-secondary">
                   {projectPage.page + 1} / {projectPage.totalPages}
                 </span>
-                <button type="button" disabled={projectPage.last} onClick={() => setPage((current) => current + 1)} className="rounded-[8px] border border-[#dce2e8] bg-white px-4 py-2 text-[12px] font-semibold text-[#667085] disabled:cursor-not-allowed disabled:opacity-40">
+                <button type="button" disabled={projectPage.last} onClick={() => setPage((current) => current + 1)} className="rounded-[8px] border border-theme bg-surface px-4 py-2 text-[12px] font-semibold text-theme-secondary disabled:cursor-not-allowed disabled:opacity-40">
                   다음
                 </button>
               </nav>
             ) : null}
           </>
         ) : (
-          <div className="mt-6 flex h-[150px] items-center justify-center rounded-[14px] border border-[#dde3ea] bg-white text-[12px] font-medium text-[#98a2b3]">
+          <div className="mt-6 flex h-[150px] items-center justify-center rounded-[14px] border border-theme bg-surface text-[12px] font-medium text-theme-muted">
             해당 상태의 프로젝트가 없습니다.
           </div>
         )}

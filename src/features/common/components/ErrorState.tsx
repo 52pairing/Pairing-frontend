@@ -48,9 +48,9 @@ export const ErrorState = ({
       </span>
 
       <div>
-        <p className="text-base font-semibold text-gray-900">{title}</p>
+        <p className="text-base font-semibold text-theme-primary">{title}</p>
         {description ? (
-          <p className="mt-1 text-sm leading-relaxed text-gray-500">
+          <p className="mt-1 text-sm leading-relaxed text-theme-secondary">
             {description}
           </p>
         ) : null}
@@ -60,7 +60,7 @@ export const ErrorState = ({
         <button
           type="button"
           onClick={onRetry}
-          className="mt-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          className="mt-2 rounded-lg border border-theme bg-surface px-4 py-2 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
         >
           {retryText}
         </button>

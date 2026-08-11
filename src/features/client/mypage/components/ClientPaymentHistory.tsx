@@ -40,7 +40,7 @@ export function ClientPaymentHistory() {
   const visibleTotal = visiblePayments.reduce((total, payment) => total + payment.amount, 0);
 
   return (
-    <main className="min-h-screen bg-[#f7f8fa] px-4 py-7 text-[#172033] sm:px-5">
+    <main className="min-h-screen bg-surface-subtle px-4 py-7 text-theme-primary sm:px-5">
       <div className="mx-auto w-full max-w-[1200px]">
         <h1 className="text-[24px] font-extrabold tracking-[-0.04em]">마이페이지</h1>
 
@@ -54,7 +54,7 @@ export function ClientPaymentHistory() {
               <SummaryCard label="성공보수 수수료" value={TOTAL_SUCCESS_FEE} tone="purple" />
             </section>
 
-            <section className="mt-4 rounded-xl border border-[#dde3ea] bg-white px-5 py-5 sm:px-7 sm:py-7">
+            <section className="mt-4 rounded-xl border border-theme bg-surface px-5 py-5 sm:px-7 sm:py-7">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-[16px] font-bold">결제 내역</h2>
                 <div className="flex flex-wrap gap-2">
@@ -68,8 +68,8 @@ export function ClientPaymentHistory() {
                         onClick={() => setActiveFilter(filter)}
                         className={`h-8 rounded-full border px-4 text-[11px] font-semibold transition ${
                           isActive
-                            ? "border-[#17365d] bg-[#17365d] text-white"
-                            : "border-[#dce2e8] bg-white text-[#667085] hover:bg-[#f8fafc]"
+                            ? "border-brand bg-brand text-white"
+                            : "border-theme bg-surface text-theme-secondary hover:bg-surface-subtle"
                         }`}
                       >
                         {filter}
@@ -79,9 +79,9 @@ export function ClientPaymentHistory() {
                 </div>
               </div>
 
-              <div className="mt-5 overflow-x-auto rounded-lg border border-[#dfe4ea]">
+              <div className="mt-5 overflow-x-auto rounded-lg border border-theme">
                 <table className="w-full min-w-[760px] border-collapse text-left text-[11px]">
-                  <thead className="bg-[#f7f8fa] text-[#98a2b3]">
+                  <thead className="bg-surface-subtle text-theme-muted">
                     <tr>
                       <TableHeader>결제일</TableHeader>
                       <TableHeader>프로젝트</TableHeader>
@@ -92,24 +92,24 @@ export function ClientPaymentHistory() {
                   </thead>
                   <tbody>
                     {visiblePayments.map((payment) => (
-                      <tr key={payment.id} className="border-t border-[#e5e9ef]">
-                        <td className="px-5 py-4 font-semibold text-[#98a2b3]">{payment.paidAt}</td>
+                      <tr key={payment.id} className="border-t border-theme">
+                        <td className="px-5 py-4 font-semibold text-theme-muted">{payment.paidAt}</td>
                         <td className="px-5 py-4">
-                          <p className="font-bold text-[#172033]">{payment.projectTitle}</p>
-                          <p className="mt-1 text-[10px] font-semibold text-[#98a2b3]">{payment.id}</p>
+                          <p className="font-bold text-theme-primary">{payment.projectTitle}</p>
+                          <p className="mt-1 text-[10px] font-semibold text-theme-muted">{payment.id}</p>
                         </td>
                         <td className="px-5 py-4"><PaymentTypeBadge type={payment.type} /></td>
-                        <td className="px-5 py-4 text-[13px] font-extrabold text-[#172033]">{formatWon(payment.amount)}</td>
-                        <td className="px-5 py-4 font-semibold text-[#667085]">{payment.paymentMethod}</td>
+                        <td className="px-5 py-4 text-[13px] font-extrabold text-theme-primary">{formatWon(payment.amount)}</td>
+                        <td className="px-5 py-4 font-semibold text-theme-secondary">{payment.paymentMethod}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              <div className="mt-7 flex justify-end border-t border-[#e5e9ef] pt-5 text-[11px]">
-                <span className="font-semibold text-[#98a2b3]">조회 기간 합계</span>
-                <strong className="ml-3 text-[14px] text-[#17365d]">{formatWon(visibleTotal)}</strong>
+              <div className="mt-7 flex justify-end border-t border-theme pt-5 text-[11px]">
+                <span className="font-semibold text-theme-muted">조회 기간 합계</span>
+                <strong className="ml-3 text-[14px] text-brand">{formatWon(visibleTotal)}</strong>
               </div>
             </section>
           </div>
@@ -120,10 +120,10 @@ export function ClientPaymentHistory() {
 }
 
 function SummaryCard({ label, value, tone }: { label: string; value: number; tone: "navy" | "blue" | "purple" }) {
-  const colors = { navy: "text-[#17365d]", blue: "text-[#3478f6]", purple: "text-[#7c3aed]" };
+  const colors = { navy: "text-brand", blue: "text-[#3478f6]", purple: "text-[#7c3aed]" };
   return (
-    <article className="flex min-h-[108px] flex-col items-center justify-center rounded-xl border border-[#dde3ea] bg-white px-4 text-center">
-      <p className="text-[11px] font-semibold text-[#98a2b3]">{label}</p>
+    <article className="flex min-h-[108px] flex-col items-center justify-center rounded-xl border border-theme bg-surface px-4 text-center">
+      <p className="text-[11px] font-semibold text-theme-muted">{label}</p>
       <strong className={`mt-3 text-[19px] font-extrabold ${colors[tone]}`}>{formatWon(value)}</strong>
     </article>
   );

@@ -121,11 +121,11 @@ export function ProjectDetails() {
     <ProjectRegisterShell currentStep={STEP} backHref="/client" backLabel="홈으로">
       <div className="mx-auto mt-12 max-w-[720px]">
         <header>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-[#111827]">
+          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-theme-primary">
             프로젝트 상세 정보
           </h1>
 
-          <p className="mt-2 text-[12px] font-medium text-[#667085]">
+          <p className="mt-2 text-[12px] font-medium text-theme-secondary">
             프리랜서가 프로젝트를 이해할 수 있도록 상세 내용을 작성해주세요.
           </p>
         </header>
@@ -137,8 +137,8 @@ export function ProjectDetails() {
           onToggle={() => setStatusGuideOpen(!statusGuideOpen)}
         >
           <div className="grid md:grid-cols-2">
-            <div className="border-b border-[#e5e9ef] px-5 py-4 md:border-b-0 md:border-r">
-              <p className="mb-3 text-[10px] font-medium text-[#98a2b3]">
+            <div className="border-b border-theme px-5 py-4 md:border-b-0 md:border-r">
+              <p className="mb-3 text-[10px] font-medium text-theme-muted">
                 작성 가이드
               </p>
 
@@ -150,7 +150,7 @@ export function ProjectDetails() {
             </div>
 
             <div className="px-5 py-4">
-              <p className="mb-3 text-[10px] font-medium text-[#98a2b3]">
+              <p className="mb-3 text-[10px] font-medium text-theme-muted">
                 예시
               </p>
 
@@ -185,8 +185,8 @@ export function ProjectDetails() {
           onToggle={() => setTaskGuideOpen(!taskGuideOpen)}
         >
           <div className="grid md:grid-cols-2">
-            <div className="border-b border-[#e5e9ef] px-5 py-4 md:border-b-0 md:border-r">
-              <p className="mb-3 text-[10px] font-medium text-[#98a2b3]">
+            <div className="border-b border-theme px-5 py-4 md:border-b-0 md:border-r">
+              <p className="mb-3 text-[10px] font-medium text-theme-muted">
                 작성 가이드
               </p>
 
@@ -198,7 +198,7 @@ export function ProjectDetails() {
             </div>
 
             <div className="px-5 py-4">
-              <p className="mb-3 text-[10px] font-medium text-[#98a2b3]">
+              <p className="mb-3 text-[10px] font-medium text-theme-muted">
                 예시
               </p>
 
@@ -243,8 +243,8 @@ export function ProjectDetails() {
           onToggle={() => setScopeGuideOpen(!scopeGuideOpen)}
         >
           <div className="grid md:grid-cols-2">
-            <div className="border-b border-[#e5e9ef] px-5 py-4 md:border-b-0 md:border-r">
-              <p className="mb-3 text-[10px] font-medium text-[#98a2b3]">
+            <div className="border-b border-theme px-5 py-4 md:border-b-0 md:border-r">
+              <p className="mb-3 text-[10px] font-medium text-theme-muted">
                 작성 가이드
               </p>
 
@@ -256,7 +256,7 @@ export function ProjectDetails() {
             </div>
 
             <div className="px-5 py-4">
-              <p className="mb-3 text-[10px] font-medium text-[#98a2b3]">
+              <p className="mb-3 text-[10px] font-medium text-theme-muted">
                 예시
               </p>
 
@@ -272,7 +272,7 @@ export function ProjectDetails() {
         </GuideBox>
 
         <FieldCard>
-          <label className="text-[12px] font-extrabold text-[#111827]">
+          <label className="text-[12px] font-extrabold text-theme-primary">
             세부 업무 범위
           </label>
 
@@ -295,8 +295,8 @@ export function ProjectDetails() {
           onToggle={() => setAdditionalGuideOpen(!additionalGuideOpen)}
         >
           <div className="grid md:grid-cols-2">
-            <div className="border-b border-[#e5e9ef] px-5 py-4 md:border-b-0 md:border-r">
-              <p className="mb-3 text-[10px] font-medium text-[#98a2b3]">
+            <div className="border-b border-theme px-5 py-4 md:border-b-0 md:border-r">
+              <p className="mb-3 text-[10px] font-medium text-theme-muted">
                 작성 가이드
               </p>
 
@@ -307,7 +307,7 @@ export function ProjectDetails() {
             </div>
 
             <div className="px-5 py-4">
-              <p className="mb-3 text-[10px] font-medium text-[#98a2b3]">
+              <p className="mb-3 text-[10px] font-medium text-theme-muted">
                 예시
               </p>
 
@@ -319,7 +319,7 @@ export function ProjectDetails() {
         </GuideBox>
 
         <FieldCard>
-          <label className="text-[12px] font-extrabold text-[#111827]">
+          <label className="text-[12px] font-extrabold text-theme-primary">
             기타 전달사항 및 우대사항
           </label>
 
@@ -331,12 +331,12 @@ export function ProjectDetails() {
         </FieldCard>
 
         {/* 프로젝트 관련 자료 */}
-        <section className="mt-5 rounded-[12px] border border-[#dce2e8] bg-white p-6">
-          <h2 className="text-[13px] font-extrabold text-[#111827]">
+        <section className="mt-5 rounded-[12px] border border-theme bg-surface p-6">
+          <h2 className="text-[13px] font-extrabold text-theme-primary">
             프로젝트 관련 자료
           </h2>
 
-          <p className="mt-2 text-[11px] leading-5 text-[#8b95a5]">
+          <p className="mt-2 text-[11px] leading-5 text-theme-muted">
             기획서, 디자인 시안, 참고 자료 등을 첨부해주세요. 구체적인
             자료일수록 더 적합한 프리랜서 매칭에 도움이 됩니다.
           </p>
@@ -367,7 +367,7 @@ export function ProjectDetails() {
           >
             <UploadIcon />
 
-            <p className="mt-2 text-[12px] font-bold text-[#667085]">
+            <p className="mt-2 text-[12px] font-bold text-theme-secondary">
               {isUploading
                 ? "파일을 업로드하고 있습니다."
                 : files.length >= MAX_FILES
@@ -375,7 +375,7 @@ export function ProjectDetails() {
                   : "클릭하거나 파일을 드래그하여 업로드"}
             </p>
 
-            <p className="mt-1 text-[10px] text-[#98a2b3]">
+            <p className="mt-1 text-[10px] text-theme-muted">
               PDF · 이미지 · 파일당 최대 100MB · 최대 10개
             </p>
           </button>
@@ -383,17 +383,17 @@ export function ProjectDetails() {
           {files.length > 0 ? (
             <div className="mt-3 space-y-2">
               {files.map((file) => (
-                <div key={file.fileId} className="flex h-[48px] items-center justify-between rounded-[8px] border border-[#dce2e8] px-4">
+                <div key={file.fileId} className="flex h-[48px] items-center justify-between rounded-[8px] border border-theme px-4">
                   <div className="flex min-w-0 items-center gap-3">
                     <FileIcon />
-                    <p className="truncate text-[11px] font-bold text-[#344054]">{file.originalName}</p>
-                    <span className="shrink-0 text-[10px] text-[#98a2b3]">{formatFileSize(file.sizeBytes)}</span>
+                    <p className="truncate text-[11px] font-bold text-theme-secondary">{file.originalName}</p>
+                    <span className="shrink-0 text-[10px] text-theme-muted">{formatFileSize(file.sizeBytes)}</span>
                   </div>
                   <button
                     type="button"
                     disabled={deletingFileId === file.fileId}
                     onClick={() => void handleDeleteFile(file)}
-                    className="text-[16px] text-[#98a2b3] hover:text-[#344054] disabled:cursor-wait"
+                    className="text-[16px] text-theme-muted hover:text-theme-secondary disabled:cursor-wait"
                     aria-label={`${file.originalName} 삭제`}
                   >
                     {deletingFileId === file.fileId ? "…" : "×"}
@@ -404,10 +404,10 @@ export function ProjectDetails() {
           ) : null}
 
           {fileError ? (
-            <p role="alert" className="mt-3 text-[11px] font-semibold text-[#b42318]">{fileError}</p>
+            <p role="alert" className="mt-3 text-[11px] font-semibold text-theme-danger">{fileError}</p>
           ) : null}
 
-          <div className="mt-3 space-y-1 text-[10px] font-medium text-[#98a2b3]">
+          <div className="mt-3 space-y-1 text-[10px] font-medium text-theme-muted">
             <p>
               · 허용 형식: PDF, PNG, JPG, JPEG · 파일당 최대 100MB · 최대 10개
             </p>
@@ -432,7 +432,7 @@ export function ProjectDetails() {
 
 function FieldCard({ children }: { children: ReactNode }) {
   return (
-    <section className="mt-3 rounded-[12px] border border-[#dce2e8] bg-white p-5">
+    <section className="mt-3 rounded-[12px] border border-theme bg-surface p-5">
       {children}
     </section>
   );
@@ -470,10 +470,10 @@ function Textarea({
         maxLength={MAX_TEXT_LENGTH}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="min-h-[165px] w-full resize-none rounded-[9px] border border-[#dce2e8] bg-white px-4 py-4 text-[11px] font-medium leading-6 text-[#344054] outline-none transition placeholder:text-[#98a2b3] focus:border-[#3b73ff] focus:ring-1 focus:ring-[#3b73ff]"
+        className="min-h-[165px] w-full resize-none rounded-[9px] border border-theme bg-surface px-4 py-4 text-[11px] font-medium leading-6 text-theme-secondary outline-none transition placeholder:text-theme-muted focus:border-[#3b73ff] focus:ring-1 focus:ring-[#3b73ff]"
       />
 
-      <p className="mt-1 text-right text-[10px] font-medium text-[#98a2b3]">
+      <p className="mt-1 text-right text-[10px] font-medium text-theme-muted">
         {value.length}자/{MAX_TEXT_LENGTH}자
       </p>
     </div>
@@ -502,13 +502,13 @@ function GuideBox({
   children: ReactNode;
 }) {
   return (
-    <section className="mt-5 overflow-hidden rounded-[11px] border border-[#dce2e8] bg-white">
+    <section className="mt-5 overflow-hidden rounded-[11px] border border-theme bg-surface">
       <button
         type="button"
         onClick={onToggle}
-        className="flex h-[44px] w-full items-center justify-between bg-[#f7f8fa] px-4 text-left"
+        className="flex h-[44px] w-full items-center justify-between bg-surface-subtle px-4 text-left"
       >
-        <span className="text-[11px] font-bold text-[#667085]">{title}</span>
+        <span className="text-[11px] font-bold text-theme-secondary">{title}</span>
 
         <ChevronIcon open={open} />
       </button>
@@ -520,7 +520,7 @@ function GuideBox({
 
 function GuideText({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-[7px] flex items-start gap-2 text-[10px] font-semibold leading-[1.5] text-[#667085]">
+    <p className="mt-[7px] flex items-start gap-2 text-[10px] font-semibold leading-[1.5] text-theme-secondary">
       <span className="mt-[6px] h-[3px] w-[3px] shrink-0 rounded-full bg-[#98a2b3]" />
       {children}
     </p>
@@ -529,7 +529,7 @@ function GuideText({ children }: { children: ReactNode }) {
 
 function ExampleText({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-[7px] text-[10px] font-medium leading-[1.5] text-[#8b95a5]">
+    <p className="mt-[7px] text-[10px] font-medium leading-[1.5] text-theme-muted">
       {children}
     </p>
   );
@@ -547,7 +547,7 @@ function ChevronIcon({ open }: { open: boolean }) {
       viewBox="0 0 14 14"
       fill="none"
       aria-hidden="true"
-      className={`text-[#98a2b3] transition ${open ? "rotate-180" : ""}`}
+      className={`text-theme-muted transition ${open ? "rotate-180" : ""}`}
     >
       <path
         d="M3.5 8.5L7 5L10.5 8.5"

@@ -22,7 +22,7 @@ export function SignupStepNavigation({
         <button
           type="button"
           onClick={onPrevious}
-          className="h-11 rounded-md border border-gray-200 px-5 text-sm font-semibold text-gray-500 transition hover:bg-gray-50"
+          className="h-11 rounded-md border border-theme px-5 text-sm font-semibold text-theme-secondary transition hover:bg-surface-subtle"
         >
           {previousLabel}
         </button>
@@ -34,7 +34,7 @@ export function SignupStepNavigation({
           className={`h-11 min-w-[120px] rounded-md px-5 text-sm font-bold text-white transition ${
             nextDisabled
               ? "cursor-not-allowed bg-gray-300"
-              : "cursor-pointer bg-[#142B4A] hover:bg-[#0f2138]"
+              : "cursor-pointer bg-brand hover:bg-[#0f2138]"
           }`}
         >
           {nextLabel}

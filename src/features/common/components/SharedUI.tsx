@@ -27,7 +27,7 @@ export function BenefitRow({
       <div className="flex min-w-0 items-center gap-2">
         <CheckCircleIcon color={iconColor} />
 
-        <span className="text-[11px] text-[#475467]">{label}</span>
+        <span className="text-[11px] text-theme-secondary">{label}</span>
       </div>
 
       <span
@@ -45,7 +45,7 @@ export function BenefitRow({
 /** HOW IT WORKS 단계 카드 사이에 놓는 화살표 (데스크톱에서만 표시) */
 export function StepArrow() {
   return (
-    <div className="hidden items-center justify-center text-[#929dad] md:flex">
+    <div className="hidden items-center justify-center text-theme-muted md:flex">
       <svg width="8" height="14" viewBox="0 0 8 14" fill="none" aria-hidden="true">
         <path
           d="M1 1L7 7L1 13"

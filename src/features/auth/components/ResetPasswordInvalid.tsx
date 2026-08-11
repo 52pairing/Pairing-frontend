@@ -10,14 +10,14 @@ export const ResetPasswordInvalid = ({
   message,
 }: ResetPasswordInvalidProps) => (
   <div className="flex flex-col items-center text-center">
-    <h1 className="text-lg font-bold text-[#111827]">
+    <h1 className="text-lg font-bold text-theme-primary">
       링크를 사용할 수 없습니다.
     </h1>
-    <p className="mt-2 text-sm font-medium text-gray-500">{message}</p>
+    <p className="mt-2 text-sm font-medium text-theme-secondary">{message}</p>
 
     <Link
       href="/login/findpassword"
-      className="mt-6 flex h-11 w-full items-center justify-center rounded-md bg-[#0b1f3a] text-sm font-bold text-white hover:bg-[#102b50]"
+      className="mt-6 flex h-11 w-full items-center justify-center rounded-md bg-brand text-sm font-bold text-white hover:bg-brand"
     >
       비밀번호 찾기 다시 시도하기
     </Link>

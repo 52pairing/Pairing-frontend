@@ -131,7 +131,7 @@ export function ProjectRegisterProvider({ children }: { children: ReactNode }) {
 
   if (!isHydrated) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center text-sm text-[#667085]">
+      <div className="flex min-h-[60vh] items-center justify-center text-sm text-theme-secondary">
         작성 중인 프로젝트 정보를 불러오고 있습니다.
       </div>
     );

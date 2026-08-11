@@ -94,22 +94,22 @@ function LoginPageContent() {
       <AuthHeader />
 
       <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-5 py-16">
-        <section className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white px-8 py-9 shadow-sm">
+        <section className="w-full max-w-[440px] rounded-lg border border-theme bg-surface px-8 py-9 shadow-sm">
           <div className="mb-6 text-center">
-            <h1 className="text-xl font-bold text-[#111827]">로그인</h1>
-            <p className="mt-2 text-sm font-medium text-gray-500">
+            <h1 className="text-xl font-bold text-theme-primary">로그인</h1>
+            <p className="mt-2 text-sm font-medium text-theme-secondary">
               서비스 이용을 위해 로그인해 주세요.
             </p>
           </div>
 
-          <div className="mb-6 grid grid-cols-2 rounded-md border border-gray-200 bg-white p-1">
+          <div className="mb-6 grid grid-cols-2 rounded-md border border-theme bg-surface p-1">
             <button
               type="button"
               onClick={() => setRole("CLIENT")}
               className={`h-9 rounded-md text-sm font-semibold ${
                 role === "CLIENT"
-                  ? "bg-[#0b1f3a] text-white"
-                  : "text-gray-500 hover:bg-gray-50"
+                  ? "bg-brand text-white"
+                  : "text-theme-secondary hover:bg-surface-subtle"
               }`}
             >
               클라이언트
@@ -120,8 +120,8 @@ function LoginPageContent() {
               onClick={() => setRole("FREELANCER")}
               className={`h-9 rounded-md text-sm font-semibold ${
                 role === "FREELANCER"
-                  ? "bg-[#0b1f3a] text-white"
-                  : "text-gray-500 hover:bg-gray-50"
+                  ? "bg-brand text-white"
+                  : "text-theme-secondary hover:bg-surface-subtle"
               }`}
             >
               프리랜서
@@ -142,7 +142,7 @@ function LoginPageContent() {
             <div>
               <label
                 htmlFor="email"
-                className="mb-2 block text-sm font-semibold text-[#0b1f3a]"
+                className="mb-2 block text-sm font-semibold text-brand"
               >
                 이메일 <span className="text-blue-500">*</span>
               </label>
@@ -153,14 +153,14 @@ function LoginPageContent() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="이메일 주소를 입력해 주세요."
-                className="h-11 w-full rounded-md border border-gray-200 px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b1f3a]"
+                className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
               />
             </div>
 
             <div>
               <label
                 htmlFor="password"
-                className="mb-2 block text-sm font-semibold text-[#0b1f3a]"
+                className="mb-2 block text-sm font-semibold text-brand"
               >
                 비밀번호 <span className="text-blue-500">*</span>
               </label>
@@ -172,13 +172,13 @@ function LoginPageContent() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="비밀번호를 입력해 주세요."
-                  className="h-11 w-full rounded-md border border-gray-200 px-4 pr-12 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b1f3a]"
+                  className="h-11 w-full rounded-md border border-theme px-4 pr-12 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 hover:text-gray-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-theme-muted hover:text-theme-secondary"
                 >
                   {showPassword ? "숨김" : "보기"}
                 </button>
@@ -189,14 +189,14 @@ function LoginPageContent() {
               <p className="text-xs font-medium text-red-500">{formError}</p>
             ) : null}
 
-            <div className="flex justify-end gap-3 text-xs font-medium text-gray-500">
-              <Link href="/login/findemail" className="hover:text-gray-900">
+            <div className="flex justify-end gap-3 text-xs font-medium text-theme-secondary">
+              <Link href="/login/findemail" className="hover:text-theme-primary">
                 아이디 찾기
               </Link>
 
-              <span className="text-gray-300">|</span>
+              <span className="text-theme-muted">|</span>
 
-              <Link href="/login/findpassword" className="hover:text-gray-900">
+              <Link href="/login/findpassword" className="hover:text-theme-primary">
                 비밀번호 찾기
               </Link>
             </div>
@@ -204,7 +204,7 @@ function LoginPageContent() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-11 w-full rounded-md bg-[#0b1f3a] text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 enabled:hover:bg-[#102b50]"
+              className="h-11 w-full rounded-md bg-brand text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 enabled:hover:bg-brand"
             >
               {isSubmitting
                 ? "로그인 중..."
@@ -218,7 +218,7 @@ function LoginPageContent() {
             <>
               <div className="mt-7 flex items-center gap-3">
                 <div className="h-px flex-1 bg-gray-200" />
-                <span className="text-xs font-medium text-gray-400">
+                <span className="text-xs font-medium text-theme-muted">
                   또는 소셜 계정으로 로그인
                 </span>
                 <div className="h-px flex-1 bg-gray-200" />
@@ -258,7 +258,7 @@ function LoginPageContent() {
                 </button>
               </div>
               {socialLoadingProvider ? (
-                <p className="mt-3 text-center text-xs text-gray-400">
+                <p className="mt-3 text-center text-xs text-theme-muted">
                   {socialLoadingProvider === "kakao" ? "카카오" : "구글"}
                   로그인 페이지로 이동 중입니다.
                 </p>
@@ -271,9 +271,9 @@ function LoginPageContent() {
             </>
           ) : null}
 
-          <p className="mt-6 text-center text-xs font-medium text-gray-500">
+          <p className="mt-6 text-center text-xs font-medium text-theme-secondary">
             아직 회원이 아니신가요?{" "}
-            <Link href="/signup" className="font-bold text-[#0b1f3a]">
+            <Link href="/signup" className="font-bold text-brand">
               회원가입
             </Link>
           </p>

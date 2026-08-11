@@ -85,10 +85,10 @@ export const LoadingState = ({
       <Spinner
         size={size}
         label={message || "로딩 중"}
-        className="text-[#2c3e5d]"
+        className="text-brand"
       />
       {message ? (
-        <p className="whitespace-pre-line text-sm text-gray-500" aria-hidden="true">
+        <p className="whitespace-pre-line text-sm text-theme-secondary" aria-hidden="true">
           {message}
         </p>
       ) : null}

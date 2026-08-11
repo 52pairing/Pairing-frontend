@@ -40,21 +40,21 @@ export const FindPasswordSent = ({
     <div className="flex flex-col items-center text-center">
       <MailIcon />
 
-      <h1 className="mt-5 text-lg font-bold text-[#111827]">
+      <h1 className="mt-5 text-lg font-bold text-theme-primary">
         인증 링크를 보냈습니다.
       </h1>
       {/* 입력값이 실제로 일치하는지는 서버가 알려주지 않아 확정 문구를 쓰지 않음 */}
-      <p className="mt-2 text-sm font-medium text-gray-500">
+      <p className="mt-2 text-sm font-medium text-theme-secondary">
         입력하신 정보가 일치하면 가입한 이메일로 인증 링크를 보내드렸습니다.
         메일함을 확인해 주세요.
       </p>
 
-      <div className="mt-6 w-full rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
-        <p className="text-xs text-gray-400">입력하신 이메일</p>
-        <p className="mt-1 text-sm font-bold text-[#0b1f3a]">{email}</p>
+      <div className="mt-6 w-full rounded-md border border-theme bg-surface-subtle px-4 py-3">
+        <p className="text-xs text-theme-muted">입력하신 이메일</p>
+        <p className="mt-1 text-sm font-bold text-brand">{email}</p>
       </div>
 
-      <ul className="mt-5 list-disc space-y-1 pl-4 text-left text-xs text-gray-500">
+      <ul className="mt-5 list-disc space-y-1 pl-4 text-left text-xs text-theme-secondary">
         <li>
           이메일의 인증 링크를 클릭하면 본인 인증이 완료되고 임시 비밀번호가
           발급됩니다.
@@ -68,7 +68,7 @@ export const FindPasswordSent = ({
         type="button"
         onClick={handleResend}
         disabled={secondsLeft > 0}
-        className="mt-6 h-11 w-full rounded-md border border-gray-200 text-sm font-semibold text-gray-400 disabled:cursor-not-allowed enabled:text-gray-700 enabled:hover:bg-gray-50"
+        className="mt-6 h-11 w-full rounded-md border border-theme text-sm font-semibold text-theme-muted disabled:cursor-not-allowed enabled:text-theme-secondary enabled:hover:bg-surface-subtle"
       >
         {secondsLeft > 0
           ? `이메일 다시 보내기 (${secondsLeft}s)`
@@ -77,7 +77,7 @@ export const FindPasswordSent = ({
 
       <Link
         href="/login"
-        className="mt-4 text-xs font-medium text-gray-500 hover:text-gray-900"
+        className="mt-4 text-xs font-medium text-theme-secondary hover:text-theme-primary"
       >
         로그인으로 돌아가기
       </Link>

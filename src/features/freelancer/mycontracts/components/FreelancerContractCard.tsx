@@ -40,18 +40,18 @@ export function FreelancerContractCard({
   onAction,
 }: FreelancerContractCardProps) {
   return (
-    <article className="rounded-xl border border-[#dde3ea] bg-white px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
+    <article className="rounded-xl border border-theme bg-surface px-5 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[14px] font-bold tracking-[-0.35px] text-[#172033]">
+            <h2 className="text-[14px] font-bold tracking-[-0.35px] text-theme-primary">
               {title}
             </h2>
             {badges.map((badge) => (
               <StatusBadge key={badge.label} {...badge} />
             ))}
           </div>
-          <p className="mt-1.5 text-[11px] font-semibold text-[#64748b]">
+          <p className="mt-1.5 text-[11px] font-semibold text-theme-secondary">
             {company} · {industry}
           </p>
         </div>
@@ -97,23 +97,23 @@ const ACTION_LABELS: Record<Exclude<ContractAction, "none">, string> = {
 const BADGE_COLORS: Record<BadgeTone, string> = {
   orange: "border-[#f4d49e] bg-[#fff8e9] text-[#e48100]",
   blue: "border-[#bdd9ef] bg-[#eef7fc] text-[#2386bc]",
-  green: "border-[#bde9ce] bg-[#effcf4] text-[#16a05d]",
+  green: "border-[#bde9ce] bg-[#effcf4] text-theme-success",
   purple: "border-[#d9c8ff] bg-[#f7f1ff] text-[#7c3aed]",
-  red: "border-[#ffc9c5] bg-[#fff2f1] text-[#f04438]",
+  red: "border-[#ffc9c5] bg-[#fff2f1] text-theme-danger",
 };
 
 const NOTICE_COLORS: Record<BadgeTone, string> = {
   orange: "border-[#f2ddba] bg-[#fff9ec] text-[#e48100]",
   blue: "border-[#cbdcf1] bg-[#eef6fc] text-[#3478f6]",
-  green: "border-[#bee8cd] bg-[#effcf4] text-[#16a05d]",
+  green: "border-[#bee8cd] bg-[#effcf4] text-theme-success",
   purple: "border-[#d9c8ff] bg-[#f7f1ff] text-[#7c3aed]",
-  red: "border-[#ffc9c5] bg-[#fff2f1] text-[#f04438]",
+  red: "border-[#ffc9c5] bg-[#fff2f1] text-theme-danger",
 };
 
 const secondaryButtonClass =
-  "flex h-[31px] cursor-pointer items-center rounded-[7px] border border-[#dce2e9] bg-white px-3.5 text-[11px] font-semibold text-[#667085] transition hover:bg-[#f8fafc]";
+  "flex h-[31px] cursor-pointer items-center rounded-[7px] border border-[#dce2e9] bg-surface px-3.5 text-[11px] font-semibold text-theme-secondary transition hover:bg-surface-subtle";
 const primaryButtonClass =
-  "flex h-[31px] cursor-pointer items-center rounded-[7px] bg-[#132d4f] px-3.5 text-[11px] font-bold text-white transition hover:bg-[#0f2541]";
+  "flex h-[31px] cursor-pointer items-center rounded-[7px] bg-brand px-3.5 text-[11px] font-bold text-white transition hover:bg-brand";
 
 function StatusBadge({ label, tone }: ContractBadge) {
   return (
@@ -126,8 +126,8 @@ function StatusBadge({ label, tone }: ContractBadge) {
 function ContractInfo({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[#98a2b3]">{label}</dt>
-      <dd className="mt-1.5 font-bold text-[#172033]">{value}</dd>
+      <dt className="text-theme-muted">{label}</dt>
+      <dd className="mt-1.5 font-bold text-theme-primary">{value}</dd>
     </div>
   );
 }

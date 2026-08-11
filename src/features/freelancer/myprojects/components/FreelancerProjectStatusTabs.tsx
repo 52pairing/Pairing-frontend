@@ -18,7 +18,7 @@ export function FreelancerProjectStatusTabs({
   onStatusChange,
 }: FreelancerProjectStatusTabsProps) {
   return (
-    <div className="mt-4 border-b border-[#e5e9ef]">
+    <div className="mt-4 border-b border-theme">
       <div className="flex h-[44px] items-end gap-2 sm:gap-5">
         {FREELANCER_PROJECT_STATUS_TABS.map((status) => {
           const isActive = activeStatus === status;
@@ -32,7 +32,7 @@ export function FreelancerProjectStatusTabs({
               className={`relative flex h-full min-w-[54px] cursor-pointer items-center justify-center px-2 text-[12px] font-semibold transition-colors ${
                 isActive
                   ? "text-[#122d50]"
-                  : "text-[#7d8899] hover:text-[#475467]"
+                  : "text-[#7d8899] hover:text-theme-secondary"
               }`}
             >
               {status}

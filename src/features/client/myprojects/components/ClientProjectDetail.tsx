@@ -143,8 +143,8 @@ export function ClientProjectDetail() {
     }
   };
 
-  if (isLoading) return <div className="flex min-h-[60vh] items-center justify-center text-sm text-[#667085]">프로젝트 상세를 불러오고 있습니다.</div>;
-  if (!project) return <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4"><p className="text-sm text-[#b42318]">{errorMessage || "프로젝트를 찾을 수 없습니다."}</p><button type="button" onClick={() => void loadProject()} className="rounded-lg bg-[#17365d] px-5 py-3 text-sm font-bold text-white">다시 시도</button></main>;
+  if (isLoading) return <div className="flex min-h-[60vh] items-center justify-center text-sm text-theme-secondary">프로젝트 상세를 불러오고 있습니다.</div>;
+  if (!project) return <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4"><p className="text-sm text-theme-danger">{errorMessage || "프로젝트를 찾을 수 없습니다."}</p><button type="button" onClick={() => void loadProject()} className="rounded-lg bg-brand px-5 py-3 text-sm font-bold text-white">다시 시도</button></main>;
 
   const showActions = !["CLOSED", "CANCELED"].includes(project.status);
   const canPay = project.payableSettlementId != null && (project.status === "REGISTERED" || project.status === "COMPLETION_PENDING");
@@ -156,27 +156,27 @@ export function ClientProjectDetail() {
 
   const actionMenu = showActions ? (
     <div ref={actionMenuRef} className="relative">
-      <button type="button" aria-label="프로젝트 관리 메뉴" aria-haspopup="menu" aria-expanded={isActionMenuOpen} onClick={() => setIsActionMenuOpen((open) => !open)} className="flex h-9 w-10 items-center justify-center rounded-[9px] border border-[#dce2e8] bg-white text-[22px] font-bold text-[#667085] hover:bg-[#f8fafc]">···</button>
-      <div role="menu" aria-hidden={!isActionMenuOpen} className={`absolute bottom-11 right-0 z-20 w-[170px] origin-bottom-right rounded-[10px] border border-[#dce2e8] bg-white p-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.14)] transition duration-150 ${isActionMenuOpen ? "visible scale-100 opacity-100" : "invisible translate-y-2 scale-95 opacity-0"}`}>
-        <button type="button" role="menuitem" onClick={() => setIsActionMenuOpen(false)} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-[#475467] hover:bg-[#f5f7fa]">프로젝트 수정</button>
-        {project.status === "REGISTERED" ? <button type="button" role="menuitem" onClick={() => openAction("cancelRegistration")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-[#d92d20] hover:bg-[#fff5f4]">등록 취소</button> : null}
-        {project.status === "RECRUITING" ? <><button type="button" role="menuitem" disabled={project.extensionCount >= 2} onClick={() => openAction("extendRecruitment")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-[#475467] hover:bg-[#f5f7fa] disabled:cursor-not-allowed disabled:text-[#b8c2ce]">모집 연장</button><button type="button" role="menuitem" onClick={() => openAction("closeRecruitment")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-[#d92d20] hover:bg-[#fff5f4]">모집 종료</button></> : null}
-        {project.status === "IN_PROGRESS" ? <button type="button" role="menuitem" onClick={() => openAction("complete")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-[#475467] hover:bg-[#f5f7fa]">프로젝트 완료</button> : null}
-        {canPay ? <button type="button" role="menuitem" onClick={() => { setIsActionMenuOpen(false); setIsPaymentOpen(true); }} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-[#17365d] hover:bg-[#eef3f8]">{project.status === "REGISTERED" ? "착수금 결제" : "성공보수 결제"}</button> : null}
+      <button type="button" aria-label="프로젝트 관리 메뉴" aria-haspopup="menu" aria-expanded={isActionMenuOpen} onClick={() => setIsActionMenuOpen((open) => !open)} className="flex h-9 w-10 items-center justify-center rounded-[9px] border border-theme bg-surface text-[22px] font-bold text-theme-secondary hover:bg-surface-subtle">···</button>
+      <div role="menu" aria-hidden={!isActionMenuOpen} className={`absolute bottom-11 right-0 z-20 w-[170px] origin-bottom-right rounded-[10px] border border-theme bg-surface p-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.14)] transition duration-150 ${isActionMenuOpen ? "visible scale-100 opacity-100" : "invisible translate-y-2 scale-95 opacity-0"}`}>
+        <button type="button" role="menuitem" onClick={() => setIsActionMenuOpen(false)} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-secondary hover:bg-background">프로젝트 수정</button>
+        {project.status === "REGISTERED" ? <button type="button" role="menuitem" onClick={() => openAction("cancelRegistration")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-danger hover:bg-danger-surface">등록 취소</button> : null}
+        {project.status === "RECRUITING" ? <><button type="button" role="menuitem" disabled={project.extensionCount >= 2} onClick={() => openAction("extendRecruitment")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-secondary hover:bg-background disabled:cursor-not-allowed disabled:text-[#b8c2ce]">모집 연장</button><button type="button" role="menuitem" onClick={() => openAction("closeRecruitment")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-danger hover:bg-danger-surface">모집 종료</button></> : null}
+        {project.status === "IN_PROGRESS" ? <button type="button" role="menuitem" onClick={() => openAction("complete")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-secondary hover:bg-background">프로젝트 완료</button> : null}
+        {canPay ? <button type="button" role="menuitem" onClick={() => { setIsActionMenuOpen(false); setIsPaymentOpen(true); }} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-brand hover:bg-[#eef3f8]">{project.status === "REGISTERED" ? "착수금 결제" : "성공보수 결제"}</button> : null}
       </div>
     </div>
   ) : null;
 
   return (
-    <main className="min-h-screen bg-[#f7f8fa] px-5 py-6 text-[#172033]">
+    <main className="min-h-screen bg-surface-subtle px-5 py-6 text-theme-primary">
       <div className="mx-auto w-full max-w-[1120px]">
         <header>
-          <Link href={projectListHref} className="mb-4 flex w-fit items-center gap-2 text-[12px] font-bold text-[#667085] transition hover:text-[#172033]"><span aria-hidden="true">←</span>프로젝트 목록으로</Link>
+          <Link href={projectListHref} className="mb-4 flex w-fit items-center gap-2 text-[12px] font-bold text-theme-secondary transition hover:text-theme-primary"><span aria-hidden="true">←</span>프로젝트 목록으로</Link>
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="break-words text-[22px] font-extrabold leading-tight tracking-[-0.04em]">{project.title}</h1>
-            <span className="shrink-0 rounded-full border border-[#dce2e8] bg-white px-3 py-1 text-[11px] font-bold text-[#667085]">{STATUS_LABEL[project.status] ?? project.status}</span>
+            <span className="shrink-0 rounded-full border border-theme bg-surface px-3 py-1 text-[11px] font-bold text-theme-secondary">{STATUS_LABEL[project.status] ?? project.status}</span>
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] font-semibold text-[#98a2b3]">
+          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] font-semibold text-theme-muted">
             <span>등록일 {formatDate(project.createdAt)}</span>
             <span>시작 희망일 {formatDate(project.startDesiredDate)}</span>
             <span>기간 {project.periodValue}{PERIOD_UNIT_LABEL[project.periodUnit] ?? project.periodUnit}</span>
@@ -184,11 +184,11 @@ export function ClientProjectDetail() {
           </div>
         </header>
 
-        {errorMessage ? <p role="alert" className="mt-4 rounded-lg border border-[#fda29b] bg-[#fff5f4] px-4 py-3 text-[12px] font-semibold text-[#b42318]">{errorMessage}</p> : null}
+        {errorMessage ? <p role="alert" className="mt-4 rounded-lg border border-[#fda29b] bg-danger-surface px-4 py-3 text-[12px] font-semibold text-theme-danger">{errorMessage}</p> : null}
 
         <ProjectDetailTabs activeTab={activeTab} onTabChange={setActiveTab} rightContent={<div className="flex items-center gap-2">{activeTab === "협상" ? <NegotiationActions /> : null}{actionMenu}</div>} />
 
-        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : activeTab === "진행 현황" ? <ProjectProgress projectId={params.projectId} isAllComplete={project.status === "COMPLETION_PENDING" || project.status === "CLOSED"} /> : <div className="mt-6 flex h-[260px] items-center justify-center rounded-[14px] border border-[#dfe4ea] bg-white text-[12px] text-[#98a2b3]">{activeTab} 정보가 없습니다.</div>}
+        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : activeTab === "진행 현황" ? <ProjectProgress projectId={params.projectId} isAllComplete={project.status === "COMPLETION_PENDING" || project.status === "CLOSED"} /> : <div className="mt-6 flex h-[260px] items-center justify-center rounded-[14px] border border-theme bg-surface text-[12px] text-theme-muted">{activeTab} 정보가 없습니다.</div>}
       </div>
 
       <ConfirmModal open={pendingAction !== null} title={pendingAction ? ACTION_MODAL[pendingAction].title : ""} description={pendingAction ? ACTION_MODAL[pendingAction].description : ""} confirmText={isProcessing ? "처리 중..." : pendingAction ? ACTION_MODAL[pendingAction].confirmText : "확인"} cancelText="취소" onClose={() => !isProcessing && setPendingAction(null)} onConfirm={() => void executeAction()} closeOnOverlayClick={!isProcessing} />

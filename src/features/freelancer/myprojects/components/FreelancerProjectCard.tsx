@@ -38,7 +38,7 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
       className={`rounded-[12px] border px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.02)] sm:px-5 ${
         isEnded
           ? "border-[#e6e9ee] bg-[#fbfbfc] text-[#aab2bf]"
-          : "border-[#dde3ea] bg-white text-[#172033]"
+          : "border-theme bg-surface text-theme-primary"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2.5">
@@ -60,21 +60,21 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
           ) : null}
         </div>
         {props.round ? (
-          <span className="text-[11px] font-bold text-[#183858]">
+          <span className="text-[11px] font-bold text-brand">
             라운드 {props.round}
           </span>
         ) : null}
       </div>
 
       <div className="mt-3 flex items-center gap-2">
-        <h2 className={`text-[14px] font-bold tracking-[-0.35px] ${isEnded ? "text-[#727d8e]" : "text-[#172033]"}`}>
+        <h2 className={`text-[14px] font-bold tracking-[-0.35px] ${isEnded ? "text-[#727d8e]" : "text-theme-primary"}`}>
           {props.title}
         </h2>
         <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${isEnded ? "bg-[#f1f5fb] text-[#7e9dcc]" : "bg-[#edf4ff] text-[#3478f6]"}`}>
           AI {props.aiMatch}%
         </span>
       </div>
-      <p className="mt-1 text-[11px] font-medium text-[#9aa4b2]">
+      <p className="mt-1 text-[11px] font-medium text-theme-muted">
         {props.industry} · {props.companySize}
       </p>
 
@@ -94,7 +94,7 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
             className={`rounded-[5px] border px-2 py-1 text-[10px] font-semibold ${
               isEnded
                 ? "border-[#dfe5ed] bg-[#f6f8fa] text-[#8190a4]"
-                : "border-[#cadcf5] bg-[#eef5ff] text-[#183858]"
+                : "border-[#cadcf5] bg-[#eef5ff] text-brand"
             }`}
           >
             {skill}
@@ -103,7 +103,7 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
       </div>
 
       <div className="mt-3.5 flex flex-wrap items-end justify-between gap-3">
-        <p className="text-[10px] font-medium text-[#9aa4b2]">
+        <p className="text-[10px] font-medium text-theme-muted">
           수신일 {props.receivedAt}
         </p>
         <div className="flex gap-2">
@@ -126,15 +126,15 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
       </div>
 
       {props.proposedTerms ? (
-        <section className="mt-3.5 rounded-[9px] border border-[#dfe4ea] px-3.5 py-3">
-          <h3 className="text-[11px] font-bold text-[#183858]">AI 최종 합의 조건</h3>
+        <section className="mt-3.5 rounded-[9px] border border-theme px-3.5 py-3">
+          <h3 className="text-[11px] font-bold text-brand">AI 최종 합의 조건</h3>
           <dl className="mt-2.5 grid grid-cols-1 gap-y-2.5 text-[11px] sm:grid-cols-2">
             <ProjectInfo label="월 급여" value={props.proposedTerms.monthlyPay} />
             <ProjectInfo label="기간" value={props.proposedTerms.duration} />
             <ProjectInfo label="근무" value={props.proposedTerms.workType} />
             <ProjectInfo label="모집 인원" value={props.proposedTerms.headcount} />
           </dl>
-          <p className="mt-2.5 border-t border-[#e4e7ec] pt-2.5 text-[10px] font-semibold text-[#12a150]">
+          <p className="mt-2.5 border-t border-theme pt-2.5 text-[10px] font-semibold text-[#12a150]">
             ✅ 수락 완료 · 상대방이 확인했습니다
           </p>
         </section>
@@ -144,15 +144,15 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
 }
 
 const secondaryButtonClass =
-  "flex h-[30px] cursor-pointer items-center justify-center rounded-[7px] border border-[#dce2e9] bg-white px-3.5 text-[11px] font-semibold text-[#526075] transition hover:bg-[#f8fafc]";
+  "flex h-[30px] cursor-pointer items-center justify-center rounded-[7px] border border-[#dce2e9] bg-surface px-3.5 text-[11px] font-semibold text-[#526075] transition hover:bg-surface-subtle";
 const primaryButtonClass =
-  "h-[30px] cursor-pointer rounded-[7px] bg-[#132d4f] px-3.5 text-[11px] font-bold text-white transition hover:bg-[#0f2541]";
+  "h-[30px] cursor-pointer rounded-[7px] bg-brand px-3.5 text-[11px] font-bold text-white transition hover:bg-brand";
 
 function Badge({ children, tone }: { children: React.ReactNode; tone: "warning" | "notice" | "danger" | "neutral" }) {
   const colors = {
     warning: "border-[#ffd794] bg-[#fff9eb] text-[#e48100]",
     notice: "border-transparent bg-[#eef5ff] text-[#3478f6]",
-    danger: "border-[#ffd8d4] bg-[#fff3f2] text-[#f04438]",
+    danger: "border-[#ffd8d4] bg-[#fff3f2] text-theme-danger",
     neutral: "border-[#e7e9ed] bg-[#f3f4f6] text-[#a0a8b5]",
   };
 
@@ -162,7 +162,7 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: "warning" 
 function ProjectInfo({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
   return (
     <div className="flex min-w-0 gap-1">
-      <dt className="shrink-0 text-[#98a2b3]">{label}</dt>
+      <dt className="shrink-0 text-theme-muted">{label}</dt>
       <dd className={`font-semibold ${muted ? "text-[#7e8998]" : "text-[#263142]"}`}>{value}</dd>
     </div>
   );

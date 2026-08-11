@@ -100,11 +100,11 @@ export const UnlockAccountModal = ({
   return (
     <Modal open={open} onClose={handleClose}>
       <div className="flex flex-1 flex-col">
-        <h2 className="text-lg font-bold text-gray-900">계정 잠금 해제</h2>
+        <h2 className="text-lg font-bold text-theme-primary">계정 잠금 해제</h2>
 
         {sent ? (
           <>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-theme-secondary">
               {email}로 인증코드를 보냈습니다. 메일함에서 확인해 주세요.
             </p>
 
@@ -114,14 +114,14 @@ export const UnlockAccountModal = ({
               onChange={(event) => setCode(event.target.value)}
               placeholder="인증코드 6자리"
               maxLength={6}
-              className="mt-4 h-11 w-full rounded-md border border-gray-200 px-4 text-sm outline-none focus:border-[#0b1f3a]"
+              className="mt-4 h-11 w-full rounded-md border border-theme px-4 text-sm outline-none focus:border-brand"
             />
 
             <button
               type="button"
               onClick={sendCode}
               disabled={isSending || secondsLeft > 0}
-              className="mt-3 self-start text-xs font-medium text-gray-500 underline disabled:cursor-not-allowed disabled:text-gray-300"
+              className="mt-3 self-start text-xs font-medium text-theme-secondary underline disabled:cursor-not-allowed disabled:text-theme-muted"
             >
               {secondsLeft > 0
                 ? `인증코드 재발송 (${secondsLeft}s)`
@@ -129,7 +129,7 @@ export const UnlockAccountModal = ({
             </button>
           </>
         ) : (
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-theme-secondary">
             {email}로 인증코드를 보내드려요. 받은 코드를 입력하면 계정 잠금이
             풀립니다.
           </p>
@@ -143,7 +143,7 @@ export const UnlockAccountModal = ({
           <button
             type="button"
             onClick={handleClose}
-            className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            className="flex-1 rounded-lg border border-theme bg-surface px-4 py-3 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
           >
             취소
           </button>
@@ -152,7 +152,7 @@ export const UnlockAccountModal = ({
               type="button"
               onClick={handleConfirm}
               disabled={!code || isConfirming}
-              className="flex-1 rounded-lg bg-[#0b1f3a] px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-gray-300"
+              className="flex-1 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               {isConfirming ? "확인 중..." : "확인"}
             </button>
@@ -161,7 +161,7 @@ export const UnlockAccountModal = ({
               type="button"
               onClick={sendCode}
               disabled={isSending}
-              className="flex-1 rounded-lg bg-[#0b1f3a] px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-gray-300"
+              className="flex-1 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               {isSending ? "발송 중..." : "인증코드 받기"}
             </button>

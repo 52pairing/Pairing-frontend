@@ -31,7 +31,7 @@ export const SignupPasswordFields = ({
       <div>
         <label
           htmlFor="signupPassword"
-          className="mb-2 block text-sm font-semibold text-[#374151]"
+          className="mb-2 block text-sm font-semibold text-theme-secondary"
         >
           비밀번호 <span className="text-[#356DF3]">*</span>
         </label>
@@ -43,12 +43,12 @@ export const SignupPasswordFields = ({
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             placeholder="비밀번호를 입력해 주세요."
-            className="h-11 w-full rounded-md border border-gray-200 px-4 pr-12 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            className="h-11 w-full rounded-md border border-theme px-4 pr-12 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
           />
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 hover:text-gray-700"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-theme-muted hover:text-theme-secondary"
           >
             {showPassword ? "숨김" : "보기"}
           </button>
@@ -62,7 +62,7 @@ export const SignupPasswordFields = ({
               <li
                 key={rule.key}
                 className={`flex items-center gap-1.5 text-xs ${
-                  passed ? "text-green-600" : "text-gray-400"
+                  passed ? "text-green-600" : "text-theme-muted"
                 }`}
               >
                 {passed ? (
@@ -86,7 +86,7 @@ export const SignupPasswordFields = ({
       <div>
         <label
           htmlFor="signupConfirmPassword"
-          className="mb-2 block text-sm font-semibold text-[#374151]"
+          className="mb-2 block text-sm font-semibold text-theme-secondary"
         >
           비밀번호 확인 <span className="text-[#356DF3]">*</span>
         </label>
@@ -98,12 +98,12 @@ export const SignupPasswordFields = ({
             value={confirmPassword}
             onChange={(e) => onConfirmPasswordChange(e.target.value)}
             placeholder="비밀번호를 다시 입력해 주세요."
-            className="h-11 w-full rounded-md border border-gray-200 px-4 pr-12 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A]"
+            className="h-11 w-full rounded-md border border-theme px-4 pr-12 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword((prev) => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 hover:text-gray-700"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-theme-muted hover:text-theme-secondary"
           >
             {showConfirmPassword ? "숨김" : "보기"}
           </button>

@@ -4,7 +4,7 @@ import { StepArrow, StepCheckIcon } from "@/features/common/components/SharedUI"
 export function ClientMain() {
   return (
     <main
-      className="min-h-screen bg-[#f7f8fa] text-[#172033]"
+      className="min-h-screen bg-surface-subtle text-theme-primary"
       style={{
         fontFamily:
           '"Pretendard", "Noto Sans KR", Arial, Helvetica, sans-serif',
@@ -40,7 +40,7 @@ export function ClientMain() {
 
             <button
               type="button"
-              className="h-[38px] rounded-lg border border-white/10 bg-white/10 px-6 text-[11px] font-semibold text-white transition hover:bg-white/15"
+              className="h-[38px] rounded-lg border border-white/10 bg-surface/10 px-6 text-[11px] font-semibold text-white transition hover:bg-surface/15"
             >
               내 프로젝트 보기
             </button>
@@ -56,23 +56,23 @@ export function ClientMain() {
             HOW IT WORKS
           </p>
 
-          <h2 className="mt-2 text-[18px] font-extrabold tracking-[-0.04em] text-[#172033]">
+          <h2 className="mt-2 text-[18px] font-extrabold tracking-[-0.04em] text-theme-primary">
             페어링에서 프로젝트가 성사되는 방법
           </h2>
         </div>
 
         <div className="mt-12 grid items-center gap-4 md:grid-cols-[1fr_18px_1fr_18px_1fr]">
           {/* STEP 1 */}
-          <article className="flex min-h-[142px] flex-col items-center justify-center rounded-[13px] border border-[#e1e5eb] bg-white px-5 py-7 text-center shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
+          <article className="flex min-h-[142px] flex-col items-center justify-center rounded-[13px] border border-theme bg-surface px-5 py-7 text-center shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
             <p className="text-[8px] font-extrabold tracking-[0.08em] text-[#3975ef]">
               STEP 1
             </p>
 
-            <h3 className="mt-3 text-[12px] font-extrabold text-[#172033]">
+            <h3 className="mt-3 text-[12px] font-extrabold text-theme-primary">
               프리랜서 요청하기
             </h3>
 
-            <p className="mt-3 text-[9px] leading-[1.7] text-[#8993a4]">
+            <p className="mt-3 text-[9px] leading-[1.7] text-theme-muted">
               프로젝트 조건을 등록하면 AI가 최적의 프리랜서를 추천합니다.
               원하는 후보에게 직접 매칭 요청을 보내세요.
             </p>
@@ -81,16 +81,16 @@ export function ClientMain() {
           <StepArrow />
 
           {/* STEP 2 */}
-          <article className="flex min-h-[142px] flex-col items-center justify-center rounded-[13px] border border-[#e1e5eb] bg-white px-5 py-7 text-center shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
+          <article className="flex min-h-[142px] flex-col items-center justify-center rounded-[13px] border border-theme bg-surface px-5 py-7 text-center shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
             <p className="text-[8px] font-extrabold tracking-[0.08em] text-[#3975ef]">
               STEP 2
             </p>
 
-            <h3 className="mt-3 text-[12px] font-extrabold text-[#172033]">
+            <h3 className="mt-3 text-[12px] font-extrabold text-theme-primary">
               조건 협상 진행
             </h3>
 
-            <p className="mt-3 text-[9px] leading-[1.7] text-[#8993a4]">
+            <p className="mt-3 text-[9px] leading-[1.7] text-theme-muted">
               AI 협상 서버에서 급여·기간·범위를 최대 15라운드 내 조율합니다.
               협상은 자동으로 기록됩니다.
             </p>
@@ -99,16 +99,16 @@ export function ClientMain() {
           <StepArrow />
 
           {/* STEP 3 */}
-          <article className="flex min-h-[142px] flex-col items-center justify-center rounded-[13px] border border-[#e1e5eb] bg-white px-5 py-7 text-center shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
+          <article className="flex min-h-[142px] flex-col items-center justify-center rounded-[13px] border border-theme bg-surface px-5 py-7 text-center shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
             <p className="text-[8px] font-extrabold tracking-[0.08em] text-[#3975ef]">
               STEP 3
             </p>
 
-            <h3 className="mt-3 text-[12px] font-extrabold text-[#172033]">
+            <h3 className="mt-3 text-[12px] font-extrabold text-theme-primary">
               계약 성사
             </h3>
 
-            <p className="mt-3 text-[9px] leading-[1.7] text-[#8993a4]">
+            <p className="mt-3 text-[9px] leading-[1.7] text-theme-muted">
               협상이 완료되면 표준 계약서가 자동 생성됩니다. 양측 서명 후
               프로젝트가 즉시 시작됩니다.
             </p>
@@ -123,18 +123,18 @@ export function ClientMain() {
                 GRADE BENEFITS
               </p>
 
-              <h2 className="mt-2 text-[17px] font-extrabold tracking-[-0.04em] text-[#172033]">
+              <h2 className="mt-2 text-[17px] font-extrabold tracking-[-0.04em] text-theme-primary">
                 등급별 혜택 안내
               </h2>
 
-              <p className="mt-1 text-[9px] text-[#8993a4]">
+              <p className="mt-1 text-[9px] text-theme-muted">
                 프로젝트 완료 실적에 따라 등급이 자동 산정됩니다.
               </p>
             </div>
 
             <Link
               href="/client/grade"
-              className="flex h-[29px] w-fit items-center gap-2 rounded-md border border-[#dfe4ea] bg-white px-4 text-[9px] font-bold text-[#334155] transition hover:bg-[#f8fafc]"
+              className="flex h-[29px] w-fit items-center gap-2 rounded-md border border-theme bg-surface px-4 text-[9px] font-bold text-[#334155] transition hover:bg-surface-subtle"
             >
               등급 안내 자세히 보기
               <span aria-hidden="true">›</span>
@@ -142,7 +142,7 @@ export function ClientMain() {
           </div>
 
           {/* 데스크톱 테이블 */}
-          <div className="mt-4 hidden overflow-hidden rounded-[13px] border border-[#e1e5eb] bg-white md:block">
+          <div className="mt-4 hidden overflow-hidden rounded-[13px] border border-theme bg-surface md:block">
             <table className="w-full table-fixed border-collapse text-left">
               <thead className="bg-[#eaf0f6]">
                 <tr className="h-[31px] text-[8px] font-bold text-[#405064]">
@@ -155,9 +155,9 @@ export function ClientMain() {
 
               <tbody>
                 {/* 실버 */}
-                <tr className="h-[45px] border-t border-[#edf0f3] text-[8px] text-[#596579]">
+                <tr className="h-[45px] border-t border-theme text-[8px] text-theme-secondary">
                   <td className="px-4">
-                    <span className="inline-flex rounded-full bg-[#eef2f5] px-3 py-1 font-bold text-[#64748b]">
+                    <span className="inline-flex rounded-full bg-[#eef2f5] px-3 py-1 font-bold text-theme-secondary">
                       실버
                     </span>
                   </td>
@@ -170,12 +170,12 @@ export function ClientMain() {
 
                   <td className="px-4">
                     <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1 text-[#677386]">
+                      <span className="flex items-center gap-1 text-theme-secondary">
                         <StepCheckIcon />
                         프로젝트 1개 등록
                       </span>
 
-                      <span className="flex items-center gap-1 text-[#677386]">
+                      <span className="flex items-center gap-1 text-theme-secondary">
                         <StepCheckIcon />
                         우수 프리랜서 매칭확률 증가
                       </span>
@@ -184,7 +184,7 @@ export function ClientMain() {
                 </tr>
 
                 {/* 골드 */}
-                <tr className="h-[45px] border-t border-[#edf0f3] text-[8px] text-[#596579]">
+                <tr className="h-[45px] border-t border-theme text-[8px] text-theme-secondary">
                   <td className="px-4">
                     <span className="inline-flex rounded-full bg-[#fff5df] px-3 py-1 font-bold text-[#e99b13]">
                       골드
@@ -199,12 +199,12 @@ export function ClientMain() {
 
                   <td className="px-4">
                     <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1 text-[#677386]">
+                      <span className="flex items-center gap-1 text-theme-secondary">
                         <StepCheckIcon />
                         프로젝트 2개 등록
                       </span>
 
-                      <span className="flex items-center gap-1 text-[#677386]">
+                      <span className="flex items-center gap-1 text-theme-secondary">
                         <StepCheckIcon />
                         우수 프리랜서 매칭확률 증가
                       </span>
@@ -213,7 +213,7 @@ export function ClientMain() {
                 </tr>
 
                 {/* 다이아 */}
-                <tr className="h-[45px] border-t border-[#edf0f3] text-[8px] text-[#596579]">
+                <tr className="h-[45px] border-t border-theme text-[8px] text-theme-secondary">
                   <td className="px-4">
                     <span className="inline-flex rounded-full bg-[#eaf3ff] px-3 py-1 font-bold text-[#3978ef]">
                       다이아
@@ -228,17 +228,17 @@ export function ClientMain() {
 
                   <td className="px-4">
                     <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1 text-[#677386]">
+                      <span className="flex items-center gap-1 text-theme-secondary">
                         <StepCheckIcon />
                         프로젝트 2개 등록
                       </span>
 
-                      <span className="flex items-center gap-1 text-[#677386]">
+                      <span className="flex items-center gap-1 text-theme-secondary">
                         <StepCheckIcon />
                         최우수 프리랜서 매칭확률 증가
                       </span>
 
-                      <span className="flex items-center gap-1 text-[#677386]">
+                      <span className="flex items-center gap-1 text-theme-secondary">
                         <StepCheckIcon />
                         수수료 인하
                       </span>
@@ -251,9 +251,9 @@ export function ClientMain() {
 
           {/* 모바일 등급 카드 */}
           <div className="mt-4 space-y-3 md:hidden">
-            <article className="rounded-xl border border-[#e1e5eb] bg-white p-4">
+            <article className="rounded-xl border border-theme bg-surface p-4">
               <div className="flex items-center justify-between">
-                <span className="rounded-full bg-[#eef2f5] px-3 py-1 text-[11px] font-bold text-[#64748b]">
+                <span className="rounded-full bg-[#eef2f5] px-3 py-1 text-[11px] font-bold text-theme-secondary">
                   실버
                 </span>
                 <span className="text-[11px] font-bold text-[#0068a9]">
@@ -261,9 +261,9 @@ export function ClientMain() {
                 </span>
               </div>
 
-              <p className="mt-3 text-[11px] text-[#596579]">기본 등급</p>
+              <p className="mt-3 text-[11px] text-theme-secondary">기본 등급</p>
 
-              <div className="mt-3 space-y-2 text-[11px] text-[#677386]">
+              <div className="mt-3 space-y-2 text-[11px] text-theme-secondary">
                 <p className="flex items-center gap-1">
                   <StepCheckIcon />
                   프로젝트 1개 등록
@@ -275,7 +275,7 @@ export function ClientMain() {
               </div>
             </article>
 
-            <article className="rounded-xl border border-[#e1e5eb] bg-white p-4">
+            <article className="rounded-xl border border-theme bg-surface p-4">
               <div className="flex items-center justify-between">
                 <span className="rounded-full bg-[#fff5df] px-3 py-1 text-[11px] font-bold text-[#e99b13]">
                   골드
@@ -285,11 +285,11 @@ export function ClientMain() {
                 </span>
               </div>
 
-              <p className="mt-3 text-[11px] text-[#596579]">
+              <p className="mt-3 text-[11px] text-theme-secondary">
                 별점 3점 이상, 건수 10개 이상
               </p>
 
-              <div className="mt-3 space-y-2 text-[11px] text-[#677386]">
+              <div className="mt-3 space-y-2 text-[11px] text-theme-secondary">
                 <p className="flex items-center gap-1">
                   <StepCheckIcon />
                   프로젝트 2개 등록
@@ -301,7 +301,7 @@ export function ClientMain() {
               </div>
             </article>
 
-            <article className="rounded-xl border border-[#e1e5eb] bg-white p-4">
+            <article className="rounded-xl border border-theme bg-surface p-4">
               <div className="flex items-center justify-between">
                 <span className="rounded-full bg-[#eaf3ff] px-3 py-1 text-[11px] font-bold text-[#3978ef]">
                   다이아
@@ -311,11 +311,11 @@ export function ClientMain() {
                 </span>
               </div>
 
-              <p className="mt-3 text-[11px] text-[#596579]">
+              <p className="mt-3 text-[11px] text-theme-secondary">
                 별점 4점 이상, 건수 20개 이상
               </p>
 
-              <div className="mt-3 space-y-2 text-[11px] text-[#677386]">
+              <div className="mt-3 space-y-2 text-[11px] text-theme-secondary">
                 <p className="flex items-center gap-1">
                   <StepCheckIcon />
                   프로젝트 2개 등록

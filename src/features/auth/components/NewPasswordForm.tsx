@@ -58,10 +58,10 @@ export const NewPasswordForm = ({
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#111827]">
+        <h1 className="text-xl font-bold text-theme-primary">
           새 비밀번호를 등록해 주세요.
         </h1>
-        <p className="mt-2 text-sm font-medium text-gray-500">
+        <p className="mt-2 text-sm font-medium text-theme-secondary">
           계정 보호를 위해 기존 임시 비밀번호와 다른 새로운 비밀번호를 입력해
           주세요.
         </p>
@@ -76,7 +76,7 @@ export const NewPasswordForm = ({
         <div>
           <label
             htmlFor="newPassword"
-            className="mb-2 block text-sm font-semibold text-[#0b1f3a]"
+            className="mb-2 block text-sm font-semibold text-brand"
           >
             새 비밀번호 <span className="text-blue-500">*</span>
           </label>
@@ -87,12 +87,12 @@ export const NewPasswordForm = ({
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="새 비밀번호를 입력해 주세요."
-              className="h-11 w-full rounded-md border border-gray-200 px-4 pr-12 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b1f3a]"
+              className="h-11 w-full rounded-md border border-theme px-4 pr-12 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
             />
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 hover:text-gray-700"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-theme-muted hover:text-theme-secondary"
             >
               {showPassword ? "숨김" : "보기"}
             </button>
@@ -105,7 +105,7 @@ export const NewPasswordForm = ({
                 <li
                   key={rule.key}
                   className={`flex items-center gap-1.5 text-xs ${
-                    passed ? "text-green-600" : "text-gray-400"
+                    passed ? "text-green-600" : "text-theme-muted"
                   }`}
                 >
                   {passed ? (
@@ -129,7 +129,7 @@ export const NewPasswordForm = ({
         <div>
           <label
             htmlFor="confirmPassword"
-            className="mb-2 block text-sm font-semibold text-[#0b1f3a]"
+            className="mb-2 block text-sm font-semibold text-brand"
           >
             새 비밀번호 확인 <span className="text-blue-500">*</span>
           </label>
@@ -140,12 +140,12 @@ export const NewPasswordForm = ({
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="비밀번호를 다시 입력해 주세요."
-              className="h-11 w-full rounded-md border border-gray-200 px-4 pr-12 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#0b1f3a]"
+              className="h-11 w-full rounded-md border border-theme px-4 pr-12 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 hover:text-gray-700"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-theme-muted hover:text-theme-secondary"
             >
               {showConfirmPassword ? "숨김" : "보기"}
             </button>
@@ -178,7 +178,7 @@ export const NewPasswordForm = ({
         <button
           type="submit"
           disabled={!isFormValid || isSubmitting}
-          className="h-11 w-full rounded-md bg-[#0b1f3a] text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 enabled:hover:bg-[#102b50]"
+          className="h-11 w-full rounded-md bg-brand text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 enabled:hover:bg-brand"
         >
           {isSubmitting ? "등록 중..." : "새 비밀번호 등록"}
         </button>

@@ -50,7 +50,7 @@ export const BusinessRegistrationNumberField = ({
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-[#374151]">
+      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
         사업자등록번호 <span className="text-[#356DF3]">*</span>
       </label>
 
@@ -61,15 +61,15 @@ export const BusinessRegistrationNumberField = ({
           value={value}
           onChange={(e) => handleChange(e.target.value)}
           placeholder="숫자 10자리"
-          className={`h-11 flex-1 rounded-md border px-4 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#142B4A] ${
-            "border-gray-200"
+          className={`h-11 flex-1 rounded-md border px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand ${
+            "border-theme"
           }`}
         />
         <button
           type="button"
           onClick={handleCheck}
           disabled={!isFormatValid || duplicateCheck.status === "checking"}
-          className="h-11 shrink-0 rounded-md border border-gray-200 px-4 text-sm font-semibold text-gray-500 transition disabled:cursor-not-allowed disabled:text-gray-300 enabled:hover:bg-gray-50"
+          className="h-11 shrink-0 rounded-md border border-theme px-4 text-sm font-semibold text-theme-secondary transition disabled:cursor-not-allowed disabled:text-theme-muted enabled:hover:bg-surface-subtle"
         >
           {duplicateCheck.status === "checking" ? "확인 중..." : "중복 확인"}
         </button>
@@ -101,7 +101,7 @@ export const BusinessRegistrationNumberField = ({
       value.length > 0 &&
       isFormatValid &&
       duplicateCheck.status === "idle" ? (
-        <p className="mt-2 text-xs text-gray-400">
+        <p className="mt-2 text-xs text-theme-muted">
           중복 확인을 눌러 사용 가능 여부를 확인해 주세요.
         </p>
       ) : null}
@@ -142,7 +142,7 @@ export const BusinessFieldSelect = ({
 
   return (
     <div className="relative">
-      <label className="mb-2 block text-sm font-semibold text-[#374151]">
+      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
         사업 분야 <span className="text-[#356DF3]">*</span>
       </label>
 
@@ -150,8 +150,8 @@ export const BusinessFieldSelect = ({
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         disabled={isLoading || isError}
-        className={`h-11 w-full rounded-md border border-gray-200 px-4 text-left text-sm outline-none focus:border-[#142B4A] disabled:cursor-not-allowed disabled:text-gray-300 ${
-          selectedLabel ? "text-gray-900" : "text-gray-400"
+        className={`h-11 w-full rounded-md border border-theme px-4 text-left text-sm outline-none focus:border-brand disabled:cursor-not-allowed disabled:text-theme-muted ${
+          selectedLabel ? "text-theme-primary" : "text-theme-muted"
         }`}
       >
         {isLoading
@@ -163,7 +163,7 @@ export const BusinessFieldSelect = ({
         <LoadError message="사업 분야를 불러오지 못했습니다." onRetry={retry} />
       ) : null}
       {open ? (
-        <div className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-md">
+        <div className="absolute z-10 mt-1 w-full rounded-md border border-theme bg-surface shadow-md">
           <input
             type="text"
             value={search}
@@ -177,10 +177,10 @@ export const BusinessFieldSelect = ({
                 <button
                   type="button"
                   onClick={() => handleSelect(option.code)}
-                  className={`block w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
+                  className={`block w-full px-4 py-2 text-left text-sm hover:bg-surface-subtle ${
                     option.code === value
                       ? "font-semibold text-[#142B4A]"
-                      : "text-gray-700"
+                      : "text-theme-secondary"
                   }`}
                 >
                   {option.label}
@@ -188,7 +188,7 @@ export const BusinessFieldSelect = ({
               </li>
             ))}
             {filtered.length === 0 ? (
-              <li className="px-4 py-2 text-sm text-gray-400">
+              <li className="px-4 py-2 text-sm text-theme-muted">
                 검색 결과가 없습니다.
               </li>
             ) : null}
@@ -215,7 +215,7 @@ export const EmployeeCountSelect = ({
 
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-[#374151]">
+      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
         직원 수 <span className="text-[#356DF3]">*</span>
       </label>
       <div className="flex flex-wrap gap-2">
@@ -229,8 +229,8 @@ export const EmployeeCountSelect = ({
               onClick={() => onChange(option.code)}
               className={`h-10 rounded-md border px-4 text-sm font-semibold transition ${
                 selected
-                  ? "border-[#142B4A] bg-[#F7F8FA] text-[#142B4A]"
-                  : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                  ? "border-brand bg-surface-subtle text-[#142B4A]"
+                  : "border-theme text-theme-secondary hover:bg-surface-subtle"
               }`}
             >
               {option.label}
@@ -239,7 +239,7 @@ export const EmployeeCountSelect = ({
         })}
       </div>
       {isLoading ? (
-        <p className="mt-2 text-xs text-gray-400">직원 수를 불러오는 중...</p>
+        <p className="mt-2 text-xs text-theme-muted">직원 수를 불러오는 중...</p>
       ) : null}
       {isError ? (
         <LoadError message="직원 수를 불러오지 못했습니다." onRetry={retry} />

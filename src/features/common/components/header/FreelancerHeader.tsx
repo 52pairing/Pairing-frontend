@@ -23,7 +23,7 @@ export function FreelancerHeader({
   return (
     <HeaderShell
       nav={freelancerNavItems.map((item) => (
-        <Link key={item.href} href={item.href} className="hover:text-slate-950">
+        <Link key={item.href} href={item.href} className="hover:text-theme-primary">
           {item.label}
         </Link>
       ))}
@@ -60,7 +60,7 @@ function HeaderIconButton({ href, iconSrc, label, count }: HeaderIconButtonProps
     <Link
       href={href}
       aria-label={label}
-      className="relative flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white hover:bg-slate-50"
+      className="relative flex h-10 w-10 items-center justify-center rounded-md border border-theme bg-surface hover:bg-surface-subtle"
     >
       <Image src={iconSrc} alt="" width={18} height={18} />
       {count > 0 ? (

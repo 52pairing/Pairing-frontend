@@ -17,7 +17,7 @@ export const AccountLockedAlert = ({
     <button
       type="button"
       onClick={onVerifyEmail}
-      className="mt-3 h-8 rounded-md border border-amber-300 bg-white px-3 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+      className="mt-3 h-8 rounded-md border border-amber-300 bg-surface px-3 text-xs font-semibold text-amber-800 hover:bg-amber-100"
     >
       이메일 인증하기
     </button>

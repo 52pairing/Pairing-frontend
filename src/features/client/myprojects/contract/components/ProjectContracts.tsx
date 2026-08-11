@@ -41,22 +41,22 @@ export function ProjectContracts({ projectId = "1" }: { projectId?: string }) {
       {CONTRACTS.map((contract) => (
         <article
           key={contract.id}
-          className="flex min-h-[128px] items-start justify-between rounded-[14px] border border-[#dde2e8] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.02)]"
+          className="flex min-h-[128px] items-start justify-between rounded-[14px] border border-theme bg-surface px-6 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.02)]"
         >
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-[15px] font-bold text-[#111827]">
+              <h2 className="text-[15px] font-bold text-theme-primary">
                 {contract.title}
               </h2>
               <ContractStatusBadge status={contract.status} />
             </div>
 
             <div className="mt-3 flex items-center gap-6 text-[12px] font-semibold">
-              <span className="text-[#667085]">
+              <span className="text-theme-secondary">
                 {contract.freelancer} · {contract.role}
               </span>
-              <span className="text-[#667085]">{contract.period}</span>
-              <span className="text-[#111827]">{contract.monthlyPay}</span>
+              <span className="text-theme-secondary">{contract.period}</span>
+              <span className="text-theme-primary">{contract.monthlyPay}</span>
             </div>
 
             <div className="mt-3 flex items-center gap-4 text-[11px] font-semibold">
@@ -73,7 +73,7 @@ export function ProjectContracts({ projectId = "1" }: { projectId?: string }) {
 
           <Link
             href={`/client/projects/${projectId}/contracts/${contract.id}`}
-            className="h-[36px] cursor-pointer rounded-[8px] bg-[#102846] px-4 text-[12px] font-bold text-white transition hover:bg-[#0c2039]"
+            className="h-[36px] cursor-pointer rounded-[8px] bg-brand px-4 text-[12px] font-bold text-white transition hover:bg-brand"
           >
             <span className="flex h-full items-center">계약 상세보기</span>
           </Link>
@@ -94,7 +94,7 @@ function ContractStatusBadge({ status }: { status: string }) {
           ? "border-[#cad3df] bg-[#f7f9fb] text-[#526174]"
           : isPaymentRequired
             ? "border-[#f5d9a6] bg-[#fff8e9] text-[#d97706]"
-            : "border-[#b8e7cd] bg-[#effcf4] text-[#16a05d]"
+            : "border-[#b8e7cd] bg-[#effcf4] text-theme-success"
       }`}
     >
       {status}
@@ -110,7 +110,7 @@ function SignatureStatus({
   signed: boolean;
 }) {
   return (
-    <span className={signed ? "text-[#16a05d]" : "text-[#ff9500]"}>
+    <span className={signed ? "text-theme-success" : "text-[#ff9500]"}>
       {signed ? "✓" : "○"} {label}
     </span>
   );

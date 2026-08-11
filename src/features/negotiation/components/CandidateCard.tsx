@@ -31,7 +31,7 @@ export function CandidateCard({ item, projectId }: CandidateCardProps) {
   const enterLabel = item.totalRound === 0 ? "협상 시작" : "협상방 입장";
 
   return (
-    <article className="flex min-h-[84px] items-center justify-between rounded-[14px] border border-[#dfe3e8] bg-white px-6 shadow-[0_1px_2px_rgba(16,24,40,0.02)]">
+    <article className="flex min-h-[84px] items-center justify-between rounded-[14px] border border-theme bg-surface px-6 shadow-[0_1px_2px_rgba(16,24,40,0.02)]">
       {/* 왼쪽 프로필 */}
       <div className="flex items-center">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[15px] font-bold text-white ${avatarClass}`}>
@@ -40,11 +40,11 @@ export function CandidateCard({ item, projectId }: CandidateCardProps) {
 
         <div className="ml-4">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-[15px] font-bold text-[#111827]">{name}</h2>
+            <h2 className="text-[15px] font-bold text-theme-primary">{name}</h2>
             <StatusBadge status={item.status} waitingForMe={item.waitingForMe} />
           </div>
 
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-[#98a2b3]">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-theme-muted">
             <span>
               라운드 {item.totalRound}/{DEFAULT_MAX_ROUND}
             </span>
@@ -109,6 +109,6 @@ function StatusBadge({
 
 const STATUS_STYLE: Record<NegotiationStatus, { label: string; className: string }> = {
   IN_PROGRESS: { label: "협상중", className: "border-[#b2ccff] bg-[#eff4ff] text-[#2970ff]" },
-  AGREED: { label: "합의", className: "border-[#abefc6] bg-[#ecfdf3] text-[#039855]" },
-  FAILED: { label: "결렬", className: "border-[#fecdca] bg-[#fef3f2] text-[#f04438]" },
+  AGREED: { label: "합의", className: "border-[#abefc6] bg-success-surface text-theme-success" },
+  FAILED: { label: "결렬", className: "border-[#fecdca] bg-danger-surface text-theme-danger" },
 };

@@ -61,7 +61,7 @@ export default function FindPasswordPage() {
       <AuthHeader />
 
       <main className="flex min-h-[calc(100vh-60px)] items-center justify-center px-5 py-16">
-        <section className="w-full max-w-[440px] rounded-lg border border-gray-200 bg-white px-8 py-9 shadow-sm">
+        <section className="w-full max-w-[440px] rounded-lg border border-theme bg-surface px-8 py-9 shadow-sm">
           {step === "form" ? (
             <FindPasswordForm
               role={role}

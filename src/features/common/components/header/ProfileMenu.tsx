@@ -50,9 +50,9 @@ export function ProfileMenu({ label, myPageHref }: ProfileMenuProps) {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        className="flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        className="flex h-10 items-center gap-2 rounded-md border border-theme bg-surface px-3 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
       >
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0b1f3a] text-xs text-white">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs text-white">
           {initial}
         </span>
         <span>{label}</span>
@@ -69,16 +69,16 @@ export function ProfileMenu({ label, myPageHref }: ProfileMenuProps) {
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-12 z-50 w-40 rounded-md border border-slate-200 bg-white py-2 shadow-lg">
+        <div className="absolute right-0 top-12 z-50 w-40 rounded-md border border-theme bg-surface py-2 shadow-lg">
           <Link
             href={myPageHref}
-            className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="block px-4 py-2 text-sm text-theme-secondary hover:bg-surface-subtle"
           >
             마이페이지
           </Link>
           <Link
             href="/support"
-            className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="block px-4 py-2 text-sm text-theme-secondary hover:bg-surface-subtle"
           >
             고객 지원
           </Link>
@@ -86,7 +86,7 @@ export function ProfileMenu({ label, myPageHref }: ProfileMenuProps) {
             type="button"
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-gray-300"
+            className="block w-full px-4 py-2 text-left text-sm text-theme-danger hover:bg-danger-surface disabled:cursor-not-allowed disabled:text-theme-muted"
           >
             {isLoggingOut ? "로그아웃 중..." : "로그아웃"}
           </button>

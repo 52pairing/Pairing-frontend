@@ -26,11 +26,11 @@ export function ProjectRegisterIntro() {
   return (
     <ProjectRegisterShell currentStep={1} backHref="/client" backLabel="홈으로">
       <div className="mx-auto mt-12 max-w-[730px]">
-        <h1 className="text-[24px] font-extrabold tracking-[-0.04em] text-[#111827]">
+        <h1 className="text-[24px] font-extrabold tracking-[-0.04em] text-theme-primary">
               프로젝트 등록 전 안내
             </h1>
 
-            <p className="mt-3 text-[12px] font-semibold leading-6 text-[#667085]">
+            <p className="mt-3 text-[12px] font-semibold leading-6 text-theme-secondary">
               등록한 프로젝트 조건을 기준으로 AI가 적합한 프리랜서를
               추천합니다.
               <br />
@@ -130,13 +130,13 @@ export function ProjectRegisterIntro() {
                   className="mt-[2px] h-[15px] w-[15px] cursor-pointer accent-[#17365d]"
                 />
 
-                <span className="text-[11px] font-semibold leading-5 text-[#344054]">
+                <span className="text-[11px] font-semibold leading-5 text-theme-secondary">
                   프로젝트 등록 내용을 모두 확인했으며, 위 안내에 동의합니다.
-                  <span className="ml-1 font-bold text-[#f04438]">(필수)</span>
+                  <span className="ml-1 font-bold text-theme-danger">(필수)</span>
                 </span>
               </label>
 
-              <p className="ml-[27px] mt-1 text-[10px] text-[#98a2b3]">
+              <p className="ml-[27px] mt-1 text-[10px] text-theme-muted">
                 동의하지 않으면 프로젝트 등록을 진행할 수 없습니다.
               </p>
             </div>
@@ -149,7 +149,7 @@ export function ProjectRegisterIntro() {
                 "mt-8 flex h-[56px] w-full items-center justify-center rounded-[10px]",
                 "text-[15px] font-bold transition",
                 noticeAgreed
-                  ? "bg-[#17365d] text-white hover:bg-[#102a49]"
+                  ? "bg-brand text-white hover:bg-brand"
                   : "cursor-not-allowed bg-[#a7b0bf] text-white",
               ].join(" ")}
             >
