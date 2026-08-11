@@ -138,7 +138,7 @@ export function ClientProjects() {
 
   return (
     <main className="min-h-screen bg-surface-subtle">
-      <div className="mx-auto w-full max-w-[1120px] px-5 pb-16 pt-5">
+      <div className="mx-auto w-full max-w-[1040px] px-6 pb-16 pt-5">
         <h1 className="text-[23px] font-bold tracking-[-0.6px] text-theme-primary">
           내 프로젝트
         </h1>

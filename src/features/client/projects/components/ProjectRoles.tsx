@@ -140,9 +140,9 @@ export function ProjectRoles() {
 
   return (
     <ProjectRegisterShell currentStep={STEP} backHref="/client" backLabel="홈으로">
-      <div className="mx-auto mt-12 max-w-[720px]">
+      <div className="mx-auto mt-8 max-w-[680px]">
         <header>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-theme-primary">직군별 모집 인원 설정</h1>
+          <h1 className="text-[20px] font-extrabold tracking-[-0.04em] text-theme-primary">직군별 모집 인원 설정</h1>
           <p className="mt-2 text-[12px] font-medium text-theme-secondary">모집이 필요한 직군과 조건을 직군별로 설정해주세요.</p>
         </header>
 
@@ -175,7 +175,7 @@ export function ProjectRoles() {
           type="button"
           disabled={!meta || recruits.length >= MAX_RECRUITS}
           onClick={() => setRecruits((current) => [...current, createRecruit(Date.now())])}
-          className="flex h-[43px] w-full items-center justify-center gap-2 rounded-b-[10px] border border-t-0 border-theme bg-surface text-[11px] font-semibold text-theme-secondary transition hover:bg-surface-subtle disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-[#b8c0cc]"
+          className="mt-4 flex h-[46px] w-full items-center justify-center gap-2 rounded-[10px] border border-theme bg-surface text-[11px] font-semibold text-theme-secondary shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition hover:border-[#b8c2ce] hover:bg-surface-subtle disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-[#b8c0cc]"
         >
           <span className="text-[18px] font-light">+</span> 모집 직군 추가
         </button>
@@ -226,7 +226,7 @@ function RecruitCard({ index, recruit, meta, canDelete, onChange, onDelete }: {
         <h2 className="text-[12px] font-extrabold text-theme-primary">모집 직군 {index + 1}</h2>
         {canDelete ? <button type="button" onClick={onDelete} className="text-[10px] font-medium text-theme-secondary">삭제</button> : null}
       </div>
-      <div className="grid gap-x-8 gap-y-6 px-5 py-6 md:grid-cols-2">
+      <div className="grid gap-x-6 gap-y-4 px-5 py-5 md:grid-cols-2">
         <Field label="직군">
           <div className="flex flex-wrap gap-2">
             {meta?.categories.map((category) => (

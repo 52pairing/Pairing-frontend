@@ -119,9 +119,9 @@ export function ProjectDetails() {
 
   return (
     <ProjectRegisterShell currentStep={STEP} backHref="/client" backLabel="홈으로">
-      <div className="mx-auto mt-12 max-w-[720px]">
+      <div className="mx-auto mt-8 max-w-[680px]">
         <header>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-theme-primary">
+          <h1 className="text-[20px] font-extrabold tracking-[-0.04em] text-theme-primary">
             프로젝트 상세 정보
           </h1>
 
@@ -470,7 +470,7 @@ function Textarea({
         maxLength={MAX_TEXT_LENGTH}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="min-h-[165px] w-full resize-none rounded-[9px] border border-theme bg-surface px-4 py-4 text-[11px] font-medium leading-6 text-theme-secondary outline-none transition placeholder:text-theme-muted focus:border-[#3b73ff] focus:ring-1 focus:ring-[#3b73ff]"
+        className="min-h-[130px] w-full resize-none rounded-[9px] border border-theme bg-surface px-4 py-3 text-[11px] font-medium leading-6 text-theme-secondary outline-none transition placeholder:text-theme-muted focus:border-[#3b73ff] focus:ring-1 focus:ring-[#3b73ff]"
       />
 
       <p className="mt-1 text-right text-[10px] font-medium text-theme-muted">

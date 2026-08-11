@@ -25,8 +25,8 @@ export function ProjectRegisterIntro() {
 
   return (
     <ProjectRegisterShell currentStep={1} backHref="/client" backLabel="홈으로">
-      <div className="mx-auto mt-12 max-w-[730px]">
-        <h1 className="text-[24px] font-extrabold tracking-[-0.04em] text-theme-primary">
+      <div className="mx-auto mt-8 max-w-[680px]">
+        <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-theme-primary">
               프로젝트 등록 전 안내
             </h1>
 
