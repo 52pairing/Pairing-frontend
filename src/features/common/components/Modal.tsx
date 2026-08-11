@@ -10,6 +10,7 @@ const FOCUSABLE =
 
 // 모든 모달이 공유하는 카드 크기 (기본 sm, 넓은 콘텐츠는 lg)
 const MODAL_SIZE = {
+  xs: "w-full max-w-[340px]",
   sm: "w-full max-w-sm min-h-[230px]",
   md: "w-full max-w-[440px]",
   lg: "w-full max-w-[596px]",
