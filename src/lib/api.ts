@@ -113,3 +113,29 @@ export async function apiCall<T>(
     res.status,
   );
 }
+
+export async function apiBlob(path: string): Promise<Blob> {
+  const request = () =>
+    fetch(`${API_BASE}${path}`, {
+      credentials: "include",
+    });
+
+  let response = await request();
+
+  if (!response.ok) {
+    let error = (await response.json()) as ApiErrorBody;
+
+    if (error.errorCode === "GLOBAL_009") {
+      await requestRefresh();
+      response = await request();
+      if (response.ok) return response.blob();
+      error = (await response.json()) as ApiErrorBody;
+    }
+
+    if (error.errorCode === "GLOBAL_010") notifySessionEnd("expired");
+    if (error.errorCode === "GLOBAL_011") notifySessionEnd("duplicate");
+    throw new ApiException(error.errorCode, error.message, response.status);
+  }
+
+  return response.blob();
+}

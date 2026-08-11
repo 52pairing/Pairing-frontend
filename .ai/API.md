@@ -435,11 +435,52 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 서비스 위치: `src/features/client/myprojects/contract/services/contracts.ts`
 - `GET /api/v1/contracts?projectId={projectId}&page={page}&size={size}`
 - 응답 `data`는 `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last` 페이지 객체
-- 항목 필드: `contractId`, `contractNo`, `projectTitle`, `counterpartName`, `status`, `totalAmount`, `startDate`, `endDate`, `signatureRequired`, `payUnit`, `payAmount`
+- 항목 필드: `contractId`, `contractNo`, `projectId`, `projectTitle`, `jobRole`, `counterpartName`, `status`, `totalAmount`, `payUnit`, `payAmount`, `startDate`, `endDate`, `signatureRequired`, `clientSigned`, `freelancerSigned`, `depositPaid`
 - 계약 탭의 기존 하드코딩 목록을 제거하고 로딩·오류·빈 상태와 실제 목록을 표시
-- `signatureRequired`로 현재 사용자 서명 필요 여부를 표시
-- 제공된 예시에서 확인된 `DRAFT`, `HOURLY`만 한글 라벨로 변환하고 미확인 코드는 원본 표시
-- `projectId` 필터 쿼리의 백엔드 지원 여부와 실제 네트워크 응답: 미검증
+- 계약 가이드의 `GET /api/v1/codes/job-roles`는 현재 백엔드에서 `404 GLOBAL_004`가 발생해, 실제 프로젝트에서 사용하는 `GET /api/v1/meta/job-roles` 결과로 `jobRole` 코드를 라벨로 변환
+- `payUnit`은 계약에서 `MONTHLY` 고정이며 카드에는 `월 {payAmount}원`으로 표시
+- `clientSigned`, `freelancerSigned`로 양측 서명 여부 표시
+- 배지는 `DRAFT` → `signatureRequired` → `SIGN_PENDING` → `SIGNED && !depositPaid` → `SIGNED` → 후속 상태 순으로 판정
+- 클라이언트 화면에서 `SIGNED && !depositPaid`는 `프리랜서 결제 대기`로 표시
+- `DRAFT` 계약은 상세보기 버튼 비활성화
+- 실제 네트워크 응답: 미검증
+
+## 계약 상세
+
+- 공용 서비스 위치: `src/features/contract/services/contracts.ts`
+- `GET /api/v1/contracts/{contractId}`로 계약 기본 정보, 당사자, 계약 조건, 조항과 서명 상태 조회
+- 계약 전체 상태: `DRAFT`, `SIGN_PENDING`, `SIGNED`
+- 서명 상태: `signatures[].partyRole`(`CLIENT`, `FREELANCER`)과 `status`(`PENDING`, `SIGNED`, `REJECTED`)
+- 계약 본문은 `clauses[]`의 `no`, `title`, `content`를 서버 순서 그대로 렌더링하고 `content`에 `white-space: pre-line` 적용
+- `DRAFT` 동안 안내를 표시하고 2초 간격 최대 10회 재조회하며 서명 버튼 비활성·PDF 버튼 숨김
+- `SIGN_PENDING`이면서 현재 사용자의 서명이 `PENDING`일 때만 서명 화면 진입 가능
+- 현재 사용자가 이미 서명했으면 상대방 서명 대기, `SIGNED`면 계약 체결 완료 표시
+- 서명 기한, 당사자 이메일, 지급일, 별도 업무 범위 필드를 화면에서 제거
+- 직무·근무 방식·근무 형태 라벨은 현재 백엔드에서 동작하는 `/api/v1/meta/*` API 사용
+
+### 계약 PDF
+
+- `GET /api/v1/contracts/{contractId}/pdf`
+- JSON 공통 응답이 아니라 PDF 바이트를 Blob으로 수신
+- 파일명은 상세 응답의 `{contractNo}.pdf` 사용
+- 공통 `apiBlob`에서 쿠키 인증, 토큰 갱신과 세션 종료 오류 처리
+- `DRAFT`에서는 PDF 버튼을 숨기고 그 외 상태에서 다운로드 가능
+- 실제 상세·PDF 네트워크 응답: 미검증
+
+### 전자서명
+
+- 계약 상세의 서명 버튼은 확인 모달 없이 `/sign` 미리보기 화면으로 이동하며 API를 호출하지 않음
+- 미리보기 진입 시 `GET /api/v1/contracts/{contractId}`로 계약서와 현재 사용자 서명 상태 조회
+- 서명란을 누르면 투명 배경 canvas를 열고 마우스·터치 포인터로 서명 작성
+- canvas는 `devicePixelRatio`를 반영하고 `touch-action: none`을 적용
+- 백엔드의 `signatureFileId`는 선택 필드지만 현재 화면 정책상 그림 서명을 필수로 요구하고 `POST /api/v1/files?purpose=SIGNATURE`로 PNG 업로드
+- 파일 업로드 성공 응답의 `fileId`를 `signatureFileId`로 사용
+- 마지막 `[전자 서명 및 계약 체결]`에서만 `POST /api/v1/contracts/{contractId}/signature`
+- 요청: `{ agreed: true, signatureFileId }`. 캔버스 서명 적용 전에는 최종 체결 버튼 비활성화
+- 서명 API가 반환한 최신 계약 상세로 화면과 완료 모달을 갱신하며 별도 재조회하지 않음
+- 한쪽만 서명한 `SIGN_PENDING`은 상대방 서명 대기, 양측 서명한 `SIGNED`는 계약 체결 완료 표시
+- 기존 중복 확인 모달, `sessionStorage` 임시 서명 상태, 서명 기한·자동 취소·수정하기 UI 제거
+- 실제 파일 업로드·서명 성공 및 실패 응답: 미검증
 - 2026-08-10: 프로젝트 상세정보 필드와 첨부 업로드·삭제 API 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 사전 검수 요청·응답 및 직무 메타 연동 코드 추가, 실제 응답 미검증
 - 2026-08-10: 프로젝트 등록 안내 동의 및 클라이언트 역할 제한 계약 추가, 실제 응답 미검증
