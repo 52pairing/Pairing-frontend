@@ -170,9 +170,9 @@ export function ProjectBasicInfo() {
 
   return (
     <ProjectRegisterShell currentStep={STEP} backHref="/client" backLabel="홈으로">
-      <div className="mx-auto mt-12 max-w-[700px]">
+      <div className="mx-auto mt-8 max-w-[660px]">
         <header>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-theme-primary">
+          <h1 className="text-[20px] font-extrabold tracking-[-0.04em] text-theme-primary">
             프로젝트 기본 정보
           </h1>
 

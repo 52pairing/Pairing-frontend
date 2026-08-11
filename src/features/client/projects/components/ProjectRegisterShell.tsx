@@ -32,7 +32,7 @@ export function ProjectRegisterShell({
           '"Pretendard", "Noto Sans KR", Arial, Helvetica, sans-serif',
       }}
     >
-      <div className="mx-auto w-full max-w-[980px] px-6 pb-20 pt-7">
+      <div className="mx-auto w-full max-w-[860px] px-5 pb-14 pt-5">
         {backHref ? (
           <Link
             href={backHref}
@@ -43,7 +43,7 @@ export function ProjectRegisterShell({
           </Link>
         ) : null}
 
-        <section className="mt-10 rounded-[16px] border border-theme bg-surface px-10 pb-10 pt-14 shadow-[0_1px_2px_rgba(15,23,42,0.02)]">
+        <section className="mt-6 rounded-[14px] border border-theme bg-surface px-7 pb-8 pt-10 shadow-[0_1px_2px_rgba(15,23,42,0.02)] sm:px-8">
           <ProjectStepper currentStep={currentStep} />
 
           {children}

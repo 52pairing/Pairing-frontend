@@ -70,9 +70,9 @@ export function ProjectConfirm() {
 
   return (
     <ProjectRegisterShell currentStep={STEP} backHref="/client" backLabel="홈으로">
-      <div className="mx-auto mt-12 max-w-[720px]">
+      <div className="mx-auto mt-8 max-w-[680px]">
         <header>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-theme-primary">
+          <h1 className="text-[20px] font-extrabold tracking-[-0.04em] text-theme-primary">
             최종 확인
           </h1>
 
@@ -226,19 +226,19 @@ function SummaryCard({
 }) {
   return (
     <section className="mt-4 rounded-[12px] border border-theme bg-surface">
-      <div className="flex items-center justify-between border-b border-[#eef1f5] px-6 py-4">
+      <div className="flex items-center justify-between border-b border-[#eef1f5] px-5 py-3">
         <h2 className="text-[13px] font-extrabold text-theme-primary">{title}</h2>
         {action}
       </div>
 
-      <div className="px-6 py-2">{children}</div>
+      <div className="px-5 py-1">{children}</div>
     </section>
   );
 }
 
 function InfoRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex items-start gap-4 border-t border-[#f1f3f6] py-4 first:border-t-0">
+    <div className="flex items-start gap-4 border-t border-[#f1f3f6] py-3 first:border-t-0">
       <span className="w-[92px] shrink-0 text-[12px] font-medium text-theme-muted">
         {label}
       </span>
