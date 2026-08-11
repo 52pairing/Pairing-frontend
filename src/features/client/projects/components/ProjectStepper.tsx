@@ -20,7 +20,7 @@ export function ProjectStepper({
   steps = PROJECT_REGISTER_STEP_LABELS,
 }: ProjectStepperProps) {
   return (
-    <div className="flex items-start">
+    <div className="flex items-start px-1">
       {steps.map((label, index) => {
         const number = index + 1;
         const state: StepState =
@@ -65,14 +65,14 @@ function StepNode({
         : "font-medium text-theme-muted";
 
   return (
-    <div className="flex w-[78px] shrink-0 flex-col items-center">
+    <div className="flex w-[68px] shrink-0 flex-col items-center">
       <div
-        className={`flex h-[34px] w-[34px] items-center justify-center rounded-full text-[12px] ${circleClass}`}
+        className={`flex h-[30px] w-[30px] items-center justify-center rounded-full text-[11px] ${circleClass}`}
       >
         {state === "completed" ? <CheckMark /> : number}
       </div>
 
-      <p className={`mt-2 text-[10px] ${labelClass}`}>{label}</p>
+      <p className={`mt-1.5 text-[9px] ${labelClass}`}>{label}</p>
     </div>
   );
 }
@@ -81,7 +81,7 @@ function StepNode({
 function StepLine({ completed = false }: { completed?: boolean }) {
   return (
     <div
-      className={`mt-[16px] h-[2px] flex-1 ${
+      className={`mt-[14px] h-[2px] flex-1 ${
         completed ? "bg-brand" : "bg-[#e6eaf0]"
       }`}
     />

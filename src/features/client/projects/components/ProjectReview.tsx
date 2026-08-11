@@ -140,7 +140,7 @@ export function ProjectReview() {
       {phase === "loading" ? (
         <LoadingState
           size="lg"
-          className="mt-12 py-16"
+          className="mt-8 py-12"
           message={"사전 검수 진행 중\n현재 프리랜서 풀을 기준으로 예상 후보 수와 매칭 가능성을 분석하고 있습니다."}
         />
       ) : null}
@@ -214,8 +214,8 @@ export function ProjectReview() {
 
 function ReviewHeader({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <header className="mx-auto mt-12 max-w-[720px]">
-      <h1 className="text-[22px] font-extrabold tracking-[-0.04em] text-theme-primary">{title}</h1>
+    <header className="mx-auto mt-8 max-w-[680px]">
+      <h1 className="text-[20px] font-extrabold tracking-[-0.04em] text-theme-primary">{title}</h1>
       <p className="mt-2 whitespace-pre-line text-[12px] font-medium text-theme-secondary">{children}</p>
     </header>
   );
