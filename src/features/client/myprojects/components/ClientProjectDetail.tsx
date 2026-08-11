@@ -9,7 +9,6 @@ import { ProjectContracts } from "@/features/client/myprojects/contract/componen
 import { ProjectInformation } from "@/features/client/myprojects/information/components/ProjectInformation";
 import { NegotiationActions, ProjectNegotiation } from "@/features/negotiation/components/ProjectNegotiation";
 import { ProjectProgress } from "@/features/client/myprojects/progress/components/ProjectProgress";
-import { RecommendedCandidates } from "@/features/client/myprojects/recommendation/components/RecommendedCandidates";
 import {
   cancelProjectRegistration,
   closeProjectRecruitment,
@@ -22,6 +21,8 @@ import { ConfirmModal } from "@/features/common/components/Modal";
 import { getProjectJobRoles, getProjectSkills, getProjectWorkConditions } from "@/features/client/projects/services/projectPreReview";
 import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
 import type { SettlementResponse } from "@/features/payment/types/payment";
+import { RecommendedCandidates } from "@/features/matching/components/RecommendedCandidates";
+import { CandidateRerollActions } from "@/features/matching/components/CandidateRerollActions";
 
 type ProjectAction = "cancelRegistration" | "extendRecruitment" | "closeRecruitment" | "complete";
 
@@ -188,9 +189,9 @@ export function ClientProjectDetail() {
 
         {errorMessage ? <p role="alert" className="mt-4 rounded-lg border border-[#fda29b] bg-danger-surface px-4 py-3 text-[12px] font-semibold text-theme-danger">{errorMessage}</p> : null}
 
-        <ProjectDetailTabs activeTab={activeTab} onTabChange={setActiveTab} rightContent={<div className="flex items-center gap-2">{activeTab === "협상" ? <NegotiationActions /> : null}{actionMenu}</div>} />
+        <ProjectDetailTabs activeTab={activeTab} onTabChange={setActiveTab} rightContent={<div className="flex items-center gap-2">{activeTab === "추천 후보" ? <CandidateRerollActions projectId={project.projectId} /> : activeTab === "협상" ? <NegotiationActions /> : null}{actionMenu}</div>} />
 
-        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} /> : activeTab === "추천 후보" ? <RecommendedCandidates /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : activeTab === "진행 현황" ? <ProjectProgress projectId={params.projectId} isAllComplete={project.status === "COMPLETION_PENDING" || project.status === "CLOSED"} /> : <div className="mt-6 flex h-[260px] items-center justify-center rounded-[14px] border border-theme bg-surface text-[12px] text-theme-muted">{activeTab} 정보가 없습니다.</div>}
+        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} /> : activeTab === "추천 후보" ? <RecommendedCandidates projectId={project.projectId} /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : <ProjectProgress projectId={params.projectId} isAllComplete={project.status === "COMPLETION_PENDING" || project.status === "CLOSED"} />}
       </div>
 
       <ConfirmModal open={pendingAction !== null} title={pendingAction ? ACTION_MODAL[pendingAction].title : ""} description={pendingAction ? ACTION_MODAL[pendingAction].description : ""} confirmText={isProcessing ? "처리 중..." : pendingAction ? ACTION_MODAL[pendingAction].confirmText : "확인"} cancelText="취소" onClose={() => !isProcessing && setPendingAction(null)} onConfirm={() => void executeAction()} closeOnOverlayClick={!isProcessing} />

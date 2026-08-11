@@ -1,0 +1,7 @@
+import { Modal } from "@/features/common/components/Modal";
+
+interface CandidateRerollPaymentSummaryModalProps { open: boolean; totalCandidateCount: number; totalPaymentAmount: number; onClose: () => void; onContinue: () => void; }
+
+export function CandidateRerollPaymentSummaryModal({ open, totalCandidateCount, totalPaymentAmount, onClose, onContinue }: CandidateRerollPaymentSummaryModalProps) {
+  return <Modal open={open} onClose={onClose} size="md"><h2 className="text-[20px] font-extrabold">재추천 비용 결제</h2><p className="mt-2 text-[12px] text-theme-secondary">새로운 프리랜서 후보를 추천받기 위한 비용을 결제해 주세요.</p><div className="mt-5 rounded-[10px] bg-[#eef3f8] p-4"><h3 className="text-[12px] font-bold">프리랜서 재추천</h3><dl className="mt-4 space-y-2 text-[12px]"><div className="flex justify-between"><dt>금액</dt><dd className="font-bold">10,000원</dd></div><div className="flex justify-between"><dt>인원 수</dt><dd className="font-bold">{totalCandidateCount}명</dd></div><div className="flex justify-between border-t border-theme pt-3"><dt>결제 금액</dt><dd className="text-[16px] font-extrabold text-brand">{totalPaymentAmount.toLocaleString("ko-KR")}원</dd></div></dl></div><div className="mt-6 flex justify-end gap-2"><button type="button" onClick={onClose} className="h-10 rounded-[8px] border border-theme px-5 text-[12px] font-bold">취소</button><button type="button" onClick={onContinue} className="h-10 rounded-[8px] bg-brand px-5 text-[12px] font-bold text-white">결제하기</button></div></Modal>;
+}
