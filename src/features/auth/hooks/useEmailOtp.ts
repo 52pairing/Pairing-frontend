@@ -7,16 +7,18 @@ import {
   sendVerificationCode,
 } from "@/features/auth/services/emailVerification";
 import { ApiException } from "@/lib/api";
+import type { VerificationPurpose } from "@/features/auth/types";
 
 interface UseEmailOtpOptions {
   email: string;
+  purpose?: VerificationPurpose;
 }
 
 const getSecondsLeft = (expiresAt: string) =>
   Math.max(Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000), 0);
 
 // 회원가입 이메일 인증의 발송·확인·서버 만료시간을 관리합니다.
-export const useEmailOtp = ({ email }: UseEmailOtpOptions) => {
+export const useEmailOtp = ({ email, purpose = "SIGNUP" }: UseEmailOtpOptions) => {
   const [sent, setSent] = useState(false);
   const [verified, setVerified] = useState(false);
   const [expiresAt, setExpiresAt] = useState("");
@@ -60,7 +62,7 @@ export const useEmailOtp = ({ email }: UseEmailOtpOptions) => {
     setError(null);
 
     try {
-      const result = await sendVerificationCode({ email, purpose: "SIGNUP" });
+      const result = await sendVerificationCode({ email, purpose });
       if (requestId !== requestIdRef.current) return;
 
       setSent(true);
@@ -93,7 +95,7 @@ export const useEmailOtp = ({ email }: UseEmailOtpOptions) => {
     setError(null);
 
     try {
-      await confirmVerificationCode({ email, purpose: "SIGNUP", code });
+      await confirmVerificationCode({ email, purpose, code });
       if (requestId !== requestIdRef.current) return;
 
       setVerified(true);

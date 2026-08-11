@@ -6,9 +6,14 @@ import { ApiException } from "@/lib/api";
 
 type SignupSubmitter<TPayload> = (payload: TPayload) => Promise<unknown>;
 
+interface UseSignupSubmitOptions {
+  onError?: (error: unknown) => void;
+}
+
 // 일반 회원가입의 제출 중 상태와 서버 오류 처리를 공통으로 관리합니다.
 export const useSignupSubmit = <TPayload,>(
   submitter: SignupSubmitter<TPayload>,
+  options: UseSignupSubmitOptions = {},
 ) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -24,6 +29,7 @@ export const useSignupSubmit = <TPayload,>(
       await submitter(payload);
       return true;
     } catch (error) {
+      options.onError?.(error);
       setSubmitError(
         error instanceof ApiException
           ? error.message

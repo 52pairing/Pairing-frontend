@@ -6,6 +6,7 @@ export const FREELANCER_MY_PAGE_MENU = [
   { label: "리뷰 관리", value: "reviews", href: "/freelancer/mypage/reviews" },
   { label: "결제수단", value: "payment-methods", href: "/freelancer/mypage/payment-methods" },
   { label: "결제 내역", value: "payments", href: "/freelancer/mypage/payments" },
+  { label: "비밀번호 변경", value: "password", href: "/freelancer/mypage/password" },
 ] as const;
 
 export type FreelancerMyPageMenu = (typeof FREELANCER_MY_PAGE_MENU)[number]["value"];

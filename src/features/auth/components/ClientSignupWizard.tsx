@@ -32,6 +32,7 @@ import { signupClient } from "@/features/auth/services/signup";
 import type { ClientSignupForm } from "@/features/auth/types";
 import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
 import { buildClientSignupRequest } from "@/features/auth/utils/buildSignupRequest";
+import { ApiException } from "@/lib/api";
 
 const STEP_LABELS = CLIENT_SIGNUP_STEPS.map((step) => step.label);
 
@@ -40,12 +41,17 @@ export function ClientSignupWizard() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState(false);
   const [form, setForm] = useState<ClientSignupForm>({});
-  const { submit, isSubmitting, submitError } =
-    useSignupSubmit(signupClient);
-
   const patch = (partial: Partial<ClientSignupForm>) => {
     setForm((current) => ({ ...current, ...partial }));
   };
+  const { submit, isSubmitting, submitError } = useSignupSubmit(signupClient, {
+    onError: (error) => {
+      if (error instanceof ApiException && error.errorCode === "AU_006") {
+        patch({ otpVerified: false });
+        setStep(3);
+      }
+    },
+  });
 
   const handleSignup = async (terms: SignupTermsItem[]) => {
     const succeeded = await submit(buildClientSignupRequest(form, terms));

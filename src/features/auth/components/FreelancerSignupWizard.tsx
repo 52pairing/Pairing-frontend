@@ -31,6 +31,7 @@ import { signupFreelancer } from "@/features/auth/services/signup";
 import type { FreelancerSignupForm } from "@/features/auth/types";
 import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
 import { buildFreelancerSignupRequest } from "@/features/auth/utils/buildSignupRequest";
+import { ApiException } from "@/lib/api";
 
 const STEP_LABELS = FREELANCER_SIGNUP_STEPS.map((step) => step.label);
 
@@ -40,12 +41,20 @@ export function FreelancerSignupWizard() {
   const [completed, setCompleted] = useState(false);
   const [form, setForm] = useState<FreelancerSignupForm>({});
   const [today] = useState(() => new Date());
-  const { submit, isSubmitting, submitError } =
-    useSignupSubmit(signupFreelancer);
-
   const patch = (partial: Partial<FreelancerSignupForm>) => {
     setForm((current) => ({ ...current, ...partial }));
   };
+  const { submit, isSubmitting, submitError } = useSignupSubmit(
+    signupFreelancer,
+    {
+      onError: (error) => {
+        if (error instanceof ApiException && error.errorCode === "AU_006") {
+          patch({ otpVerified: false });
+          setStep(2);
+        }
+      },
+    },
+  );
 
   const handleSignup = async (terms: SignupTermsItem[]) => {
     const succeeded = await submit(buildFreelancerSignupRequest(form, terms));

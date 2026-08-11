@@ -31,6 +31,7 @@ export const UnlockAccountModal = ({
   const [isConfirming, setIsConfirming] = useState(false);
   const [error, setError] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [remainingSendCount, setRemainingSendCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -45,6 +46,7 @@ export const UnlockAccountModal = ({
     setCode("");
     setError("");
     setSecondsLeft(0);
+    setRemainingSendCount(null);
   };
 
   const handleClose = () => {
@@ -53,6 +55,7 @@ export const UnlockAccountModal = ({
   };
 
   const sendCode = async () => {
+    if (remainingSendCount === 0) return;
     setIsSending(true);
     setError("");
 
@@ -65,8 +68,12 @@ export const UnlockAccountModal = ({
         0,
       );
       setSecondsLeft(seconds);
+      setRemainingSendCount(result.remainingSendCount);
       setSent(true);
     } catch (sendError) {
+      if (sendError instanceof ApiException && sendError.errorCode === "AU_003") {
+        setRemainingSendCount(0);
+      }
       setError(
         sendError instanceof ApiException
           ? sendError.message
@@ -120,13 +127,18 @@ export const UnlockAccountModal = ({
             <button
               type="button"
               onClick={sendCode}
-              disabled={isSending || secondsLeft > 0}
+              disabled={isSending || secondsLeft > 0 || remainingSendCount === 0}
               className="mt-3 self-start text-xs font-medium text-theme-secondary underline disabled:cursor-not-allowed disabled:text-theme-muted"
             >
               {secondsLeft > 0
                 ? `인증코드 재발송 (${secondsLeft}s)`
                 : "인증코드 다시 받기"}
             </button>
+            {remainingSendCount !== null ? (
+              <p className="mt-2 text-xs text-theme-muted">
+                남은 발송 횟수: {remainingSendCount}회
+              </p>
+            ) : null}
           </>
         ) : (
           <p className="mt-2 text-sm text-theme-secondary">
@@ -160,7 +172,7 @@ export const UnlockAccountModal = ({
             <button
               type="button"
               onClick={sendCode}
-              disabled={isSending}
+              disabled={isSending || remainingSendCount === 0}
               className="flex-1 rounded-lg bg-brand px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               {isSending ? "발송 중..." : "인증코드 받기"}

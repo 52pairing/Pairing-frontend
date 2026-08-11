@@ -13,7 +13,7 @@ interface PasswordRule {
 
 // 프로젝트 공통 비밀번호 정책: 8자 이상 + 대소문자 + 숫자 + 특수문자
 const PASSWORD_RULES: PasswordRule[] = [
-  { key: "length", label: "8자 이상", test: (v) => v.length >= 8 },
+  { key: "length", label: "8~20자", test: (v) => v.length >= 8 && v.length <= 20 },
   {
     key: "case",
     label: "영문 대문자와 소문자 포함",
@@ -32,12 +32,14 @@ interface NewPasswordFormProps {
   error?: string;
   // 검증을 통과한 새 비밀번호 값을 그대로 전달 (API 호출은 부모 페이지 책임)
   onSubmit: (newPassword: string) => void;
+  temporaryPassword?: boolean;
 }
 
 export const NewPasswordForm = ({
   isSubmitting,
   error,
   onSubmit,
+  temporaryPassword = true,
 }: NewPasswordFormProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -62,15 +64,17 @@ export const NewPasswordForm = ({
           새 비밀번호를 등록해 주세요.
         </h1>
         <p className="mt-2 text-sm font-medium text-theme-secondary">
-          계정 보호를 위해 기존 임시 비밀번호와 다른 새로운 비밀번호를 입력해
-          주세요.
+          {temporaryPassword
+            ? "계정 보호를 위해 기존 임시 비밀번호와 다른 새로운 비밀번호를 입력해 주세요."
+            : "현재와 다른 새로운 비밀번호를 입력해 주세요."}
         </p>
       </div>
 
-      <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-700">
-        보안을 위해 새로운 비밀번호를 등록해야 합니다. 등록 전까지 다른 서비스에
-        접근할 수 없습니다.
-      </div>
+      {temporaryPassword ? (
+        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-700">
+          보안을 위해 새로운 비밀번호를 등록해야 합니다. 등록 전까지 다른 서비스에 접근할 수 없습니다.
+        </div>
+      ) : null}
 
       <form className="space-y-5" onSubmit={handleSubmit}>
         <div>
@@ -85,6 +89,7 @@ export const NewPasswordForm = ({
               id="newPassword"
               type={showPassword ? "text" : "password"}
               value={password}
+              maxLength={20}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="새 비밀번호를 입력해 주세요."
               className="h-11 w-full rounded-md border border-theme px-4 pr-12 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
@@ -138,6 +143,7 @@ export const NewPasswordForm = ({
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
+              maxLength={20}
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="비밀번호를 다시 입력해 주세요."
               className="h-11 w-full rounded-md border border-theme px-4 pr-12 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
