@@ -150,6 +150,9 @@ export function NegotiationRoom() {
   const handleEvent = useCallback(
     (event: NegotiationEvent) => {
       switch (event.type) {
+        // STARTED: 상대가 마지노선을 내 협상이 시작될 때 서버가 발행(초기 제안엔 NEW_PROPOSAL 없음).
+        // 이벤트는 "재조회 신호"로만 쓰고, 화면 전환 판정은 totalRound 로 유지한다.
+        case "STARTED":
         case "NEW_PROPOSAL":
         case "ANSWERED":
           void refreshMessages();

@@ -244,7 +244,7 @@ function ConditionBadges({ conditions }: { conditions: NegotiationCondition[] })
             className={`rounded-full border px-3 py-1.5 text-[11px] font-bold ${isAgreed ? "border-[#abefc6] bg-success-surface text-theme-success" : isRejected ? "border-[#fecdca] bg-danger-surface text-theme-danger" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}
           >
             {conditionLabel(condition.type)}{" "}
-            {isAgreed ? "합의🔒" : isRejected ? "재협상" : "진행중"}
+            {isAgreed ? "합의🔒" : isRejected ? "재협상 필요" : "진행중"}
           </span>
         );
       })}
@@ -636,7 +636,7 @@ function ConditionActionPanel({
           >
             <div className="flex justify-between text-[11px] font-bold text-[#d97706]">
               <span>{floorFieldLabel(condition.type, viewerRole)}</span>
-              <span className="rounded bg-[#fff0b8] px-2 py-1">재입력 필요</span>
+              <span className="rounded bg-[#fff0b8] px-2 py-1">재협상 필요</span>
             </div>
             {condition.myFloor != null ? (
               <p className="mt-1 text-[10px] text-[#92400e]">

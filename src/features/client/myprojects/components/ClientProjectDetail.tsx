@@ -180,7 +180,7 @@ export function ClientProjectDetail() {
             <span>등록일 {formatDate(project.createdAt)}</span>
             <span>시작 희망일 {formatDate(project.startDesiredDate)}</span>
             <span>기간 {project.periodValue}{PERIOD_UNIT_LABEL[project.periodUnit] ?? project.periodUnit}</span>
-            <span>전체 모집 {project.totalHeadcount}명</span>
+            <span>전체 모집 {project.totalHeadcount}명 · 확정 {project.confirmedHeadcount}명</span>
           </div>
         </header>
 

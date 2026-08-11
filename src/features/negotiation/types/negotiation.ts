@@ -55,6 +55,7 @@ export type WorkStyle = "REMOTE" | "ONSITE" | "ANY";
 // ── STOMP 실시간 이벤트 ──────────────────────────────────────────────
 
 export type NegotiationEventType =
+  | "STARTED"
   | "NEW_PROPOSAL"
   | "ANSWERED"
   | "CONDITION_LOCKED"
@@ -144,7 +145,8 @@ export interface NegotiationDetail {
  */
 export interface NegotiationListItem {
   negotiationId: number;
-  negotiationNo: number;
+  /** 표시용 번호 문자열(예: "NEG-2026-005"). 서버 값 그대로 출력하고 파싱·식별자로 쓰지 말 것 */
+  negotiationNo: string;
   projectId: number;
   projectTitle: string;
   counterpartName: string | null;
