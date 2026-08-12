@@ -36,3 +36,16 @@ export interface ClientContractPage {
   first: boolean;
   last: boolean;
 }
+
+export type ClientContractTab = "ALL" | "CLIENT_PENDING" | "CLIENT_SIGNED" | "ALL_SIGNED";
+
+export interface ClientContractCardProps {
+  contract: ClientContractListItem;
+  jobRoleLabel: string;
+  detailHref: string;
+}
+
+export interface ClientContractTabsProps {
+  activeTab: ClientContractTab;
+  onTabChange: (tab: ClientContractTab) => void;
+}
