@@ -4,12 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { getProjectMatchingRequests } from "@/features/client/myprojects/services/projectDetail";
+import type { ProjectFreelancerStatusProps } from "@/features/client/myprojects/types/components";
 import type { MatchingRequestItem } from "@/features/client/myprojects/types/projectDetail";
-
-interface ProjectFreelancerStatusProps {
-  projectId: number;
-  jobRoleLabels: Record<string, string>;
-}
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "요청 대기",

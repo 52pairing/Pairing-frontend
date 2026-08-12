@@ -18,6 +18,7 @@ import type {
   ProjectJobRoleOption,
   ProjectMetaOption,
 } from "@/features/client/projects/types/preReview";
+import type { ProjectRecruitMeta } from "@/features/client/projects/types/components";
 import type { ProjectRecruit } from "@/features/client/projects/types/project";
 
 const STEP = 3;
@@ -35,12 +36,6 @@ const createRecruit = (id: number): ProjectRecruit => ({
   skills: [],
   skillLabels: {},
 });
-
-interface ProjectRecruitMeta {
-  categories: ProjectMetaOption[];
-  jobRoles: ProjectJobRoleOption[];
-  skills: ProjectMetaOption[];
-}
 
 /** 모집 조건 메타(직군·직무·스킬) 3종을 한 번에 조회 */
 const fetchRecruitMeta = () =>

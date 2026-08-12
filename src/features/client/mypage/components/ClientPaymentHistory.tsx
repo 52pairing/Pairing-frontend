@@ -3,18 +3,9 @@
 import { useState } from "react";
 
 import { ClientMyPageSidebar } from "@/features/client/components/ClientMyPageSidebar";
+import type { PaymentFilter, PaymentHistoryItem } from "@/features/client/mypage/types/components";
 
 const PAYMENT_FILTERS = ["전체", "착수금 수수료", "성공보수 수수료"] as const;
-type PaymentFilter = (typeof PAYMENT_FILTERS)[number];
-
-interface PaymentHistoryItem {
-  id: string;
-  paidAt: string;
-  projectTitle: string;
-  type: Exclude<PaymentFilter, "전체">;
-  amount: number;
-  paymentMethod: string;
-}
 
 const PAYMENT_HISTORY: readonly PaymentHistoryItem[] = [
   { id: "PAY-2026-0042", paidAt: "2026.06.18", projectTitle: "B2B 주문 관리 서비스 리뉴얼", type: "성공보수 수수료", amount: 4200000, paymentMethod: "신한카드 1234" },

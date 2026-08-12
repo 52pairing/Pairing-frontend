@@ -1,12 +1,9 @@
-import { ProjectFreelancerStatus } from "@/features/client/myprojects/information/components/ProjectFreelancerStatus";
-import type { ClientProjectDetailResponse } from "@/features/client/myprojects/types/projectDetail";
+"use client";
 
-interface ProjectInformationProps {
-  project: ClientProjectDetailResponse;
-  jobRoleLabels: Record<string, string>;
-  skillLabels: Record<string, string>;
-  workStyleLabel: string;
-}
+import { useState } from "react";
+
+import { ProjectFreelancerStatus } from "@/features/client/myprojects/information/components/ProjectFreelancerStatus";
+import type { ProjectInformationProps } from "@/features/client/myprojects/types/components";
 
 const PERIOD_UNIT_LABEL: Record<string, string> = {
   DAY: "일",
@@ -38,8 +35,11 @@ export function ProjectInformation({
   jobRoleLabels,
   skillLabels,
   workStyleLabel,
+  workFormLabel,
 }: ProjectInformationProps) {
   const deadlineLabel = getDeadlineLabel(project.recruitDeadline);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const isRemote = project.workStyle === "REMOTE" || workStyleLabel.includes("재택");
 
   return (
     <>
@@ -63,8 +63,50 @@ export function ProjectInformation({
           <ProjectDetailInfo label="기간" value={`${project.periodValue}${PERIOD_UNIT_LABEL[project.periodUnit] ?? project.periodUnit}`} />
           <ProjectDetailInfo label="시작 희망일" value={formatDate(project.startDesiredDate)} />
           <ProjectDetailInfo label="근무 방식" value={workStyleLabel} />
-          {project.workLocation ? <ProjectDetailInfo label="근무 장소" value={project.workLocation} /> : null}
+          <ProjectDetailInfo label="근무 형태" value={workFormLabel} />
+          {!isRemote && project.workLocation ? <ProjectDetailInfo label="근무 장소" value={project.workLocation} /> : null}
         </dl>
+      </section>
+
+      <section className="mt-4 overflow-hidden rounded-[14px] border border-theme bg-surface">
+        <button
+          type="button"
+          aria-expanded={isDetailOpen}
+          aria-controls="project-detail-information"
+          onClick={() => setIsDetailOpen((open) => !open)}
+          className="flex w-full items-center justify-between px-7 py-5 text-left hover:bg-surface-subtle"
+        >
+          <span className="text-[14px] font-extrabold">상세 정보</span>
+          <span aria-hidden="true" className={`text-[16px] text-theme-secondary transition-transform ${isDetailOpen ? "rotate-180" : ""}`}>⌄</span>
+        </button>
+
+        {isDetailOpen ? (
+          <div id="project-detail-information" className="border-t border-theme px-7 py-6">
+            <div className="space-y-7">
+              <ProjectDescription label="현재 진행 상황" value={project.currentSituation} />
+              <ProjectDescription label="주요 담당 업무" value={project.mainTask} />
+              <ProjectDescription label="세부 업무범위" value={project.detailScope} />
+              <ProjectDescription label="기타 전달사항 및 우대사항" value={project.extraNote} />
+              <div>
+                <h3 className="text-[12px] font-bold text-theme-primary">첨부 자료</h3>
+                {project.files.length > 0 ? (
+                  <ul className="mt-3 space-y-2">
+                    {project.files.map((file) => (
+                      <li key={file.fileId} className="flex flex-wrap items-center justify-between gap-3 rounded-[9px] border border-theme px-4 py-3 text-[11px]">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span aria-hidden="true">{file.originalName.toLowerCase().match(/\.(png|jpe?g|gif|webp)$/) ? "🖼️" : "📄"}</span>
+                          <span className="truncate font-semibold text-theme-secondary">{file.originalName}</span>
+                          <span className="shrink-0 text-theme-muted">{formatFileSize(file.sizeBytes)}</span>
+                        </div>
+                        <a href={file.fileUrl} download={file.originalName} target="_blank" rel="noreferrer" className="shrink-0 font-bold text-brand hover:underline">다운로드</a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : <p className="mt-3 text-[11px] text-theme-muted">첨부된 자료가 없습니다.</p>}
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="mt-4 rounded-[14px] border border-theme bg-surface px-7 py-6">
@@ -88,22 +130,17 @@ export function ProjectInformation({
         </div>
       </section>
 
-      {project.files.length > 0 ? (
-        <section className="mt-4 rounded-[14px] border border-theme bg-surface px-7 py-6">
-          <h2 className="text-[14px] font-extrabold">첨부 파일</h2>
-          <div className="mt-4 space-y-2">
-            {project.files.map((file) => (
-              <a key={file.fileId} href={file.fileUrl} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-[9px] border border-theme px-4 py-3 text-[12px] hover:bg-surface-subtle">
-                <span className="font-semibold text-theme-secondary">{file.originalName}</span>
-                <span className="text-theme-muted">{formatFileSize(file.sizeBytes)}</span>
-              </a>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
       <ProjectFreelancerStatus projectId={project.projectId} jobRoleLabels={jobRoleLabels} />
     </>
+  );
+}
+
+function ProjectDescription({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div>
+      <h3 className="border-b border-theme pb-3 text-[12px] font-bold text-theme-primary">{label}</h3>
+      <p className="mt-3 whitespace-pre-line text-[12px] leading-6 text-theme-secondary">{value?.trim() || "-"}</p>
+    </div>
   );
 }
 

@@ -1,19 +1,11 @@
 import { Fragment } from "react";
 
 import { PROJECT_REGISTER_STEP_LABELS } from "@/features/client/projects/constants/steps";
+import type { ProjectStepperProps, ProjectStepState } from "@/features/client/projects/types/components";
 
 /**
  * 클라이언트 프로젝트 등록 플로우의 상단 진행 스텝 표시.
  */
-
-type StepState = "completed" | "active" | "upcoming";
-
-interface ProjectStepperProps {
-  /** 현재 진행 중인 단계 (1부터 시작) */
-  currentStep: number;
-  /** 스텝 라벨 목록. 기본값은 프로젝트 등록 플로우 6단계 */
-  steps?: readonly string[];
-}
 
 export function ProjectStepper({
   currentStep,
@@ -23,7 +15,7 @@ export function ProjectStepper({
     <div className="flex items-start px-1">
       {steps.map((label, index) => {
         const number = index + 1;
-        const state: StepState =
+        const state: ProjectStepState =
           number < currentStep
             ? "completed"
             : number === currentStep
@@ -50,7 +42,7 @@ function StepNode({
 }: {
   number: number;
   label: string;
-  state: StepState;
+  state: ProjectStepState;
 }) {
   const circleClass =
     state === "upcoming"

@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import type { ClientMyPageSidebarProps } from "@/features/client/types/components";
+
+export type { ClientMyPageActiveMenu, ClientMyPageMenu } from "@/features/client/types/components";
+
 export const CLIENT_MY_PAGE_MENU = [
   { label: "기본 정보", value: "profile", href: "/client/mypage/profile" },
   { label: "기업 정보", value: "company", href: "/client/mypage/company" },
@@ -8,13 +12,6 @@ export const CLIENT_MY_PAGE_MENU = [
   { label: "결제 내역", value: "payments", href: "/client/mypage/payments" },
   { label: "비밀번호 변경", value: "password", href: "/client/mypage/password" },
 ] as const;
-
-export type ClientMyPageMenu = (typeof CLIENT_MY_PAGE_MENU)[number]["value"];
-export type ClientMyPageActiveMenu = ClientMyPageMenu | "cancel";
-
-interface ClientMyPageSidebarProps {
-  activeMenu: ClientMyPageActiveMenu;
-}
 
 export function ClientMyPageSidebar({ activeMenu }: ClientMyPageSidebarProps) {
   return (

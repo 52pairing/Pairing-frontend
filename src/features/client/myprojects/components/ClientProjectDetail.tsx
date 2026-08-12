@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-import { ProjectDetailTabs, type ProjectDetailTab } from "@/features/client/myprojects/components/ProjectDetailTabs";
+import { ProjectDetailTabs } from "@/features/client/myprojects/components/ProjectDetailTabs";
 import { ProjectContracts } from "@/features/client/myprojects/contract/components/ProjectContracts";
 import { ProjectInformation } from "@/features/client/myprojects/information/components/ProjectInformation";
 import { NegotiationActions, ProjectNegotiation } from "@/features/negotiation/components/ProjectNegotiation";
@@ -17,14 +17,13 @@ import {
   getClientProjectDetail,
 } from "@/features/client/myprojects/services/projectDetail";
 import type { ClientProjectDetailResponse } from "@/features/client/myprojects/types/projectDetail";
+import type { ProjectAction, ProjectDetailTab } from "@/features/client/myprojects/types/components";
 import { ConfirmModal } from "@/features/common/components/Modal";
 import { getProjectJobRoles, getProjectSkills, getProjectWorkConditions } from "@/features/client/projects/services/projectPreReview";
 import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
 import type { SettlementResponse } from "@/features/payment/types/payment";
 import { RecommendedCandidates } from "@/features/matching/components/RecommendedCandidates";
 import { CandidateRerollActions } from "@/features/matching/components/CandidateRerollActions";
-
-type ProjectAction = "cancelRegistration" | "extendRecruitment" | "closeRecruitment" | "complete";
 
 const STATUS_LABEL: Record<string, string> = {
   REGISTERED: "등록 완료",
@@ -59,6 +58,7 @@ export function ClientProjectDetail() {
   const [jobRoleLabels, setJobRoleLabels] = useState<Record<string, string>>({});
   const [skillLabels, setSkillLabels] = useState<Record<string, string>>({});
   const [workStyleLabels, setWorkStyleLabels] = useState<Record<string, string>>({});
+  const [workFormLabels, setWorkFormLabels] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
@@ -89,6 +89,7 @@ export function ClientProjectDetail() {
       setJobRoleLabels(Object.fromEntries(jobRoles.map((item) => [item.code, item.label])));
       setSkillLabels(Object.fromEntries(skills.map((item) => [item.code, item.label])));
       setWorkStyleLabels(Object.fromEntries(workConditions.workStyles.map((item) => [item.code, item.label])));
+      setWorkFormLabels(Object.fromEntries(workConditions.workForms.map((item) => [item.code, item.label])));
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "프로젝트 상세를 불러오지 못했습니다.");
     } finally {
@@ -169,7 +170,7 @@ export function ClientProjectDetail() {
     <div ref={actionMenuRef} className="relative">
       <button type="button" aria-label="프로젝트 관리 메뉴" aria-haspopup="menu" aria-expanded={isActionMenuOpen} onClick={() => setIsActionMenuOpen((open) => !open)} className="flex h-9 w-10 items-center justify-center rounded-[9px] border border-theme bg-surface text-[22px] font-bold text-theme-secondary hover:bg-surface-subtle">···</button>
       <div role="menu" aria-hidden={!isActionMenuOpen} className={`absolute bottom-11 right-0 z-20 w-[170px] origin-bottom-right rounded-[10px] border border-theme bg-surface p-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.14)] transition duration-150 ${isActionMenuOpen ? "visible scale-100 opacity-100" : "invisible translate-y-2 scale-95 opacity-0"}`}>
-        <button type="button" role="menuitem" onClick={() => setIsActionMenuOpen(false)} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-secondary hover:bg-background">프로젝트 수정</button>
+        <Link href={`/client/projects/${project.projectId}/edit`} role="menuitem" onClick={() => setIsActionMenuOpen(false)} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-secondary hover:bg-background">프로젝트 수정</Link>
         {project.status === "REGISTERED" ? <button type="button" role="menuitem" onClick={() => openAction("cancelRegistration")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-danger hover:bg-danger-surface">등록 취소</button> : null}
         {project.status === "RECRUITING" ? <><button type="button" role="menuitem" disabled={project.extensionCount >= 2} onClick={() => openAction("extendRecruitment")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-secondary hover:bg-background disabled:cursor-not-allowed disabled:text-[#b8c2ce]">모집 연장</button><button type="button" role="menuitem" onClick={() => openAction("closeRecruitment")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-danger hover:bg-danger-surface">모집 종료</button></> : null}
         {project.status === "IN_PROGRESS" ? <button type="button" role="menuitem" onClick={() => openAction("complete")} className="flex h-9 w-full items-center rounded-[7px] px-3 text-[12px] font-semibold text-theme-secondary hover:bg-background">프로젝트 완료</button> : null}
@@ -199,7 +200,7 @@ export function ClientProjectDetail() {
 
         <ProjectDetailTabs activeTab={activeTab} onTabChange={setActiveTab} rightContent={<div className="flex items-center gap-2">{activeTab === "추천 후보" ? <CandidateRerollActions projectId={project.projectId} /> : activeTab === "협상" ? <NegotiationActions /> : null}{actionMenu}</div>} />
 
-        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} /> : activeTab === "추천 후보" ? <RecommendedCandidates projectId={project.projectId} /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : <ProjectProgress project={project} jobRoleLabels={jobRoleLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} />}
+        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} workFormLabel={workFormLabels[project.workForm] ?? project.workForm} /> : activeTab === "추천 후보" ? <RecommendedCandidates projectId={project.projectId} /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : <ProjectProgress project={project} jobRoleLabels={jobRoleLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} />}
       </div>
 
       <ConfirmModal open={pendingAction !== null} title={pendingAction ? ACTION_MODAL[pendingAction].title : ""} description={pendingAction ? ACTION_MODAL[pendingAction].description : ""} confirmText={isProcessing ? "처리 중..." : pendingAction ? ACTION_MODAL[pendingAction].confirmText : "확인"} cancelText="취소" onClose={() => !isProcessing && setPendingAction(null)} onConfirm={() => void executeAction()} closeOnOverlayClick={!isProcessing} />

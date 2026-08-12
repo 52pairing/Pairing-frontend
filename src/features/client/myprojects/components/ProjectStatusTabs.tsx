@@ -1,12 +1,9 @@
 import {
   CLIENT_PROJECT_TABS,
-  type ClientProjectTab,
 } from "@/features/client/myprojects/types/projectList";
+import type { ProjectStatusTabsProps } from "@/features/client/myprojects/types/components";
 
-export interface ProjectStatusTabsProps {
-  activeTab: ClientProjectTab;
-  onTabChange: (tab: ClientProjectTab) => void;
-}
+export type { ProjectStatusTabsProps } from "@/features/client/myprojects/types/components";
 
 export function ProjectStatusTabs({
   activeTab,

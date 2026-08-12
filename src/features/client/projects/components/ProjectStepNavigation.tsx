@@ -2,14 +2,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@/features/common/components/SharedUI";
-
-interface ProjectStepNavigationProps {
-  onPrevious: () => void;
-  onNext: () => void;
-  nextDisabled?: boolean;
-  previousLabel?: string;
-  nextLabel?: string;
-}
+import type { ProjectStepNavigationProps } from "@/features/client/projects/types/components";
 
 /** 프로젝트 등록 입력 단계에서 사용하는 공통 하단 내비게이션입니다. */
 export function ProjectStepNavigation({
