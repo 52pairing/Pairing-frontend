@@ -18,19 +18,21 @@ npm run dev      # next dev (개발 서버)
 npm run build    # next build
 npm run start    # next start (프로덕션 서버)
 npm run lint     # eslint
+npm run test     # Jest 전체 테스트 1회 실행
+npm run test:watch     # Jest watch 모드
+npm run test:coverage  # Jest 커버리지 수집
 ```
 
-### 아직 존재하지 않는 스크립트 (확인 필요)
+### 현재 테스트 환경
 
-현재 `package.json`에는 테스트 스크립트와 테스트 도구가 없습니다.
-
-- `npm run test` — 미설치
-- `npm run test:unit` — 미설치
-- `npm run test:e2e` — 미설치
-- Jest — 미설치
-- Playwright — 미설치
-
-> README에는 Jest·Playwright 사용이 명시돼 있으나 실제 `package.json`에는 아직 도입돼 있지 않습니다. 테스트 도구가 실제로 추가되면 이 문서를 실제 스크립트 기준으로 갱신합니다.
+- Jest 29
+- React Testing Library
+- `@testing-library/jest-dom`
+- `@testing-library/user-event`
+- jsdom
+- 설정 파일: `jest.config.ts`, `jest.setup.ts`
+- 테스트 위치: `unit-tests/**/*.test.ts`, `unit-tests/**/*.test.tsx`
+- Playwright 및 `npm run test:e2e` — 미설치
 
 실제로 존재하지 않는 명령은 실행하거나 문서에 통과했다고 기록하지 않습니다.
 
@@ -79,7 +81,7 @@ npm run build
 
 ## 3. 변경 유형별 검증
 
-아래 표에서 단위 테스트·E2E 테스트 항목은 테스트 도구가 도입된 이후에 적용합니다. 현재는 `lint`와 `build`, 브라우저 확인을 기본 검증으로 사용합니다.
+아래 표의 단위·컴포넌트 테스트는 Jest로 실행합니다. E2E 테스트는 Playwright가 도입된 이후 적용합니다.
 
 | 변경 유형 | 기본 검증 |
 | --- | --- |
