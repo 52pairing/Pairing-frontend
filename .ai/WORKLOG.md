@@ -55,6 +55,32 @@
 
 - `MyPagePasswordChange.tsx`의 비밀번호 검사 규칙이 영문 포함 여부만 확인하고 있어, 프로젝트 확정 정책(대소문자 모두 포함, `NewPasswordForm.tsx`/`SignupPasswordFields.tsx`와 동일)과 달랐습니다. 같은 규칙으로 맞추고 안내 문구도 수정했습니다.
 - `npm run lint`, `npm run build` 재실행해 통과를 재확인했습니다.
+## 2026-08-12 — 클라이언트 프로젝트 등록 테스트 환경·코드 작성
+
+### 작업 요약
+
+- 수업자료의 `next/jest`, jsdom, `jest-dom`, React Testing Library, `userEvent` 패턴을 프로젝트에 적용했습니다.
+- Jest 일반 실행·watch·coverage 스크립트와 TypeScript 경로 별칭 설정을 추가했습니다.
+- 프로젝트 등록 폼의 API 요청 변환, 필수값 검증, 예산 단위 변환, 선택값 정규화 단위 테스트를 작성했습니다.
+- 프로젝트 등록 Context의 `sessionStorage` 복원·저장·초기화·손상 데이터 복구 테스트를 작성했습니다.
+- 등록 안내의 필수 동의와 단계 이동, 최종 확인의 요약·등록 성공·실패·중복 제출 방지 컴포넌트 테스트를 작성했습니다.
+
+### 실행한 검증
+
+- [x] `npm run test -- --runInBand` — 4 suites, 21 tests 통과
+- [x] `npx tsc --noEmit`
+- [x] `npm run lint`
+- [x] `npm run build`
+- [x] `git diff --check`
+- [ ] 실제 브라우저 프로젝트 등록 흐름 확인
+- [ ] 실제 프로젝트 등록·사전 검수 API 응답 확인
+
+### 남은 주의사항
+
+- 테스트는 서비스 모듈을 Mock 처리하므로 실제 네트워크 응답은 검증하지 않습니다.
+- 기본 정보·직군 모집·상세 입력·사전 검수 화면의 세부 상호작용 테스트는 후속 범위입니다.
+
+---
 
 ## 2026-08-12 — 공용 FAQ 챗봇 화면 UI 구현
 
