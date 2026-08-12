@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Spinner } from "@/features/common/components/Loading";
 import { NegotiationResultCard } from "@/features/negotiation/components/NegotiationResultCard";
@@ -82,6 +82,15 @@ export function NegotiationChatFlow({
     detail.status === "IN_PROGRESS" && detail.totalRound === 0 && hasSubmittedFloor;
   const showActionPanel =
     detail.status === "IN_PROGRESS" && detail.totalRound >= 1 && detail.waitingForMe;
+  // AI 진행 중은 요청이 떠 있는 동안(isSubmitting)만 참. 그 외 대기는 상대 입력 대기다.
+  const hasRejected = conditions.some((condition) => condition.status === "REJECTED");
+
+  // 새 메시지·상태 변화 시 로그를 맨 아래로 (채팅 관례, 타결 카드가 화면 밖으로 밀리지 않게)
+  const logRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = logRef.current;
+    if (element) element.scrollTop = element.scrollHeight;
+  }, [messages.length, detail.status]);
 
   return (
     <main className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] bg-surface">
@@ -93,7 +102,7 @@ export function NegotiationChatFlow({
         />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-7 pt-4">
+      <div ref={logRef} className="min-h-0 flex-1 overflow-y-auto px-6 pb-7 pt-4">
         <ConditionBadges conditions={conditions} />
 
         {/* 실시간 로그 */}
@@ -147,7 +156,13 @@ export function NegotiationChatFlow({
             onGiveUp={onGiveUp}
           />
         ) : (
-          <WaitingNotice label="대리인이 협상을 진행하고 있습니다…" />
+          <WaitingNotice
+            label={
+              hasRejected
+                ? "상대방이 조건을 다시 입력하고 있습니다"
+                : "대리인이 협상을 진행하고 있습니다…"
+            }
+          />
         )}
       </div>
     </main>
@@ -292,11 +307,11 @@ function MessageItem({
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8878e8] text-[11px] font-bold text-white">
           {senderLabel(message.senderType).charAt(0)}
         </span>
-        <div>
+        <div className="min-w-0">
           <p className={`mb-1 text-[10px] text-[#a5adbb] ${isMine ? "text-right" : ""}`}>
             {senderLabel(message.senderType)}
           </p>
-          <div className={`rounded-[12px] px-4 py-2.5 text-[12px] leading-5 ${isMine ? "bg-[#8878e8] text-white" : "border border-theme bg-surface text-[#283142]"}`}>
+          <div className={`whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-[12px] px-4 py-2.5 text-[12px] leading-5 ${isMine ? "bg-[#8878e8] text-white" : "border border-theme bg-surface text-[#283142]"}`}>
             {message.content}
             {message.reason ? (
               <small className="mt-1 block opacity-80">근거: {message.reason}</small>
@@ -314,9 +329,11 @@ function MessageItem({
 function TimelineDivider({ label }: { label: string }) {
   return (
     <div className="mt-4 flex items-center gap-3">
-      <div className="h-px flex-1 bg-[#e7eaf0]" />
-      <span className="whitespace-nowrap text-[10px] text-[#a5adbb]">{label}</span>
-      <div className="h-px flex-1 bg-[#e7eaf0]" />
+      <div className="h-px flex-1 shrink-0 bg-[#e7eaf0]" />
+      <span className="min-w-0 break-words [overflow-wrap:anywhere] text-center text-[10px] text-[#a5adbb]">
+        {label}
+      </span>
+      <div className="h-px flex-1 shrink-0 bg-[#e7eaf0]" />
     </div>
   );
 }
@@ -758,6 +775,16 @@ function ConditionActionPanel({
             labels,
           );
           const boundText = viewerRole === "CLIENT" ? "이상이어야" : "이하여야";
+          // 마지노선 비교 방식: 서버 floorComparison 우선, 없으면(배포 시점차) type 으로 추정
+          const comparison =
+            condition.floorComparison ??
+            (condition.type === "WORK_STYLE" || condition.type === "WORK_FORM"
+              ? "CHOICE"
+              : "RANGE");
+          const warningText =
+            comparison === "CHOICE"
+              ? `지금 제안(${proposedText})을 수락하려면 이 값을 허용해야 합니다`
+              : `지금 제안(${proposedText})을 수락하려면 ${proposedText} ${boundText} 합니다`;
           const myFloorText = formatConditionValue(condition.type, condition.myFloor, labels);
           const isEditing = editOpen[condition.conditionId] === true;
           return (
@@ -813,7 +840,7 @@ function ConditionActionPanel({
                   />
                   {warnIds[condition.conditionId] && proposedText ? (
                     <p className="mt-2 text-[10px] font-semibold text-[#b54708]">
-                      ⚠️ 지금 제안({proposedText})을 수락하려면 {proposedText} {boundText} 합니다
+                      ⚠️ {warningText}
                     </p>
                   ) : null}
                   <p className="mt-1 text-[10px] text-theme-muted">라운드는 진행되지 않습니다.</p>
