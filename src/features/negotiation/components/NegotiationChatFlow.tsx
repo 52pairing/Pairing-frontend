@@ -53,6 +53,8 @@ interface NegotiationChatFlowProps {
     conditionType: ConditionType,
     value: string,
   ) => Promise<{ ok: boolean; message?: string }>;
+  /** 대리인 호출 실패(AGENT_FAILED) 재시도 */
+  onRetryAgent: () => void;
   onGiveUp: () => void;
   /** 요청 진행 중(버튼 잠금) */
   isSubmitting: boolean;
@@ -67,6 +69,7 @@ export function NegotiationChatFlow({
   onStart,
   onSubmitAnswers,
   onUpdateFloor,
+  onRetryAgent,
   onGiveUp,
   isSubmitting,
   chatActionSlot,
@@ -74,6 +77,9 @@ export function NegotiationChatFlow({
   const conditions = detail.conditions ?? [];
   const isFailed = detail.status === "FAILED";
   const isComplete = detail.status === "AGREED";
+  // 대리인 A2A 상태 (비동기 전환)
+  const agentRunning = detail.agentState === "RUNNING";
+  const agentFailed = detail.agentState === "FAILED";
   // 내 마지노선을 이미 냈는지 (내 것만 conditions[].myFloor 로 내려옴)
   const hasSubmittedFloor = conditions.some((condition) => condition.myFloor != null);
   const isSetup =
@@ -118,8 +124,9 @@ export function NegotiationChatFlow({
               labels={labels}
             />
           ))}
-          {/* AI 대리인 협상(Gemini 왕복, 10~20초) 대기 표시 — 누른 사람 화면에만 */}
-          {isSubmitting ? <AgentTypingBubble /> : null}
+          {/* AI 대리인 협상(Gemini 왕복, 10~20초) 대기 표시.
+              내 요청 중(isSubmitting)이거나 서버가 대리인 진행 중(agentState=RUNNING)일 때 */}
+          {isSubmitting || agentRunning ? <AgentTypingBubble /> : null}
         </div>
 
         {/* 상태별 화면 */}
@@ -135,6 +142,11 @@ export function NegotiationChatFlow({
               actionSlot={chatActionSlot}
             />
           </div>
+        ) : agentFailed ? (
+          <AgentFailedNotice onRetry={onRetryAgent} isSubmitting={isSubmitting} />
+        ) : agentRunning ? (
+          // 진행 표시는 위 로그의 타이핑 말풍선이 담당
+          null
         ) : isSetup ? (
           <SetupPanel
             conditions={conditions}
@@ -144,7 +156,7 @@ export function NegotiationChatFlow({
             onStart={onStart}
           />
         ) : isWaitingOpponentFloor ? (
-          <WaitingNotice label="상대방이 조건을 입력하면 협상이 시작됩니다." />
+          <WaitingNotice label="상대방이 조건을 입력하고 있습니다" />
         ) : showActionPanel ? (
           <ConditionActionPanel
             conditions={conditions}
@@ -228,6 +240,40 @@ function WaitingNotice({ label }: { label: string }) {
   return (
     <div className="mt-8 flex justify-center">
       <p className="rounded-full bg-[#f2f4f8] px-4 py-2 text-[11px] text-[#7d8799]">{label}</p>
+    </div>
+  );
+}
+
+// 대리인 호출 실패(AGENT_FAILED): 안내 + 다시 시도(같은 마지노선으로 재제출 = 재시도)
+function AgentFailedNotice({
+  onRetry,
+  isSubmitting,
+}: {
+  onRetry: () => void;
+  isSubmitting: boolean;
+}) {
+  return (
+    <div className="mt-8 flex flex-col items-center gap-3">
+      <div className="w-full max-w-[420px] rounded-[12px] border border-[#fecdca] bg-danger-surface px-4 py-3 text-center text-[12px] font-semibold leading-5 text-theme-danger">
+        AI 대리인 호출에 실패해 이번 라운드가 진행되지 못했습니다.
+        <br />
+        다시 시도해 주세요.
+      </div>
+      <button
+        type="button"
+        disabled={isSubmitting}
+        onClick={onRetry}
+        className="flex h-[40px] cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-[#8878e8] px-6 text-[12px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
+      >
+        {isSubmitting ? (
+          <>
+            <Spinner size="sm" label="재시도" />
+            재시도 중…
+          </>
+        ) : (
+          "다시 시도"
+        )}
+      </button>
     </div>
   );
 }

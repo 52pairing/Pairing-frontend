@@ -60,17 +60,22 @@ export type NegotiationEventType =
   | "ANSWERED"
   | "CONDITION_LOCKED"
   | "AGREED"
-  | "FAILED";
+  | "FAILED"
+  // 비동기 A2A 전환으로 추가된 이벤트
+  | "AGENT_RUNNING" // 대리인이 돌기 시작(제출 즉시)
+  | "AGENT_FAILED"; // 대리인 호출 실패, 라운드 안 오름
 
-/** `/topic/negotiations/{negotiationId}` 로 수신하는 실시간 이벤트 payload */
+/**
+ * `/topic/negotiations/{negotiationId}` 로 수신하는 실시간 이벤트 payload.
+ * 실제 payload에는 conditionId·occurredAt 이 없어 optional (현재 type 만 사용).
+ */
 export interface NegotiationEvent {
   type: NegotiationEventType;
   negotiationId: number;
-  /** 조건 무관 이벤트는 null */
-  conditionId: number | null;
   status: NegotiationStatus;
   totalRound: number;
-  occurredAt: string;
+  conditionId?: number | null;
+  occurredAt?: string;
 }
 
 // ── REST 응답 ────────────────────────────────────────────────────────
