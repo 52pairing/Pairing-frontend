@@ -46,9 +46,15 @@ export function SuccessFeeComplete({ role }: SuccessFeeCompleteProps) {
           <Link href={historyHref} className="flex h-11 items-center justify-center rounded-lg border border-theme bg-surface text-[12px] font-semibold text-theme-secondary hover:bg-surface-subtle">전체 정산 내역 보기</Link>
           <button type="button" onClick={() => window.print()} className="h-11 rounded-lg border border-theme bg-surface text-[12px] font-semibold text-theme-secondary hover:bg-surface-subtle">계약서 다운로드</button>
         </div>
-        <button type="button" className="mt-3 h-11 w-full rounded-lg bg-brand text-[12px] font-bold text-white hover:bg-brand">
-          {role === "client" ? "프리랜서 평가하기" : "클라이언트 평가하기"}
-        </button>
+        {role === "client" ? (
+          <Link href={`/client/projects/${params.projectId}/review`} className="mt-3 flex h-11 w-full items-center justify-center rounded-lg bg-brand text-[12px] font-bold text-brand-contrast hover:bg-brand-hover">
+            프리랜서 평가하기
+          </Link>
+        ) : (
+          <button type="button" className="mt-3 h-11 w-full rounded-lg bg-brand text-[12px] font-bold text-brand-contrast hover:bg-brand-hover">
+            클라이언트 평가하기
+          </button>
+        )}
       </div>
     </main>
   );
