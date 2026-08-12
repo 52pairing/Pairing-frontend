@@ -196,6 +196,8 @@ interface ConfirmModalProps {
   /** 취소 버튼 · 오버레이 · ESC로 닫힐 때 호출 */
   onClose: () => void;
   closeOnOverlayClick?: boolean;
+  confirmDisabled?: boolean;
+  cancelDisabled?: boolean;
 }
 
 /**
@@ -216,6 +218,8 @@ export const ConfirmModal = ({
   onConfirm,
   onClose,
   closeOnOverlayClick = true,
+  confirmDisabled = false,
+  cancelDisabled = false,
 }: ConfirmModalProps) => {
   const titleId = useId();
   const descriptionId = useId();
@@ -258,7 +262,8 @@ export const ConfirmModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-theme bg-surface px-4 py-3 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
+              disabled={cancelDisabled}
+              className="flex-1 rounded-lg border border-theme bg-surface px-4 py-3 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-theme-muted"
             >
               {cancelText}
             </button>
@@ -266,7 +271,8 @@ export const ConfirmModal = ({
           <button
             type="button"
             onClick={onConfirm}
-            className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold ${CONFIRM_STYLE[variant]}`}
+            disabled={confirmDisabled}
+            className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-theme-muted ${CONFIRM_STYLE[variant]}`}
           >
             {confirmText}
           </button>

@@ -551,12 +551,59 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 기존 파일 삭제는 전체 요청의 `fileIds`에서 제외하고, 수정 화면에서 신규 업로드 후 제거한 파일만 `DELETE /api/v1/files/{fileId}` 호출
 - 실제 네트워크 응답: 미검증
 
-## 클라이언트 프로젝트 계약 목록
+## 계약 목록 (프리랜서 내 계약·계약 관리·프로젝트 계약 탭 공용)
 
-- 서비스 위치: `src/features/client/myprojects/contract/services/contracts.ts`
-- `GET /api/v1/contracts?projectId={projectId}&page={page}&size={size}`
+- 공용 서비스 위치: `src/features/contract/services/contracts.ts`
+- `GET /api/v1/contracts?tab={tab}&page={page}&size={size}`
+- 프로젝트로 좁힐 때만 `projectId={projectId}`를 추가
 - 응답 `data`는 `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last` 페이지 객체
-- 항목 필드: `contractId`, `contractNo`, `projectId`, `projectTitle`, `jobRole`, `counterpartName`, `status`, `totalAmount`, `payUnit`, `payAmount`, `startDate`, `endDate`, `signatureRequired`, `clientSigned`, `freelancerSigned`, `depositPaid`
+- 항목 필드: `contractId`, `contractNo`, `projectId`, `projectTitle`, `jobRole`, `counterpartName`, `clientBusinessField`, `status`, `totalAmount`, `payUnit`, `payAmount`, `startDate`, `endDate`, `createdAt`, `workStyle`, `signatureRequired`, `clientSigned`, `freelancerSigned`, `depositPaid`
+- 탭: `ALL`, `AWAITING_ME`, `IN_PROGRESS`, `SETTLEMENT_PENDING`, `COMPLETED`
+- `AWAITING_ME`는 상대방의 서명 여부와 무관하게 현재 사용자의 서명이 필요한 계약
+- `DRAFT`(AI 계약 문구 작성 중)는 `ALL` 탭에만 포함
+- 프리랜서 카드의 왼쪽 상태 뱃지는 `status`만 사용: `DRAFT` 작성 중, `SIGN_PENDING` 서명 대기, `SIGNED` 계약 체결 완료, `IN_PROGRESS` 진행 중, `COMPLETION_PENDING` 정산 대기, `COMPLETED` 완료
+- 회사·업종은 `counterpartName · clientBusinessField`, 생성일은 `createdAt`, 근무 방식은 `workStyle`(`REMOTE` 재택, `ONSITE` 상주, `ANY` 모두 가능) 사용
+- 카드 하단 안내 문구는 서버 필드가 아니라 프론트 고정 문구
+- 실제 화면의 오류 스택에서 일부 항목의 `createdAt` 누락을 확인함. 생성일은 선택 타입으로 처리하고 누락 시 `-`를 표시하며, 정확한 nullable 정책은 백엔드 확인 필요
+
+### 프리랜서 착수금 결제
+
+- 착수금 결제 버튼은 `SIGNED && !depositPaid` 계약에 표시하고, 실제 결제 진입에는 목록 카드의 `payableSettlementId`가 필수
+- `payableSettlementId`가 누락되어도 목업 결제로 대체하지 않음
+- 현재 실제 목록 응답에서 `payableSettlementId` 누락 사례가 확인되어, 누락 시 `GET /api/v1/settlements/mine?projectId={projectId}`의 `content`에서 `phase === DEPOSIT && payable === true`인 정산 ID를 보완 조회한 뒤 상세 모달을 엶
+- 모달 진입 시 `GET /api/v1/settlements/{payableSettlementId}`로 결제 상세 조회
+- 상세 필드: `projectTitle`, `baseAmount`, `feeRate`, `gradeDiscount`, `feeAmount`
+- 결제는 기존 `POST /api/v1/settlements/{settlementId}/payment`를 사용하고, 완료 화면은 별도 조회 없이 결제 API 응답을 그대로 표시
+- 완료 필드: `projectTitle`, `feeAmount`, `paymentMethodLabel`, `paidAt`, `approvalNo`, `phase`, `status`
+- 상태: `DEPOSIT + PAID` → 착수 수수료 결제 완료, `SUCCESS_FEE + PAID` → 성공보수 수수료 결제 완료
+- `paymentMethodLabel`이 `null`이면 결제수단 행만 숨기고 결제일시·승인번호는 유지
+- 결제 완료 후 `IN_PROGRESS` 탭이 아니라 `/freelancer/contracts/{contractId}` 계약 상세로 이동
+- 결제 내역: `GET /api/v1/settlements/mine?page={page}&size={size}`, 프로젝트 한정 시에만 `projectId` 추가
+- 실제 착수금 상세·결제 성공 및 실패 응답: 미검증
+
+### 프리랜서 성공보수 결제
+
+- 목록 카드의 `payableSettlementId`로 `GET /api/v1/settlements/{payableSettlementId}` 상세 조회
+- `projectTitle`, `baseAmount`, `feeRate`, `gradeDiscount`, `feeAmount`를 표시하며 금액은 서버 값을 그대로 사용
+- 할인율은 `feeRate - gradeDiscount`만 화면에서 계산하고, 할인이 0보다 크면 `{feeRate}% → 마스터 할인 {gradeDiscount}% = {적용률}%` 형식 표시
+- 계약 기간은 목록 카드의 `startDate`, `endDate`로 개월 수를 계산
+- `GET /api/v1/accounts/me/payment-methods`에서 `methodType === CARD`만 표시하고 `isDefault` 카드에 `(기본)` 표기 및 초기 선택
+- `POST /api/v1/settlements/{settlementId}/payment` 요청 중 중복 제출 방지, 성공 응답으로 완료 화면 즉시 표시
+- 오류: `SETTLEMENT_NOT_FOUND`, `NOT_PAYER`, `NOT_PAYABLE`; `NOT_PAYABLE`은 목록 새로고침 안내
+- 프리랜서 성공보수 결제 후에도 계약은 정산 대기일 수 있으므로 계약 종료 문구를 표시하지 않음
+- 실제 성공보수 정산 상세·결제 성공 및 실패 응답: 미검증
+
+### 프리랜서 성공보수 결제 완료
+
+- 화면: `/freelancer/contracts/{contractId}/success-fee/complete?projectId={projectId}`
+- `GET /api/v1/settlements/mine?projectId={projectId}&page=0&size=10` 한 번만 호출
+- `content[]`에서 `phase === DEPOSIT`, `phase === SUCCESS_FEE`를 찾아 계약 금액(`baseAmount`), 각 `feeRate`·`gradeDiscount`·`feeAmount`, 결제일(`paidAt`) 표시
+- 전체 플랫폼 수수료는 두 `feeAmount`를 화면에서 합산
+- 등급 할인이 있으면 표시 요율에 `gradeDiscount` 적용 사실을 함께 표시
+- 최종 종료일은 제공하지 않으며 화면에서도 제거
+- 실제 정산 2건 조회 응답: 미검증
+- 목록 정렬은 서버의 `id DESC` 고정값을 그대로 사용하며 프론트에서 재정렬하지 않음
+- 프리랜서 내 계약은 페이지당 10개를 조회하고 서버 페이지 정보로 이전·다음 이동
 - 계약 탭의 기존 하드코딩 목록을 제거하고 로딩·오류·빈 상태와 실제 목록을 표시
 - 계약 가이드의 `GET /api/v1/codes/job-roles`는 현재 백엔드에서 `404 GLOBAL_004`가 발생해, 실제 프로젝트에서 사용하는 `GET /api/v1/meta/job-roles` 결과로 `jobRole` 코드를 라벨로 변환
 - `payUnit`은 계약에서 `MONTHLY` 고정이며 카드에는 `월 {payAmount}원`으로 표시
@@ -569,7 +616,7 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 ### 클라이언트 계약 관리
 
 - 화면: `/client/contracts?tab={tab}`
-- `GET /api/v1/contracts?page={page}&size=100`으로 프로젝트 조건 없이 본인의 전체 계약 조회
+- `GET /api/v1/contracts?tab=ALL&page={page}&size=100`으로 프로젝트 조건 없이 본인의 전체 계약 조회
 - 첫 응답의 `totalPages`가 2 이상이면 나머지 페이지를 추가 조회해 탭 필터 누락 방지
 - 탭 `ALL`: 전체 계약
 - 탭 `CLIENT_PENDING`: `clientSigned === false`
@@ -583,12 +630,19 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 - 공용 서비스 위치: `src/features/contract/services/contracts.ts`
 - `GET /api/v1/contracts/{contractId}`로 계약 기본 정보, 당사자, 계약 조건, 조항과 서명 상태 조회
-- 계약 전체 상태: `DRAFT`, `SIGN_PENDING`, `SIGNED`
+- 계약 전체 상태: `DRAFT`, `SIGN_PENDING`, `SIGNED`, `IN_PROGRESS`, `COMPLETION_PENDING`, `COMPLETED` (목록에 없는 값은 원문 표시)
+- 상세 화면은 `GET /api/v1/contracts/{contractId}` 응답 하나만 사용하며 직무·근무 조건 메타를 추가 조회하지 않음
 - 서명 상태: `signatures[].partyRole`(`CLIENT`, `FREELANCER`)과 `status`(`PENDING`, `SIGNED`, `REJECTED`)
 - 계약 본문은 `clauses[]`의 `no`, `title`, `content`를 서버 순서 그대로 렌더링하고 `content`에 `white-space: pre-line` 적용
 - `DRAFT` 동안 안내를 표시하고 2초 간격 최대 10회 재조회하며 서명 버튼 비활성·PDF 버튼 숨김
 - `SIGN_PENDING`이면서 현재 사용자의 서명이 `PENDING`일 때만 서명 화면 진입 가능
 - 현재 사용자가 이미 서명했으면 상대방 서명 대기, `SIGNED`면 계약 체결 완료 표시
+- `signatures[]`는 `partyRole`로 프리랜서·클라이언트 서명 칸에 배치하고 `name`, `status`, `signedAt` 표시
+- 계약 확정 칸은 최상위 `status`, `signedAt`으로 구성: `SIGN_PENDING`은 서명 대기, 그 외는 계약 최종 확정
+- 계약 조건은 `projectTitle`, `jobRole`, `startDate`, `endDate`, 최상위 `signedAt`, `clientName`, `payUnit`, `payAmount`, `workStyle`, `workForm` 사용
+- 근무 코드: `REMOTE` 재택, `ONSITE` 상주, `ANY` 모두 가능 / `FULL_TIME` 풀타임, `PART_TIME` 파트타임
+- `clauses[]`의 `no`, `title`, `content`를 서버 순서 그대로 표시하고 `specialTerms`가 있을 때만 특약사항 표시
+- 상세 오류: `CONTRACT_NOT_FOUND`, `NOT_CONTRACT_PARTY`; PDF 오류: `PDF_RENDER_FAILED`
 - 서명 기한, 당사자 이메일, 지급일, 별도 업무 범위 필드를 화면에서 제거
 - 직무·근무 방식·근무 형태 라벨은 현재 백엔드에서 동작하는 `/api/v1/meta/*` API 사용
 
@@ -605,7 +659,7 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 - 화면 위치: `src/features/client/myprojects/progress/components/ProjectProgress.tsx`
 - 우측 프로젝트 정보와 상태 스텝퍼는 상위 상세 화면이 조회한 `GET /api/v1/projects/{projectId}` 응답 사용
-- `GET /api/v1/contracts?projectId={projectId}&page=0&size=100`으로 프로젝트 계약 목록 조회
+- `GET /api/v1/contracts?tab=ALL&page=0&size=100&projectId={projectId}`로 프로젝트 계약 목록 조회
 - `IN_PROGRESS`, `COMPLETION_PENDING`, `COMPLETED`, `TERMINATED` 계약만 진행 현황 카드로 표시
 - 카드에 `counterpartName`, `jobRole`, `payAmount`, `status` 표시하고 아바타 이니셜은 상대방 이름 첫 글자로 생성
 - 계약 상세 링크는 실제 `contractId` 사용
@@ -618,12 +672,23 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 - 계약 상세의 서명 버튼은 확인 모달 없이 `/sign` 미리보기 화면으로 이동하며 API를 호출하지 않음
 - 미리보기 진입 시 `GET /api/v1/contracts/{contractId}`로 계약서와 현재 사용자 서명 상태 조회
+- 계약 본문은 별도 HTML로 복제하지 않고 `GET /api/v1/contracts/{contractId}/pdf` Blob URL을 iframe에 표시해 서버 PDF와 동일하게 유지
+- 주요 업무 유무에 따른 조항 번호 이동, 월 용역대금·총 계약 금액, 상주/재택 근무 장소, 조항과 서명 이미지 표시는 서버 PDF가 담당
+- 대금 분할(`downAmount`, `finalAmount`)과 계약서 수정 UI는 사용하지 않음
 - 서명란을 누르면 투명 배경 canvas를 열고 마우스·터치 포인터로 서명 작성
 - canvas는 `devicePixelRatio`를 반영하고 `touch-action: none`을 적용
 - 백엔드의 `signatureFileId`는 선택 필드지만 현재 화면 정책상 그림 서명을 필수로 요구하고 `POST /api/v1/files?purpose=SIGNATURE`로 PNG 업로드
 - 파일 업로드 성공 응답의 `fileId`를 `signatureFileId`로 사용
 - 마지막 `[전자 서명 및 계약 체결]`에서만 `POST /api/v1/contracts/{contractId}/signature`
 - 요청: `{ agreed: true, signatureFileId }`. 캔버스 서명 적용 전에는 최종 체결 버튼 비활성화
+- 최종 제출 전에 되돌릴 수 없음을 알리는 확인 모달을 표시하고, 모달 확인 시에만 서명 API 호출
+- 제출 요청 중에는 모달 확인·닫기와 화면 제출 버튼을 비활성화해 중복 요청 방지
+- 성공 응답 `status === SIGNED`는 마지막 서명자로 계약 체결 완료, `SIGN_PENDING`은 내 서명 완료·상대방 대기로 분기
+- 서명 완료 모달은 별도 조회 없이 서명 API 응답의 `contractNo`, `projectTitle`, `freelancerName`, `startDate`, `endDate`, `payUnit`, `payAmount`를 직접 표시
+- `payUnit === MONTHLY`는 급여를 `월 {payAmount}원`, 지급 방식을 `월별 지급`으로 파생 표시
+- 완료 모달의 계약서 다운로드는 `GET /api/v1/contracts/{contractId}/pdf` Blob 응답 사용
+- 서명 버튼과 확인 모달은 상세 `status === SIGN_PENDING`일 때만 노출
+- 오류: `CONTRACT_NOT_FOUND`, `NOT_CONTRACT_PARTY`, `INVALID_CONTRACT_STATUS`, `ALREADY_SIGNED`
 - 서명 API가 반환한 최신 계약 상세로 화면과 완료 모달을 갱신하며 별도 재조회하지 않음
 - 한쪽만 서명한 `SIGN_PENDING`은 상대방 서명 대기, 양측 서명한 `SIGNED`는 계약 체결 완료 표시
 - 기존 중복 확인 모달, `sessionStorage` 임시 서명 상태, 서명 기한·자동 취소·수정하기 UI 제거
