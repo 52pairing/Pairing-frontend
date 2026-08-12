@@ -11,12 +11,13 @@ export const getSettlement = (settlementId: number) =>
 export const getMyPaymentMethods = () =>
   apiCall<AccountPaymentMethod[]>("/api/v1/accounts/me/payment-methods");
 
-export const getMySettlements = (projectId: number, page = 0, size = 10) => {
+export const getMySettlements = (projectId?: number, page = 0, size = 10) => {
   const query = new URLSearchParams({
-    projectId: String(projectId),
     page: String(page),
     size: String(size),
   });
+
+  if (projectId != null) query.set("projectId", String(projectId));
 
   return apiCall<SettlementPageResponse>(`/api/v1/settlements/mine?${query}`);
 };

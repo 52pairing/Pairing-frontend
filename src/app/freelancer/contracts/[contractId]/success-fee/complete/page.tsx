@@ -1,5 +1,5 @@
-import { SuccessFeeComplete } from "@/features/payment/components/SuccessFeeComplete";
+import { FreelancerSuccessFeeComplete } from "@/features/payment/components/FreelancerSuccessFeeComplete";
 
 export default function FreelancerSuccessFeeCompletePage() {
-  return <SuccessFeeComplete role="freelancer" />;
+  return <FreelancerSuccessFeeComplete />;
 }

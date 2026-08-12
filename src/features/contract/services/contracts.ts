@@ -1,5 +1,30 @@
 import { apiBlob, apiCall } from "@/lib/api";
 import type { ContractDetailResponse } from "@/features/contract/types/contractDetail";
+import type { ContractListPage, ContractListTab } from "@/features/contract/types/contractList";
+
+interface GetContractsParams {
+  tab: ContractListTab;
+  page?: number;
+  size?: number;
+  projectId?: number;
+}
+
+export const getContracts = ({
+  tab,
+  page = 0,
+  size = 10,
+  projectId,
+}: GetContractsParams) => {
+  const query = new URLSearchParams({
+    tab,
+    page: String(page),
+    size: String(size),
+  });
+
+  if (projectId != null) query.set("projectId", String(projectId));
+
+  return apiCall<ContractListPage>(`/api/v1/contracts?${query}`);
+};
 
 export const getContractDetail = (contractId: number) =>
   apiCall<ContractDetailResponse>(`/api/v1/contracts/${contractId}`);

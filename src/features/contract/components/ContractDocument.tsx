@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ContractCompleteModal } from "@/features/contract/components/ContractCompleteModal";
+import { ConfirmModal, WarningIcon } from "@/features/common/components/Modal";
 import {
   downloadContractPdf,
   getContractDetail,
@@ -16,7 +17,7 @@ import type {
   ContractDetailResponse,
   ContractPartyRole,
 } from "@/features/contract/types/contractDetail";
-import { getProjectJobRoles } from "@/features/client/projects/services/projectPreReview";
+import { ApiException } from "@/lib/api";
 
 interface ContractDocumentProps {
   role: "client" | "freelancer";
@@ -43,14 +44,17 @@ export function ContractDocument({ role }: ContractDocumentProps) {
     : "/freelancer/contracts";
 
   const [contract, setContract] = useState<ContractDetailResponse | null>(null);
-  const [jobRoleLabels, setJobRoleLabels] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
+  const [pdfErrorMessage, setPdfErrorMessage] = useState("");
   const [isSignaturePadOpen, setIsSignaturePadOpen] = useState(false);
   const [signatureBlob, setSignatureBlob] = useState<Blob | null>(null);
   const [signaturePreviewUrl, setSignaturePreviewUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [signedContract, setSignedContract] = useState<ContractDetailResponse | null>(null);
+  const submitLockRef = useRef(false);
 
   const loadContract = useCallback(async () => {
     if (!Number.isInteger(contractId) || contractId <= 0) {
@@ -61,12 +65,19 @@ export function ContractDocument({ role }: ContractDocumentProps) {
     setIsLoading(true);
     setErrorMessage("");
     try {
-      const [detail, jobRoles] = await Promise.all([
-        getContractDetail(contractId),
-        getProjectJobRoles(),
-      ]);
+      const detail = await getContractDetail(contractId);
       setContract(detail);
-      setJobRoleLabels(Object.fromEntries(jobRoles.map((item) => [item.code, item.label])));
+
+      try {
+        const pdf = await downloadContractPdf(contractId);
+        setPdfPreviewUrl((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return URL.createObjectURL(pdf);
+        });
+        setPdfErrorMessage("");
+      } catch (error) {
+        setPdfErrorMessage(error instanceof Error ? error.message : "계약서 미리보기를 불러오지 못했습니다.");
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "계약서를 불러오지 못했습니다.");
     } finally {
@@ -88,6 +99,10 @@ export function ContractDocument({ role }: ContractDocumentProps) {
     if (signaturePreviewUrl) URL.revokeObjectURL(signaturePreviewUrl);
   }, [signaturePreviewUrl]);
 
+  useEffect(() => () => {
+    if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl);
+  }, [pdfPreviewUrl]);
+
   const saveSignature = (blob: Blob) => {
     if (signaturePreviewUrl) URL.revokeObjectURL(signaturePreviewUrl);
     setSignatureBlob(blob);
@@ -96,7 +111,7 @@ export function ContractDocument({ role }: ContractDocumentProps) {
   };
 
   const submitSignature = async () => {
-    if (!contract || isSubmitting) return;
+    if (!contract || submitLockRef.current) return;
     const mySignature = contract.signatures.find((item) => item.partyRole === myPartyRole);
     if (
       contract.status !== "SIGN_PENDING" ||
@@ -104,6 +119,7 @@ export function ContractDocument({ role }: ContractDocumentProps) {
       !signatureBlob
     ) return;
 
+    submitLockRef.current = true;
     setIsSubmitting(true);
     setErrorMessage("");
     try {
@@ -111,9 +127,12 @@ export function ContractDocument({ role }: ContractDocumentProps) {
       const updated = await signContract(contract.contractId, uploaded.fileId);
       setContract(updated);
       setSignedContract(updated);
+      setIsConfirmOpen(false);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "전자 서명에 실패했습니다.");
+      setErrorMessage(getSignatureErrorMessage(error));
+      setIsConfirmOpen(false);
     } finally {
+      submitLockRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -141,7 +160,6 @@ export function ContractDocument({ role }: ContractDocumentProps) {
 
   const mySignature = contract.signatures.find((item) => item.partyRole === myPartyRole);
   const canSign = contract.status === "SIGN_PENDING" && mySignature?.status === "PENDING";
-  const jobRoleLabel = jobRoleLabels[contract.jobRole] ?? contract.jobRole;
 
   return (
     <main className="min-h-screen bg-background text-theme-primary">
@@ -157,35 +175,53 @@ export function ContractDocument({ role }: ContractDocumentProps) {
         <div className="mb-4 rounded-[9px] border border-warning-border bg-warning-surface px-4 py-2.5 text-[12px] font-medium text-theme-warning">계약서 내용을 최종 확인해 주세요. 전자 서명 후에는 되돌릴 수 없습니다.</div>
         {errorMessage ? <p role="alert" className="mb-4 rounded-[9px] border border-theme bg-danger-surface px-4 py-3 text-[12px] text-theme-danger">{errorMessage}</p> : null}
 
-        <article className="rounded-[15px] bg-surface px-6 py-8 shadow-[0_1px_2px_rgba(16,24,40,0.04)] md:px-10">
-          <div className="text-center">
-            <h2 className="text-[22px] font-bold tracking-[-0.02em]">프리랜서 용역 계약서</h2>
-            <p className="mt-2 text-[12px] text-theme-muted">계약 번호: {contract.contractNo} · 작성일: {contract.createdAt.slice(0, 10).replaceAll("-", ".")}</p>
+        <section className="overflow-hidden rounded-[15px] border border-theme bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+          <div className="flex items-center justify-between border-b border-theme px-5 py-4">
+            <div>
+              <h2 className="text-[15px] font-bold">프리랜서 용역 계약서</h2>
+              <p className="mt-1 text-[11px] text-theme-muted">계약 번호 {contract.contractNo}</p>
+            </div>
+            <button type="button" onClick={() => void downloadPdf()} className="h-9 rounded-[8px] border border-theme px-4 text-[11px] font-semibold text-theme-secondary hover:bg-surface-subtle">PDF 다운로드</button>
           </div>
+          {pdfPreviewUrl ? (
+            <iframe title="프리랜서 용역 계약서 PDF 미리보기" src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`} className="h-[76vh] min-h-[720px] w-full bg-surface" />
+          ) : (
+            <div className="flex min-h-[520px] flex-col items-center justify-center gap-3 px-5 text-center text-[12px] text-theme-secondary">
+              <p role={pdfErrorMessage ? "alert" : undefined}>{pdfErrorMessage || "계약서 PDF를 불러오고 있습니다."}</p>
+              {pdfErrorMessage ? <button type="button" onClick={() => void loadContract()} className="rounded-[8px] bg-brand px-4 py-2 font-bold text-white">다시 시도</button> : null}
+            </div>
+          )}
+        </section>
 
-          <SectionTitle title="당사자 표시" className="mt-8" />
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <PartyCard title="갑 (클라이언트)" rows={[["기업명", contract.client.companyName], ["사업자등록번호", contract.client.businessNo], ["대표자", contract.client.representative], ["주소", contract.client.address], ["연락처", contract.client.phone]]} />
-            <PartyCard title="을 (프리랜서)" rows={[["성명", contract.freelancer.name], ["연락처", contract.freelancer.phone], ["직군", jobRoleLabel], ["정산 계좌", contract.freelancer.settlementAccount]]} />
-          </div>
-
-          {contract.clauses.map((clause) => <section key={clause.no} className="mt-9"><h3 className="border-b-2 border-theme-strong pb-2 text-[15px] font-bold">제{clause.no}조 ({clause.title})</h3><p className="mt-3 whitespace-pre-line text-[14px] leading-7 text-theme-secondary">{clause.content}</p></section>)}
-
-          <SectionTitle title="서명" className="mt-11" />
+        <section className="mt-5 rounded-[15px] bg-surface px-6 py-7 shadow-[0_1px_2px_rgba(16,24,40,0.04)] md:px-10">
+          <h2 className="text-[15px] font-bold">전자서명</h2>
           <button type="button" disabled={!canSign} onClick={() => setIsSignaturePadOpen(true)} className="mt-5 block w-full max-w-[380px] rounded-[12px] border border-theme px-7 py-6 text-left transition hover:bg-surface-subtle disabled:cursor-not-allowed disabled:hover:bg-transparent">
             <p className="text-center text-[14px] text-theme-muted">{role === "client" ? "갑 (클라이언트)" : "을 (프리랜서)"}</p>
             <p className="mt-2 text-center text-[17px] font-bold">{mySignature?.name ?? (role === "client" ? contract.client.companyName : contract.freelancer.name)}</p>
             <div className="mt-7 flex justify-center">{signaturePreviewUrl ? <Image unoptimized src={signaturePreviewUrl} alt="작성한 전자서명" width={220} height={88} className="h-[88px] max-w-[220px] object-contain" /> : <span className="flex h-[88px] w-[160px] items-center justify-center rounded-[10px] border border-dashed border-theme text-[13px] text-theme-muted">전자서명</span>}</div>
           </button>
-        </article>
+        </section>
 
         <div className="mt-5 flex gap-3">
           <button type="button" onClick={() => router.push(detailPath)} className="h-[46px] w-[200px] rounded-[11px] border border-theme bg-surface text-[14px] font-semibold text-theme-secondary transition hover:bg-surface-subtle">취소하기</button>
-          <button type="button" disabled={!canSign || !signatureBlob || isSubmitting} onClick={() => void submitSignature()} className="h-[46px] flex-1 rounded-[11px] bg-brand text-[14px] font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-theme-muted">{isSubmitting ? "서명 처리 중..." : signatureBlob ? "전자 서명 및 계약 체결" : "전자서명을 먼저 작성해 주세요"}</button>
+          {contract.status === "SIGN_PENDING" ? <button type="button" disabled={!canSign || !signatureBlob || isSubmitting} onClick={() => setIsConfirmOpen(true)} className="h-[46px] flex-1 rounded-[11px] bg-brand text-[14px] font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-theme-muted">{isSubmitting ? "서명 처리 중..." : signatureBlob ? "전자 서명 및 계약 체결" : "전자서명을 먼저 작성해 주세요"}</button> : null}
         </div>
       </div>
 
       {isSignaturePadOpen ? <SignaturePadModal onCancel={() => setIsSignaturePadOpen(false)} onSave={saveSignature} /> : null}
+      <ConfirmModal
+        open={isConfirmOpen}
+        title="계약서에 서명하시겠습니까?"
+        description={<>서명 후에는 취소하거나 되돌릴 수 없습니다.<br />계약 내용을 확인했다면 서명을 진행해 주세요.</>}
+        confirmText={isSubmitting ? "서명 처리 중..." : "서명하기"}
+        cancelText="취소"
+        icon={<WarningIcon />}
+        onClose={() => { if (!isSubmitting) setIsConfirmOpen(false); }}
+        onConfirm={() => void submitSignature()}
+        closeOnOverlayClick={!isSubmitting}
+        confirmDisabled={isSubmitting}
+        cancelDisabled={isSubmitting}
+      />
       {signedContract ? <ContractCompleteModal contract={signedContract} onBackToProject={() => router.push(backPath)} onDownload={() => void downloadPdf()} backLabel={role === "client" ? "프로젝트로 돌아가기" : "내 계약으로 돌아가기"} /> : null}
     </main>
   );
@@ -258,10 +294,11 @@ function SignaturePadModal({ onCancel, onSave }: { onCancel: () => void; onSave:
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-theme-overlay px-4"><section role="dialog" aria-modal="true" aria-labelledby="signature-pad-title" className="w-full max-w-[620px] rounded-[16px] bg-surface p-6 shadow-[0_24px_60px_rgba(15,23,42,0.22)]"><h2 id="signature-pad-title" className="text-[17px] font-bold">전자서명 작성</h2><p className="mt-2 text-[12px] text-theme-secondary">아래 영역에 마우스나 손가락으로 서명해 주세요.</p><canvas ref={canvasRef} onPointerDown={startDrawing} onPointerMove={draw} onPointerUp={stopDrawing} onPointerCancel={stopDrawing} className="mt-5 h-[220px] w-full touch-none rounded-[10px] border border-theme bg-transparent" /><div className="mt-5 flex justify-between gap-2"><button type="button" onClick={clear} className="h-10 rounded-[8px] border border-theme px-4 text-[12px] font-semibold text-theme-secondary">지우기</button><div className="flex gap-2"><button type="button" onClick={onCancel} className="h-10 rounded-[8px] border border-theme px-4 text-[12px] font-semibold text-theme-secondary">취소</button><button type="button" disabled={!hasStroke} onClick={() => void save()} className="h-10 rounded-[8px] bg-brand px-5 text-[12px] font-bold text-white disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-theme-muted">서명 적용</button></div></div></section></div>;
 }
 
-function SectionTitle({ title, className = "" }: { title: string; className?: string }) {
-  return <div className={`${className} flex items-center gap-2 border-b-2 border-theme-strong pb-2`}><span className="h-2.5 w-2.5 bg-brand" /><h3 className="text-[15px] font-bold">{title}</h3></div>;
-}
-
-function PartyCard({ title, rows }: { title: string; rows: string[][] }) {
-  return <div className="rounded-[12px] bg-surface-subtle px-5 py-4"><p className="mb-2 text-[13px] font-semibold text-theme-muted">{title}</p>{rows.map(([label, value]) => <div key={label} className="grid grid-cols-[110px_1fr] border-b border-theme py-2.5 last:border-b-0"><span className="text-[13px] text-theme-muted">{label}</span><span className="break-words text-[14px] font-semibold leading-6 text-theme-secondary">{value}</span></div>)}</div>;
+function getSignatureErrorMessage(error: unknown) {
+  if (!(error instanceof ApiException)) return error instanceof Error ? error.message : "전자 서명에 실패했습니다.";
+  if (error.errorCode === "CONTRACT_NOT_FOUND") return "계약을 찾을 수 없습니다.";
+  if (error.errorCode === "NOT_CONTRACT_PARTY") return "이 계약에 서명할 권한이 없습니다.";
+  if (error.errorCode === "INVALID_CONTRACT_STATUS") return "계약서가 아직 작성 중이거나 서명할 수 없는 상태입니다.";
+  if (error.errorCode === "ALREADY_SIGNED") return "이미 서명이 완료된 계약입니다.";
+  return error.message;
 }
