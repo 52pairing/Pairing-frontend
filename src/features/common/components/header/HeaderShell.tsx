@@ -4,17 +4,18 @@ import { ThemeControl } from "@/features/common/theme/ThemeControl";
 import { ThemeLogo } from "@/features/common/theme/ThemeLogo";
 
 interface HeaderShellProps {
+  homeHref: string;
   nav: ReactNode;
   actions: ReactNode;
 }
 
 // 모든 Header가 공유하는 공통 레이아웃
 // 높이 60px, 로고, 가운데 메뉴, 오른쪽 액션 영역 배치만 담당
-export function HeaderShell({ nav, actions }: HeaderShellProps) {
+export function HeaderShell({ homeHref, nav, actions }: HeaderShellProps) {
   return (
     <header className="top-0 z-40 h-[60px] border-b border-theme bg-surface">
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-8">
-        <Link href="/" aria-label="Pairing 홈" className="flex items-center">
+        <Link href={homeHref} aria-label="Pairing 홈" className="flex items-center">
           <ThemeLogo priority />
         </Link>
 
