@@ -42,7 +42,11 @@ export function FreelancerHeader({
             label="알림"
             count={noticeCount}
           />
-          <ProfileMenu label={name} myPageHref="/freelancer/mypage" />
+          <ProfileMenu
+            label={name}
+            myPageHref="/freelancer/mypage"
+            profileManageHref="/freelancer/mypage/profile"
+          />
         </>
       }
     />
