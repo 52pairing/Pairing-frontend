@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { StepArrow, StepCheckIcon } from "@/features/common/components/SharedUI";
+import {
+  StepArrow,
+  StepCheckIcon,
+} from "@/features/common/components/SharedUI";
 
 export function FreelancerMain() {
   return (
@@ -29,8 +32,7 @@ export function FreelancerMain() {
           {/* 설명 */}
           <p className="mt-4 text-[10px] leading-[1.9] text-[#c2d3e3]">
             AI가 회사 규모, 기술 스택, 예산을 분석해
-            <br />
-            딱 맞는 프로젝트를 먼저 추천해 드립니다.
+            <br />딱 맞는 프로젝트를 먼저 추천해 드립니다.
           </p>
         </div>
       </section>
@@ -78,8 +80,7 @@ export function FreelancerMain() {
               </h3>
 
               <p className="mt-[10px] text-[8px] leading-[1.8] text-theme-secondary">
-                AI 협상 채널에서 급여·기간·범위를 최대 15라운드 내
-                조율합니다.
+                AI 협상 채널에서 급여·기간·범위를 최대 15라운드 내 조율합니다.
               </p>
             </article>
 
@@ -155,7 +156,7 @@ export function FreelancerMain() {
 
                   {/* 승급조건 */}
                   <td className="px-3 py-4 text-[8px] font-semibold leading-[1.7] text-theme-primary">
-                    디폴트 (가입 즉시)
+                    기본 등급
                   </td>
 
                   {/* 등급 유지 */}
@@ -192,8 +193,7 @@ export function FreelancerMain() {
                   {/* 승급조건 */}
                   <td className="px-3 py-4 text-[8px] font-semibold leading-[1.7] text-theme-primary">
                     별점 3점↑
-                    <br />
-                    + 완료 5건↑
+                    <br />+ 완료 5건↑
                   </td>
 
                   {/* 등급 유지 */}
@@ -233,8 +233,7 @@ export function FreelancerMain() {
                   {/* 승급조건 */}
                   <td className="px-3 py-4 text-[8px] font-semibold leading-[1.7] text-theme-primary">
                     별점 4점↑
-                    <br />
-                    + 완료 10건↑
+                    <br />+ 완료 10건↑
                   </td>
 
                   {/* 등급 유지 */}
@@ -284,7 +283,7 @@ export function FreelancerMain() {
               <div className="mt-4 border-t border-theme pt-4">
                 <p className="text-[10px] text-theme-muted">승급 조건</p>
                 <p className="mt-1 text-[11px] font-semibold text-theme-primary">
-                  디폴트 (가입 즉시)
+                  기본 등급
                 </p>
               </div>
 
@@ -386,9 +385,7 @@ function BenefitItem({ text }: { text: string }) {
     <div className="flex items-center gap-[5px]">
       <StepCheckIcon color="#18B875" size={9} />
 
-      <span className="text-[8px] leading-[1.45] text-[#526174]">
-        {text}
-      </span>
+      <span className="text-[8px] leading-[1.45] text-[#526174]">{text}</span>
     </div>
   );
 }

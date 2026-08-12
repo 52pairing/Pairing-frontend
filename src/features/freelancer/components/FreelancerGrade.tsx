@@ -65,7 +65,7 @@ export function FreelancerGrade() {
               </p>
 
               <p className="mt-1 text-[12px] font-semibold text-theme-primary">
-                디폴트 (가입 즉시)
+                기본 등급
               </p>
             </div>
           </div>
@@ -106,9 +106,7 @@ export function FreelancerGrade() {
               </h2>
 
               <div className="mt-3">
-                <p className="text-[10px] text-theme-muted">
-                  착수금 수수료
-                </p>
+                <p className="text-[10px] text-theme-muted">착수금 수수료</p>
 
                 <div className="mt-1.5 flex items-center gap-3">
                   <FeeBox rate="4%" type="junior" />
@@ -120,9 +118,7 @@ export function FreelancerGrade() {
               </div>
 
               <div className="mt-3">
-                <p className="text-[10px] text-theme-muted">
-                  성공보수 수수료
-                </p>
+                <p className="text-[10px] text-theme-muted">성공보수 수수료</p>
 
                 <div className="mt-1.5 flex items-center gap-3">
                   <FeeBox rate="6%" type="junior" />
@@ -147,9 +143,7 @@ export function FreelancerGrade() {
             </span>
 
             <div className="ml-3">
-              <p className="text-[11px] font-bold text-[#3178f6]">
-                승급 조건
-              </p>
+              <p className="text-[11px] font-bold text-[#3178f6]">승급 조건</p>
 
               <p className="mt-1 text-[12px] font-semibold text-theme-primary">
                 별점 평균 3점 이상 + 완료 건수 5건 이상
@@ -199,9 +193,7 @@ export function FreelancerGrade() {
               </h2>
 
               <div className="mt-3">
-                <p className="text-[10px] text-theme-muted">
-                  착수금 수수료
-                </p>
+                <p className="text-[10px] text-theme-muted">착수금 수수료</p>
 
                 <div className="mt-1.5 flex items-center gap-3">
                   <FeeBox rate="4%" type="senior" />
@@ -213,9 +205,7 @@ export function FreelancerGrade() {
               </div>
 
               <div className="mt-3">
-                <p className="text-[10px] text-theme-muted">
-                  성공보수 수수료
-                </p>
+                <p className="text-[10px] text-theme-muted">성공보수 수수료</p>
 
                 <div className="mt-1.5 flex items-center gap-3">
                   <FeeBox rate="6%" type="senior" />
@@ -240,9 +230,7 @@ export function FreelancerGrade() {
             </span>
 
             <div className="ml-3">
-              <p className="text-[11px] font-bold text-[#7c3cff]">
-                승급 조건
-              </p>
+              <p className="text-[11px] font-bold text-[#7c3cff]">승급 조건</p>
 
               <p className="mt-1 text-[12px] font-semibold text-theme-primary">
                 별점 평균 4점 이상 + 완료 건수 10건 이상
@@ -304,9 +292,7 @@ export function FreelancerGrade() {
               </h2>
 
               <div className="mt-3">
-                <p className="text-[10px] text-theme-muted">
-                  착수금 수수료
-                </p>
+                <p className="text-[10px] text-theme-muted">착수금 수수료</p>
 
                 <div className="mt-1.5 flex items-center gap-3">
                   <FeeBox rate="3%" type="master" />
@@ -318,9 +304,7 @@ export function FreelancerGrade() {
               </div>
 
               <div className="mt-3">
-                <p className="text-[10px] text-theme-muted">
-                  성공보수 수수료
-                </p>
+                <p className="text-[10px] text-theme-muted">성공보수 수수료</p>
 
                 <div className="mt-1.5 flex items-center gap-3">
                   <FeeBox rate="5%" type="master" />
@@ -392,9 +376,9 @@ export function FreelancerGrade() {
           <InfoIcon size={14} />
 
           <p className="text-[10px] font-medium leading-4 text-theme-secondary">
-            등급은 회원 등록 시 사전 안내되며, 매월 자동으로 체크됩니다.
-            기존일 기준 6개월 내 프로젝트 경험이 없으면 하위 등급으로
-            조정될 수 있습니다.
+            등급은 회원 등록 시 사전 안내되며, 매월 자동으로 체크됩니다. 기존일
+            기준 6개월 내 프로젝트 경험이 없으면 하위 등급으로 조정될 수
+            있습니다.
           </p>
         </div>
       </div>
@@ -473,11 +457,7 @@ function CardIcon() {
         strokeWidth="1.2"
       />
 
-      <path
-        d="M3 6H13"
-        stroke="#3178f6"
-        strokeWidth="1.2"
-      />
+      <path d="M3 6H13" stroke="#3178f6" strokeWidth="1.2" />
     </svg>
   );
 }
