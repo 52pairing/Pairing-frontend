@@ -18,10 +18,15 @@ export function FreelancerReviewForm() {
   return (
     <main className="min-h-[calc(100dvh-60px)] bg-surface-subtle px-4 py-8 text-theme-primary sm:px-5 sm:py-12">
       <div className="mx-auto w-full max-w-[1104px]">
-        <Link href={`/client/projects/${projectId}`}>뒤로</Link>
+        <Link
+          href={`/client/projects/${projectId}`}
+          className="text-gray-500 text-[12px] font-semibold"
+        >
+          &lt; 뒤로 가기
+        </Link>
 
         <div className="mt-4">
-          <h1 className="text-[20px] font-extrabold tracking-[-0.04em]">
+          <h1 className="text-2xl font-extrabold tracking-[-0.04em]">
             프리랜서 평가
           </h1>
           <p className="mt-2 text-[12px] font-semibold text-theme-muted">

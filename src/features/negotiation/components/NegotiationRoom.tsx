@@ -18,6 +18,7 @@ import {
   markNegotiationRead,
   startNegotiation,
   submitAnswers,
+  updateFloors,
 } from "@/features/negotiation/services/negotiation";
 import { useNegotiationEvents } from "@/features/negotiation/stomp/useNegotiationEvents";
 import type {
@@ -195,26 +196,58 @@ export function NegotiationRoom() {
     [negotiationId, isSubmitting, refreshDetail, refreshMessages],
   );
 
-  // 조건 승인/재지시
+  // 조건 승인/재지시. 마지노선 밖 수락(NG_011)이면 floorViolation=true 로 알려 패널이 수정 영역을 편다.
   const handleSubmitAnswers = useCallback(
-    async (answers: AnswerInput[]) => {
-      if (!negotiationId || isSubmitting || !detail) return;
+    async (answers: AnswerInput[]): Promise<{ floorViolation: boolean }> => {
+      if (!negotiationId || isSubmitting || !detail) return { floorViolation: false };
       setIsSubmitting(true);
       setActionError(null);
       try {
         // roundNo 는 상세의 totalRound 를 그대로 전송(늦은 응답 필터용)
         await submitAnswers(negotiationId, { roundNo: detail.totalRound, answers });
         await Promise.all([refreshDetail(), refreshMessages()]);
+        return { floorViolation: false };
       } catch (error) {
+        const isFloorViolation =
+          error instanceof ApiException && error.errorCode === "NG_011";
         setActionError(
           error instanceof ApiException ? error.message : "제출에 실패했습니다.",
         );
-        await Promise.all([refreshDetail(), refreshMessages()]);
+        // NG_011 은 화면 전환 없이 그대로 두고(상태 재동기화만), 패널이 수정 영역을 편다
+        await refreshDetail();
+        if (!isFloorViolation) await refreshMessages();
+        return { floorViolation: isFloorViolation };
       } finally {
         setIsSubmitting(false);
       }
     },
     [negotiationId, isSubmitting, detail, refreshDetail, refreshMessages],
+  );
+
+  // 마지노선 수정 — 응답 data 로 상태 교체(재조회 X, 라운드 변화 없음).
+  // 성공 여부와 실패 메시지를 패널에 돌려줘 인라인 오류/닫기 처리에 쓴다.
+  const handleUpdateFloor = useCallback(
+    async (
+      conditionType: ConditionType,
+      value: string,
+    ): Promise<{ ok: boolean; message?: string }> => {
+      if (!negotiationId) return { ok: false };
+      setActionError(null);
+      try {
+        const updated = await updateFloors(negotiationId, {
+          conditions: [{ conditionType, value }],
+        });
+        setDetail(updated);
+        return { ok: true };
+      } catch (error) {
+        return {
+          ok: false,
+          message:
+            error instanceof ApiException ? error.message : "마지노선 수정에 실패했습니다.",
+        };
+      }
+    },
+    [negotiationId],
   );
 
   // 협상 포기
@@ -305,6 +338,7 @@ export function NegotiationRoom() {
           labels={labels}
           onStart={handleStart}
           onSubmitAnswers={handleSubmitAnswers}
+          onUpdateFloor={handleUpdateFloor}
           onGiveUp={() => setIsCancelOpen(true)}
           isSubmitting={isSubmitting}
           chatActionSlot={

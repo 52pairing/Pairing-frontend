@@ -78,6 +78,7 @@ export function ProfileMenu({ label, myPageHref }: ProfileMenuProps) {
           </Link>
           <Link
             href="/support"
+            onClick={() => setOpen(false)}
             className="block px-4 py-2 text-sm text-theme-secondary hover:bg-surface-subtle"
           >
             고객 지원

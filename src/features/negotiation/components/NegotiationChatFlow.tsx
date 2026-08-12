@@ -15,6 +15,7 @@ import {
   formatConditionValue,
   manwonToWonString,
   senderLabel,
+  wonToManwon,
   type WorkConditionLabels,
 } from "@/features/negotiation/utils/conditionFormat";
 
@@ -45,8 +46,13 @@ interface NegotiationChatFlowProps {
   labels: WorkConditionLabels;
   /** 협상 시작(마지노선 저장) — value 는 서버 전송용 문자열 */
   onStart: (conditions: Array<{ conditionType: ConditionType; value: string }>) => void;
-  /** 조건 승인/재지시 제출 */
-  onSubmitAnswers: (answers: AnswerInput[]) => void;
+  /** 조건 승인/재지시 제출 — 마지노선 밖 수락(NG_011)이면 floorViolation=true */
+  onSubmitAnswers: (answers: AnswerInput[]) => Promise<{ floorViolation: boolean }>;
+  /** 내 마지노선 수정(PATCH) — ok=false 면 message 를 인라인 표시 */
+  onUpdateFloor: (
+    conditionType: ConditionType,
+    value: string,
+  ) => Promise<{ ok: boolean; message?: string }>;
   onGiveUp: () => void;
   /** 요청 진행 중(버튼 잠금) */
   isSubmitting: boolean;
@@ -60,6 +66,7 @@ export function NegotiationChatFlow({
   labels,
   onStart,
   onSubmitAnswers,
+  onUpdateFloor,
   onGiveUp,
   isSubmitting,
   chatActionSlot,
@@ -136,6 +143,7 @@ export function NegotiationChatFlow({
             viewerRole={detail.viewerRole}
             isSubmitting={isSubmitting}
             onSubmit={onSubmitAnswers}
+            onUpdateFloor={onUpdateFloor}
             onGiveUp={onGiveUp}
           />
         ) : (
@@ -350,31 +358,62 @@ const INPUT_CLASS =
 function ConditionFloorField({
   condition,
   labels,
+  defaultServerValue,
   onChange,
 }: {
   condition: NegotiationCondition;
   labels: WorkConditionLabels;
+  /** 수정 시 현재 마지노선(서버 형식) 프리필 */
+  defaultServerValue?: string | null;
   onChange: (serverValue: string) => void;
 }) {
+  const initial = defaultServerValue ?? "";
   switch (condition.type) {
     case "AMOUNT":
-      return <AmountField onChange={onChange} />;
+      return <AmountField defaultServerValue={initial} onChange={onChange} />;
     case "PERIOD":
-      return <PeriodField options={toOptions(labels.periodUnits)} onChange={onChange} />;
+      return (
+        <PeriodField
+          options={toOptions(labels.periodUnits)}
+          defaultServerValue={initial}
+          onChange={onChange}
+        />
+      );
     case "WORK_STYLE":
-      return <CodeSelectField options={toOptions(labels.workStyles)} onChange={onChange} />;
+      return (
+        <CodeSelectField
+          options={toOptions(labels.workStyles)}
+          defaultServerValue={initial}
+          onChange={onChange}
+        />
+      );
     case "WORK_FORM":
-      return <CodeSelectField options={toOptions(labels.workForms)} onChange={onChange} />;
+      return (
+        <CodeSelectField
+          options={toOptions(labels.workForms)}
+          defaultServerValue={initial}
+          onChange={onChange}
+        />
+      );
     case "START_DATE":
-      return <DateField onChange={onChange} />;
+      return <DateField defaultServerValue={initial} onChange={onChange} />;
     default:
-      return <PlainTextField onChange={onChange} />;
+      return <PlainTextField defaultServerValue={initial} onChange={onChange} />;
   }
 }
 
 // 금액: 만원 입력 → 원 단위 문자열
-function AmountField({ onChange }: { onChange: (value: string) => void }) {
-  const [manwon, setManwon] = useState("");
+function AmountField({
+  defaultServerValue,
+  onChange,
+}: {
+  defaultServerValue?: string;
+  onChange: (value: string) => void;
+}) {
+  const [manwon, setManwon] = useState(() => {
+    const won = Number(defaultServerValue);
+    return defaultServerValue && !Number.isNaN(won) ? String(wonToManwon(won)) : "";
+  });
   return (
     <div className="flex items-center gap-2">
       <input
@@ -397,13 +436,16 @@ function AmountField({ onChange }: { onChange: (value: string) => void }) {
 // 기간: 숫자 + 단위(meta periodUnits) → "N MONTH"
 function PeriodField({
   options,
+  defaultServerValue,
   onChange,
 }: {
   options: Array<{ code: string; label: string }>;
+  defaultServerValue?: string;
   onChange: (value: string) => void;
 }) {
-  const [amount, setAmount] = useState("");
-  const [unit, setUnit] = useState(options[0]?.code ?? "MONTH");
+  const [defaultAmount, defaultUnit] = (defaultServerValue ?? "").split(" ");
+  const [amount, setAmount] = useState(defaultAmount ?? "");
+  const [unit, setUnit] = useState(defaultUnit || options[0]?.code || "MONTH");
   const emit = (nextAmount: string, nextUnit: string) =>
     onChange(nextAmount.trim() === "" ? "" : `${nextAmount} ${nextUnit}`);
   return (
@@ -441,12 +483,14 @@ function PeriodField({
 // 근무 방식/형태: meta 코드 드롭다운 → 코드 전송
 function CodeSelectField({
   options,
+  defaultServerValue,
   onChange,
 }: {
   options: Array<{ code: string; label: string }>;
+  defaultServerValue?: string;
   onChange: (value: string) => void;
 }) {
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(defaultServerValue ?? "");
   return (
     <select
       value={code}
@@ -469,8 +513,14 @@ function CodeSelectField({
 }
 
 // 시작일: 날짜 입력 (yyyy-MM-dd 그대로 전송)
-function DateField({ onChange }: { onChange: (value: string) => void }) {
-  const [date, setDate] = useState("");
+function DateField({
+  defaultServerValue,
+  onChange,
+}: {
+  defaultServerValue?: string;
+  onChange: (value: string) => void;
+}) {
+  const [date, setDate] = useState(defaultServerValue ?? "");
   return (
     <input
       type="date"
@@ -485,8 +535,14 @@ function DateField({ onChange }: { onChange: (value: string) => void }) {
 }
 
 // 자유 텍스트 (SCOPE/OTHER)
-function PlainTextField({ onChange }: { onChange: (value: string) => void }) {
-  const [text, setText] = useState("");
+function PlainTextField({
+  defaultServerValue,
+  onChange,
+}: {
+  defaultServerValue?: string;
+  onChange: (value: string) => void;
+}) {
+  const [text, setText] = useState(defaultServerValue ?? "");
   return (
     <input
       value={text}
@@ -594,18 +650,29 @@ function ConditionActionPanel({
   viewerRole,
   isSubmitting,
   onSubmit,
+  onUpdateFloor,
   onGiveUp,
 }: {
   conditions: NegotiationCondition[];
   labels: WorkConditionLabels;
   viewerRole: "CLIENT" | "FREELANCER";
   isSubmitting: boolean;
-  onSubmit: (answers: AnswerInput[]) => void;
+  onSubmit: (answers: AnswerInput[]) => Promise<{ floorViolation: boolean }>;
+  onUpdateFloor: (
+    conditionType: ConditionType,
+    value: string,
+  ) => Promise<{ ok: boolean; message?: string }>;
   onGiveUp: () => void;
 }) {
   const [decisions, setDecisions] = useState<Record<number, Decision>>({});
   // 재지시 새 마지노선 (서버 전송 형식)
   const [floors, setFloors] = useState<Record<number, string>>({});
+  // 마지노선 수정 인라인 상태
+  const [editOpen, setEditOpen] = useState<Record<number, boolean>>({});
+  const [editValues, setEditValues] = useState<Record<number, string>>({});
+  const [editErrors, setEditErrors] = useState<Record<number, string>>({});
+  const [warnIds, setWarnIds] = useState<Record<number, boolean>>({});
+  const [savingId, setSavingId] = useState<number | null>(null);
 
   const pending = conditions.filter((condition) => condition.status === "PENDING");
   const rejected = conditions.filter((condition) => condition.status === "REJECTED");
@@ -616,7 +683,33 @@ function ConditionActionPanel({
     rejected.every((condition) => (floors[condition.conditionId] ?? "").trim() !== "") &&
     pending.length + rejected.length > 0;
 
-  const handleSubmit = () => {
+  const openEdit = (condition: NegotiationCondition) => {
+    setEditOpen((prev) => ({ ...prev, [condition.conditionId]: true }));
+    // 현재 마지노선(서버 형식)으로 초기화 — 수정 없이 저장해도 현재 값이 전송됨
+    setEditValues((prev) => ({ ...prev, [condition.conditionId]: condition.myFloor ?? "" }));
+  };
+  const closeEdit = (conditionId: number) => {
+    setEditOpen((prev) => ({ ...prev, [conditionId]: false }));
+    setEditErrors((prev) => ({ ...prev, [conditionId]: "" }));
+    setWarnIds((prev) => ({ ...prev, [conditionId]: false }));
+  };
+  const saveEdit = async (condition: NegotiationCondition) => {
+    const value = (editValues[condition.conditionId] ?? "").trim();
+    if (value === "") return;
+    setSavingId(condition.conditionId);
+    const result = await onUpdateFloor(condition.type, value);
+    setSavingId(null);
+    if (result.ok) {
+      closeEdit(condition.conditionId);
+    } else {
+      setEditErrors((prev) => ({
+        ...prev,
+        [condition.conditionId]: result.message ?? "마지노선 수정에 실패했습니다.",
+      }));
+    }
+  };
+
+  const handleSubmit = async () => {
     const answers: AnswerInput[] = [
       ...pending.map((condition) => ({
         conditionId: condition.conditionId,
@@ -628,10 +721,27 @@ function ConditionActionPanel({
         proposedValue: floors[condition.conditionId] ?? "",
       })),
     ];
-    onSubmit(answers);
+    const result = await onSubmit(answers);
+    // 마지노선 밖 수락(NG_011) → 수락한 조건의 수정 영역을 펴고 경고 표시
+    if (result.floorViolation) {
+      pending
+        .filter((condition) => decisions[condition.conditionId] === "accept")
+        .forEach((condition) => {
+          openEdit(condition);
+          setWarnIds((prev) => ({ ...prev, [condition.conditionId]: true }));
+        });
+    }
   };
 
   const hasRejected = rejected.length > 0;
+
+  // 단가·기간은 역할에 따라 상한/하한. 근무 방식/형태는 접두 없음.
+  const floorPrefix = (type: ConditionType): string =>
+    type === "AMOUNT" || type === "PERIOD"
+      ? viewerRole === "CLIENT"
+        ? "최대 "
+        : "최소 "
+      : "";
 
   return (
     <div className="mt-6 flex justify-end">
@@ -641,31 +751,99 @@ function ConditionActionPanel({
         </p>
 
         {/* 승인 대기 조건 — 상대방이 제안한 값을 수락/거절 */}
-        {pending.map((condition) => (
-          <div key={condition.conditionId} className="mt-4">
-            <p className="text-[10px] font-semibold text-theme-muted">상대방 제안</p>
-            <p className="mt-0.5 text-[13px] font-bold text-theme-primary">
-              {conditionLabel(condition.type)}{" "}
-              {formatConditionValue(condition.type, condition.proposedValue ?? opponentValue(condition, viewerRole), labels)}
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <DecisionButton
-                label="수락"
-                selected={decisions[condition.conditionId] === "accept"}
-                onClick={() =>
-                  setDecisions((prev) => ({ ...prev, [condition.conditionId]: "accept" }))
-                }
-              />
-              <DecisionButton
-                label="거절"
-                selected={decisions[condition.conditionId] === "reject"}
-                onClick={() =>
-                  setDecisions((prev) => ({ ...prev, [condition.conditionId]: "reject" }))
-                }
-              />
+        {pending.map((condition) => {
+          const proposedText = formatConditionValue(
+            condition.type,
+            condition.proposedValue ?? opponentValue(condition, viewerRole),
+            labels,
+          );
+          const boundText = viewerRole === "CLIENT" ? "이상이어야" : "이하여야";
+          const myFloorText = formatConditionValue(condition.type, condition.myFloor, labels);
+          const isEditing = editOpen[condition.conditionId] === true;
+          return (
+            <div key={condition.conditionId} className="mt-4">
+              <p className="text-[10px] font-semibold text-theme-muted">상대방 제안</p>
+              <p className="mt-0.5 text-[13px] font-bold text-theme-primary">
+                {conditionLabel(condition.type)} {proposedText}
+              </p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <DecisionButton
+                  label="수락"
+                  selected={decisions[condition.conditionId] === "accept"}
+                  onClick={() =>
+                    setDecisions((prev) => ({ ...prev, [condition.conditionId]: "accept" }))
+                  }
+                />
+                <DecisionButton
+                  label="거절"
+                  selected={decisions[condition.conditionId] === "reject"}
+                  onClick={() =>
+                    setDecisions((prev) => ({ ...prev, [condition.conditionId]: "reject" }))
+                  }
+                />
+              </div>
+
+              {/* 내 마지노선 + 수정 */}
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-[10px] text-theme-muted">
+                  내 마지노선: {floorPrefix(condition.type)}
+                  {myFloorText || "미설정"}
+                </span>
+                {!isEditing ? (
+                  <button
+                    type="button"
+                    onClick={() => openEdit(condition)}
+                    className="text-[10px] font-bold text-[#7969dc] hover:underline"
+                  >
+                    수정
+                  </button>
+                ) : null}
+              </div>
+
+              {/* 마지노선 수정 인라인 영역 */}
+              {isEditing ? (
+                <div className="mt-2 rounded-[8px] border border-[#e2e5ea] bg-[#fafafe] p-3">
+                  <ConditionFloorField
+                    condition={condition}
+                    labels={labels}
+                    defaultServerValue={condition.myFloor}
+                    onChange={(value) =>
+                      setEditValues((prev) => ({ ...prev, [condition.conditionId]: value }))
+                    }
+                  />
+                  {warnIds[condition.conditionId] && proposedText ? (
+                    <p className="mt-2 text-[10px] font-semibold text-[#b54708]">
+                      ⚠️ 지금 제안({proposedText})을 수락하려면 {proposedText} {boundText} 합니다
+                    </p>
+                  ) : null}
+                  <p className="mt-1 text-[10px] text-theme-muted">라운드는 진행되지 않습니다.</p>
+                  {editErrors[condition.conditionId] ? (
+                    <p className="mt-1 text-[10px] font-semibold text-theme-danger">
+                      {editErrors[condition.conditionId]}
+                    </p>
+                  ) : null}
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      disabled={savingId === condition.conditionId}
+                      onClick={() => void saveEdit(condition)}
+                      className="h-[32px] flex-1 cursor-pointer rounded-[7px] bg-[#8878e8] text-[11px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
+                    >
+                      저장
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => closeEdit(condition.conditionId)}
+                      className="h-[32px] flex-1 cursor-pointer rounded-[7px] border border-theme bg-surface text-[11px] font-bold text-theme-secondary"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* 재지시 조건 (새 마지노선 입력) */}
         {rejected.map((condition) => (
@@ -682,6 +860,9 @@ function ConditionActionPanel({
                 직전 마지노선: {formatConditionValue(condition.type, condition.myFloor, labels)}
               </p>
             ) : null}
+            <p className="mt-1 text-[10px] text-[#92400e]">
+              새로 입력한 값으로 대체됩니다. 저장하면 대리인이 다시 협상합니다.
+            </p>
             <div className="mt-3">
               <ConditionFloorField
                 condition={condition}
@@ -708,7 +889,7 @@ function ConditionActionPanel({
           <button
             type="button"
             disabled={!canSubmit || isSubmitting}
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
             className="flex h-[40px] w-full cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-[#8878e8] text-[12px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
           >
             {isSubmitting ? (
