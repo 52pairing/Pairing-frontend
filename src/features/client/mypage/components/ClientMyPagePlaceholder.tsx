@@ -1,11 +1,5 @@
-import { ClientMyPageSidebar, type ClientMyPageActiveMenu } from "@/features/client/components/ClientMyPageSidebar";
-
-interface ClientMyPagePlaceholderProps {
-  activeMenu: ClientMyPageActiveMenu;
-  title: string;
-  description: string;
-  isCancel?: boolean;
-}
+import { ClientMyPageSidebar } from "@/features/client/components/ClientMyPageSidebar";
+import type { ClientMyPagePlaceholderProps } from "@/features/client/mypage/types/components";
 
 export function ClientMyPagePlaceholder({
   activeMenu,

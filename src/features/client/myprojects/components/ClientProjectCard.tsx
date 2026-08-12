@@ -1,23 +1,8 @@
 import Link from "next/link";
 
-export interface ClientProjectCardProps {
-  projectId: number;
-  title: string;
-  status: string;
-  position: string;
-  skills: string[];
-  budget: string;
-  duration: string;
-  startDate: string;
-  headcount: string;
-  registeredAt: string;
-  deadline?: string;
-  actionType?: "payment" | "detail" | "complete" | "successFee";
-  detailHref?: string;
-  onPayment?: () => void;
-  onComplete?: () => void;
-  isCompleting?: boolean;
-}
+import type { ClientProjectCardProps } from "@/features/client/myprojects/types/components";
+
+export type { ClientProjectCardProps } from "@/features/client/myprojects/types/components";
 
 export function ClientProjectCard({
   projectId,

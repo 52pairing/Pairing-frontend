@@ -3,23 +3,9 @@
 import { useEffect, useId, useState } from "react";
 
 import { Modal } from "@/features/common/components/Modal";
+import type { RecommendedCandidateItem } from "@/features/client/myprojects/types/components";
 
-interface Candidate {
-  id: number;
-  name: string;
-  role: string;
-  career: string;
-  level: string;
-  rating: number;
-  reviewCount: number;
-  monthlyRate: number;
-  skills: string[];
-  reasons: string[];
-  introduction: string;
-  avatarClass: string;
-}
-
-const CANDIDATES: Candidate[] = [
+const CANDIDATES: RecommendedCandidateItem[] = [
   {
     id: 1,
     name: "김개발",
@@ -69,9 +55,9 @@ export function RecommendedCandidates() {
   const [recommendationRound, setRecommendationRound] = useState(1);
   const [rejectedIds, setRejectedIds] = useState<number[]>([]);
   const [requestedIds, setRequestedIds] = useState<number[]>([]);
-  const [candidateToRequest, setCandidateToRequest] = useState<Candidate | null>(null);
-  const [candidateToReject, setCandidateToReject] = useState<Candidate | null>(null);
-  const [profileCandidate, setProfileCandidate] = useState<Candidate | null>(null);
+  const [candidateToRequest, setCandidateToRequest] = useState<RecommendedCandidateItem | null>(null);
+  const [candidateToReject, setCandidateToReject] = useState<RecommendedCandidateItem | null>(null);
+  const [profileCandidate, setProfileCandidate] = useState<RecommendedCandidateItem | null>(null);
   const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
@@ -203,7 +189,7 @@ export function RecommendedCandidates() {
   );
 }
 
-function CandidateCard({ candidate, requested, onReject, onProfile, onRequest }: { candidate: Candidate; requested: boolean; onReject: () => void; onProfile: () => void; onRequest: () => void }) {
+function CandidateCard({ candidate, requested, onReject, onProfile, onRequest }: { candidate: RecommendedCandidateItem; requested: boolean; onReject: () => void; onProfile: () => void; onRequest: () => void }) {
   return (
     <article className="flex h-full flex-col rounded-[14px] border border-theme bg-surface p-4">
       <div className="flex items-center gap-3">
@@ -235,7 +221,7 @@ function CandidateCard({ candidate, requested, onReject, onProfile, onRequest }:
   );
 }
 
-function CandidateProfileModal({ candidate, onClose }: { candidate: Candidate | null; onClose: () => void }) {
+function CandidateProfileModal({ candidate, onClose }: { candidate: RecommendedCandidateItem | null; onClose: () => void }) {
   return (
     <Modal open={candidate !== null} onClose={onClose} size="lg">
       {candidate ? (

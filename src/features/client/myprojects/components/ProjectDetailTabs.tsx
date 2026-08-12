@@ -1,12 +1,8 @@
+import type { ProjectDetailTabsProps } from "@/features/client/myprojects/types/components";
+
 export const PROJECT_DETAIL_TABS = ["프로젝트 정보", "추천 후보", "협상", "계약", "진행 현황"] as const;
 
-export type ProjectDetailTab = (typeof PROJECT_DETAIL_TABS)[number];
-
-interface ProjectDetailTabsProps {
-  activeTab: ProjectDetailTab;
-  onTabChange: (tab: ProjectDetailTab) => void;
-  rightContent?: ReactNode;
-}
+export type { ProjectDetailTab } from "@/features/client/myprojects/types/components";
 
 export function ProjectDetailTabs({ activeTab, onTabChange, rightContent }: ProjectDetailTabsProps) {
   return (
@@ -28,4 +24,3 @@ export function ProjectDetailTabs({ activeTab, onTabChange, rightContent }: Proj
     </div>
   );
 }
-import type { ReactNode } from "react";

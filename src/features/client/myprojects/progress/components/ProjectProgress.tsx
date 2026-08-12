@@ -6,19 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getChatRoomByNegotiation } from "@/features/chat/services/chatRooms";
 import { getClientProjectContracts } from "@/features/client/myprojects/contract/services/contracts";
-import type { ClientContractListItem } from "@/features/client/myprojects/contract/types/contract";
-import type { ClientProjectDetailResponse } from "@/features/client/myprojects/types/projectDetail";
+import type { ProgressContract, ProjectProgressProps } from "@/features/client/myprojects/types/components";
 import { getContractDetail } from "@/features/contract/services/contracts";
-
-interface ProjectProgressProps {
-  project: ClientProjectDetailResponse;
-  jobRoleLabels: Record<string, string>;
-  workStyleLabel: string;
-}
-
-interface ProgressContract extends ClientContractListItem {
-  negotiationId: number;
-}
 
 const STATUS_LABEL: Record<string, string> = {
   IN_PROGRESS: "진행중",

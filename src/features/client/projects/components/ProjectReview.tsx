@@ -22,9 +22,9 @@ import type {
   ProjectJobRoleOption,
   ProjectPreReviewResponse,
 } from "@/features/client/projects/types/preReview";
+import type { ProjectReviewPhase } from "@/features/client/projects/types/components";
 
 const STEP = 5;
-type Phase = "intro" | "loading" | "result" | "error";
 
 export function ProjectReview() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export function ProjectReview() {
   const next = nextStep(STEP);
   const recruits = form.recruits ?? [];
 
-  const [phase, setPhase] = useState<Phase>("intro");
+  const [phase, setPhase] = useState<ProjectReviewPhase>("intro");
   const [result, setResult] = useState<ProjectPreReviewResponse | null>(null);
   const [jobRoles, setJobRoles] = useState<ProjectJobRoleOption[]>([]);
   const [errorMessage, setErrorMessage] = useState("");

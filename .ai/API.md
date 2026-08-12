@@ -458,6 +458,14 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 리뷰 조회 및 작성 영역은 담당 범위에서 제외
 - 실제 종료 프로젝트·정산·계약 조합 응답: 미검증
 
+### 프로젝트 정보 탭 상세 표시
+
+- `GET /api/v1/projects/{projectId}` 응답의 `workStyle`, `workForm`, `workLocation`을 기본 정보에 표시
+- `workStyle`, `workForm` 라벨은 `GET /api/v1/meta/work-conditions`의 `workStyles`, `workForms`를 사용
+- `workStyle`이 `REMOTE`이거나 라벨에 `재택`이 포함되면 근무 장소를 표시하지 않음
+- 기본 정보 아래 상세 정보 토글에서 `currentSituation`, `mainTask`, `detailScope`, `extraNote`를 줄바꿈을 유지해 표시
+- 같은 토글에서 `files[]`의 `originalName`, `sizeBytes`, `fileUrl`을 이용해 첨부 자료와 다운로드 링크 표시
+
 ## 클라이언트 내 프로젝트 목록
 
 - 서비스 위치: `src/features/client/myprojects/services/clientProjects.ts`
@@ -498,8 +506,17 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `POST /api/v1/projects/{projectId}/recruit-extensions`
 - `POST /api/v1/projects/{projectId}/recruit-close`
 - `POST /api/v1/projects/{projectId}/completion`
-- `PUT /api/v1/projects/{projectId}` 요청 타입과 서비스 함수를 추가함. 수정 폼 연결 전이라 현재 메뉴에서는 아직 요청하지 않음
-- 수정 요청은 등록 본문에서 `noticeAgreed`를 제외하고 `positions[]`에 `positionId`(`number | null`)를 포함한 전체 교체 방식
+- 프로젝트 상세의 관리 메뉴에서 `/client/projects/{projectId}/edit`로 이동
+- 수정 화면 진입 시 프로젝트 상세와 직군·직무·스킬·근무 조건 메타를 함께 조회해 폼 초기화
+- `PUT /api/v1/projects/{projectId}`에 `title`, `startDesiredDate`, `startNegotiable`, `periodValue`, `periodUnit`, `budgetAmount`, `workStyle`, `workForm`, `positions`, `currentSituation`, `mainTask`, `detailScope`, `extraNote`, `fileIds` 전체 전송
+- `workLocation`은 수정 요청에서 제외
+- `positions[]`의 기존 항목은 `positionId` 유지, 신규 항목은 `null`, 삭제 항목은 배열에서 제외하며 배열 순서를 유지
+- 직무 선택 시 메타의 `parentCode`를 `jobCategory`에 함께 반영
+- `REGISTERED`는 결제 전으로 판단해 전체 수정 가능, 이후 상태는 `budgetAmount`, `headcount`, 포지션 추가·삭제 비활성화
+- 결제 전 포지션 변경 시 저장 후 `POST /api/v1/projects/pre-review` 재호출
+- PUT 성공 후 `GET /api/v1/projects/{projectId}`를 재조회해 서버에서 갱신한 예산·수수료 관련 상태를 반영
+- 오류 코드 `BUDGET_NOT_CHANGEABLE`, `HEADCOUNT_NOT_CHANGEABLE`, `POSITION_NOT_CHANGEABLE`, `PROJECT_NOT_FOUND`, `NOT_PROJECT_OWNER`, `INVALID_STATUS`를 사용자 메시지로 분기
+- 기존 파일 삭제는 전체 요청의 `fileIds`에서 제외하고, 수정 화면에서 신규 업로드 후 제거한 파일만 `DELETE /api/v1/files/{fileId}` 호출
 - 실제 네트워크 응답: 미검증
 
 ## 클라이언트 프로젝트 계약 목록
