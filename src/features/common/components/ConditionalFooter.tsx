@@ -6,6 +6,7 @@ import { Footer } from "@/features/common/components/Footer";
 
 const FOOTER_HIDDEN_PATHS = [
   "/chat",
+  "/support/chatbot",
   "/client/projects/new/complete",
   "/client/payments/complete",
 ];

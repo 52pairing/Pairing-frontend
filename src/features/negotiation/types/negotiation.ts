@@ -92,6 +92,14 @@ export interface NegotiationCondition {
   roundCount: number;
   /** 내 마지노선 (내 것만, 상대 floor는 비공개) */
   myFloor: string | null;
+  /**
+   * 마지노선 비교 방식.
+   * - RANGE: 크기 비교(이상/이하) — AMOUNT/PERIOD/START_DATE
+   * - CHOICE: 허용값 집합(허용해야) — WORK_STYLE/WORK_FORM
+   * - NONE: 비교 기준 없음(자유 텍스트) — SCOPE/OTHER → 안내 문구 미표시
+   * 응답에 없을 수 있어(배포 시점차) optional. 없으면 type 으로 추정한다.
+   */
+  floorComparison?: "RANGE" | "CHOICE" | "NONE";
 }
 
 /**
@@ -136,6 +144,12 @@ export interface NegotiationDetail {
   aiOutAt: string | null;
   /** 미사용(항상 false). 15회 자동 결렬로 설계 변경되며 폐기 */
   finalApprovalRequired: boolean;
+  /**
+   * 대리인 A2A 상태 (백엔드 비동기 전환 시 도입 — 아직 배포 전이라 optional).
+   * RUNNING=대리인 호출 중, FAILED=호출 실패, IDLE=대기.
+   * 배포되면 RUNNING 동안 GET 폴링(2~3s) + 라벨 우선순위에 반영 필요.
+   */
+  agentState?: "RUNNING" | "FAILED" | "IDLE";
   conditions: NegotiationCondition[];
 }
 

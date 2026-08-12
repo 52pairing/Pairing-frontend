@@ -22,6 +22,7 @@ export function FreelancerHeader({
 }: FreelancerHeaderProps) {
   return (
     <HeaderShell
+      homeHref="/freelancer"
       nav={freelancerNavItems.map((item) => (
         <Link key={item.href} href={item.href} className="hover:text-theme-primary">
           {item.label}

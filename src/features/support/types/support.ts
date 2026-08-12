@@ -1,5 +1,28 @@
 export interface ChatbotQuotaResponse {
+  quotaDate: string;
   dailyLimit: number;
+  usedCount: number;
+  remainingCount: number;
+}
+
+export interface ChatbotMessage {
+  sessionId: number;
+  question: string;
+  answer: string;
+  actions: ChatbotAction[];
+  remainingQuota: number;
+  createdAt: string;
+}
+
+export interface ChatbotAction {
+  code: string;
+  label: string;
+  url: string;
+}
+
+export interface ChatbotQuestionRequest {
+  question: string;
+  sessionId: number | null;
 }
 
 export type InquiryStatus = "PENDING" | "ANSWERED";
@@ -39,9 +62,7 @@ export interface InquiryPageResponse {
 export interface InquiryUploadedFile {
   fileId: number;
   originalName: string;
-  fileUrl: string;
-  mimeType: string;
-  sizeBytes: number;
+  url: string;
 }
 
 export interface CreateInquiryRequest {
