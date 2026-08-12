@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { ClientMyPageSidebar } from "@/features/client/components/ClientMyPageSidebar";
+import { ClientMyPageLayout } from "@/features/client/mypage/components/ClientMyPageLayout";
 import type { PaymentFilter, PaymentHistoryItem } from "@/features/client/mypage/types/components";
 
 const PAYMENT_FILTERS = ["전체", "착수금 수수료", "성공보수 수수료"] as const;
@@ -31,14 +31,8 @@ export function ClientPaymentHistory() {
   const visibleTotal = visiblePayments.reduce((total, payment) => total + payment.amount, 0);
 
   return (
-    <main className="min-h-screen bg-surface-subtle px-4 py-7 text-theme-primary sm:px-5">
-      <div className="mx-auto w-full max-w-[1200px]">
-        <h1 className="text-[24px] font-extrabold tracking-[-0.04em]">마이페이지</h1>
-
-        <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-start">
-          <ClientMyPageSidebar activeMenu="payments" />
-
-          <div className="min-w-0 flex-1">
+    <ClientMyPageLayout activeMenu="payments">
+          <div className="min-w-0">
             <section className="grid gap-3 sm:grid-cols-3">
               <SummaryCard label="총 납부 수수료" value={TOTAL_FEE} tone="navy" />
               <SummaryCard label="착수금 수수료" value={TOTAL_UPFRONT_FEE} tone="blue" />
@@ -104,9 +98,7 @@ export function ClientPaymentHistory() {
               </div>
             </section>
           </div>
-        </div>
-      </div>
-    </main>
+    </ClientMyPageLayout>
   );
 }
 
