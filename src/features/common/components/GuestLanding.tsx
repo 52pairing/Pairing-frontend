@@ -5,12 +5,12 @@ import { StepArrow } from "@/features/common/components/SharedUI";
 import { FaqSection } from "@/features/common/components/FaqSection";
 
 const STATS = [
-  { value: "98.2%", label: "프로젝트 완수율" },
-  { value: "4,800+", label: "누적 프로젝트" },
-  { value: "12,300+", label: "누적 협상 수" },
-  { value: "2,100+", label: "검증된 프리랜서" },
-  { value: "4.7점", label: "AI 매칭 만족도" },
-  { value: "820억+", label: "누적 프로젝트 금액" },
+  { value: "99%", label: "프로젝트 완수율" },
+  { value: "5,657개", label: "누적 프로젝트 등록 수" },
+  { value: "6,000개", label: "누적 협상 수" },
+  { value: "5,000+", label: "검증된 프리랜서" },
+  { value: "4.8/5.0", label: "AI 매칭 만족도" },
+  { value: "3000억", label: "누적 프로젝트 금액" },
 ];
 
 const STEPS = [
@@ -191,10 +191,12 @@ export function GuestLanding() {
 
       {/* 서비스 이용 과정 */}
       <section className="bg-surface-subtle px-4 py-16">
-        <div className="mx-auto max-w-[1200px]">
+        <div className="mx-auto max-w-[1200px] whitespace-pre-line">
           <SectionHeading
             title="서비스 이용 과정"
-            desc="복잡한 과정 없이, 4단계로 프로젝트를 시작하세요."
+            desc={
+              "AI Agent로 빠르게 끝내는 협상 \n 복잡한 과정 없이, 단 4단계로 프로젝트를 시작하세요."
+            }
           />
 
           <div className="mt-10 flex flex-col gap-4 md:flex-row md:items-stretch">
