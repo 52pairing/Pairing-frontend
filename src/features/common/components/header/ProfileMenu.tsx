@@ -9,10 +9,11 @@ import { logout } from "@/features/auth/services/logout";
 interface ProfileMenuProps {
   label: string;
   myPageHref: string;
+  profileManageHref?: string;
 }
 
 // 클라이언트/프리랜서 Header에서 공통으로 사용하는 프로필 드롭다운
-export function ProfileMenu({ label, myPageHref }: ProfileMenuProps) {
+export function ProfileMenu({ label, myPageHref, profileManageHref }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -72,10 +73,20 @@ export function ProfileMenu({ label, myPageHref }: ProfileMenuProps) {
         <div className="absolute right-0 top-12 z-50 w-40 rounded-md border border-theme bg-surface py-2 shadow-lg">
           <Link
             href={myPageHref}
+            onClick={() => setOpen(false)}
             className="block px-4 py-2 text-sm text-theme-secondary hover:bg-surface-subtle"
           >
             마이페이지
           </Link>
+          {profileManageHref ? (
+            <Link
+              href={profileManageHref}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm text-theme-secondary hover:bg-surface-subtle"
+            >
+              프로필 등록·관리
+            </Link>
+          ) : null}
           <Link
             href="/support"
             onClick={() => setOpen(false)}

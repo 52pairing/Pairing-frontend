@@ -27,7 +27,7 @@ export function FreelancerReviewForm() {
 
         <div className="mt-4">
           <h1 className="text-2xl font-extrabold tracking-[-0.04em]">
-            프리랜서 평가
+            클라이언트 평가
           </h1>
           <p className="mt-2 text-[12px] font-semibold text-theme-muted">
             AI 추천 엔진 개발 · 김개발
@@ -47,14 +47,14 @@ export function FreelancerReviewForm() {
           onSubmit={(event) => event.preventDefault()}
         >
           <section className="rounded-xl border border-theme bg-surface px-4 py-6 sm:px-7 sm:py-7">
-            <h2 className="text-[14px] font-bold">프리랜서 평가</h2>
+            <h2 className="text-[14px] font-bold">클라이언트 평가</h2>
 
             <div className="mt-5">
               <p
                 id="freelancer-rating-label"
                 className="text-[12px] font-semibold text-theme-muted"
               >
-                프리랜서 별점 <span className="text-theme-danger">*</span>
+                클라이언트 별점 <span className="text-theme-danger">*</span>
               </p>
               <div
                 role="radiogroup"
@@ -83,14 +83,14 @@ export function FreelancerReviewForm() {
             </div>
 
             <label htmlFor="freelancer-review" className="sr-only">
-              프리랜서 리뷰
+              클라이언트 리뷰
             </label>
             <textarea
               id="freelancer-review"
               value={freelancerReview}
               maxLength={MAX_REVIEW_LENGTH}
               onChange={(event) => setFreelancerReview(event.target.value)}
-              placeholder="프리랜서에 대한 솔직한 리뷰를 남겨주세요. (선택, 최대 500자)"
+              placeholder="클라이언트에 대한 솔직한 리뷰를 남겨주세요. (선택, 최대 500자)"
               className="mt-4 h-28 w-full resize-none rounded-lg border border-theme bg-surface px-4 py-3 text-[12px] leading-5 text-theme-primary outline-none placeholder:font-semibold placeholder:text-theme-muted focus:border-theme-strong focus:ring-2 focus:ring-brand/20 sm:h-[100px]"
             />
             <p
