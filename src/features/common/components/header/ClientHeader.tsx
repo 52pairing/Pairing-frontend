@@ -23,6 +23,7 @@ export function ClientHeader({
 }: ClientHeaderProps) {
   return (
     <HeaderShell
+      homeHref="/client"
       nav={clientNavItems.map((item) => (
         <Link key={item.href} href={item.href} className="hover:text-theme-primary">
           {item.label}

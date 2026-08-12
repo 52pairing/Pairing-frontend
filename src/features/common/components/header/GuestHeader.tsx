@@ -11,6 +11,7 @@ const guestNavItems = [
 export function GuestHeader() {
   return (
     <HeaderShell
+      homeHref="/"
       nav={guestNavItems.map((item) => (
         <Link key={item.href} href={item.href} className="hover:text-theme-primary">
           {item.label}
