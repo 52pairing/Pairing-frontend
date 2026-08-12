@@ -1,28 +1,13 @@
-import { apiCall } from "@/lib/api";
-import type { ClientContractPage } from "@/features/client/myprojects/contract/types/contract";
+import { getContracts } from "@/features/contract/services/contracts";
 
 export const getClientProjectContracts = (
   projectId: number,
   page = 0,
   size = 10,
-) => {
-  const query = new URLSearchParams({
-    projectId: String(projectId),
-    page: String(page),
-    size: String(size),
-  });
+) => getContracts({ tab: "ALL", projectId, page, size });
 
-  return apiCall<ClientContractPage>(`/api/v1/contracts?${query}`);
-};
-
-export const getClientContracts = (page = 0, size = 100) => {
-  const query = new URLSearchParams({
-    page: String(page),
-    size: String(size),
-  });
-
-  return apiCall<ClientContractPage>(`/api/v1/contracts?${query}`);
-};
+export const getClientContracts = (page = 0, size = 100) =>
+  getContracts({ tab: "ALL", page, size });
 
 export const getAllClientContracts = async () => {
   const firstPage = await getClientContracts();

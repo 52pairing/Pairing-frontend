@@ -152,10 +152,11 @@ export function NegotiationRoom() {
     (event: NegotiationEvent) => {
       switch (event.type) {
         // STARTED: 상대가 마지노선을 내 협상이 시작될 때 서버가 발행(초기 제안엔 NEW_PROPOSAL 없음).
-        // 이벤트는 "재조회 신호"로만 쓰고, 화면 전환 판정은 totalRound 로 유지한다.
+        // 이벤트는 "재조회 신호"로만 쓰고, 화면 전환 판정은 totalRound/agentState 로 유지한다.
         case "STARTED":
         case "NEW_PROPOSAL":
         case "ANSWERED":
+        case "AGENT_RUNNING": // 대리인 진행 시작 → agentState=RUNNING 반영
           void refreshMessages();
           void refreshDetail();
           break;
@@ -164,6 +165,7 @@ export function NegotiationRoom() {
           break;
         case "AGREED":
         case "FAILED":
+        case "AGENT_FAILED": // 실패 안내가 SYSTEM 메시지로 저장됨 → 메시지도 재조회
           void refreshDetail();
           void refreshMessages();
           break;
@@ -173,6 +175,17 @@ export function NegotiationRoom() {
   );
 
   useNegotiationEvents(negotiationId, handleEvent);
+
+  // 폴링 폴백: agentState=RUNNING 동안 2.5초 간격 재조회. WS가 끊겨도(예: code 1006)
+  // 화면이 영구히 멈추지 않게 한다. RUNNING 이 끝나면 effect 재실행되며 자동 중단.
+  useEffect(() => {
+    if (!negotiationId || detail?.agentState !== "RUNNING") return;
+    const timer = setInterval(() => {
+      void refreshDetail();
+      void refreshMessages();
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [negotiationId, detail?.agentState, refreshDetail, refreshMessages]);
 
   // 협상 시작
   const handleStart = useCallback(
@@ -269,6 +282,24 @@ export function NegotiationRoom() {
     }
   }, [negotiationId, isSubmitting, refreshDetail]);
 
+  // 대리인 실패(AGENT_FAILED) 재시도: 라운드가 안 올랐으므로 내 마지노선(myFloor)으로 start 재호출 = 재시도.
+  const handleRetryAgent = useCallback(async () => {
+    if (!negotiationId || !detail) return;
+    if (detail.totalRound === 0) {
+      const conditions = detail.conditions
+        .filter((condition) => condition.myFloor != null)
+        .map((condition) => ({
+          conditionType: condition.type,
+          value: condition.myFloor as string,
+        }));
+      if (conditions.length > 0) {
+        await handleStart(conditions);
+        return;
+      }
+    }
+    await Promise.all([refreshDetail(), refreshMessages()]);
+  }, [negotiationId, detail, handleStart, refreshDetail, refreshMessages]);
+
   const goBackToProject = () => router.push(`${projectsBase}/${projectId}`);
 
   return (
@@ -339,6 +370,7 @@ export function NegotiationRoom() {
           onStart={handleStart}
           onSubmitAnswers={handleSubmitAnswers}
           onUpdateFloor={handleUpdateFloor}
+          onRetryAgent={() => void handleRetryAgent()}
           onGiveUp={() => setIsCancelOpen(true)}
           isSubmitting={isSubmitting}
           chatActionSlot={

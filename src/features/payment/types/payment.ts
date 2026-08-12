@@ -6,6 +6,7 @@ export interface PaymentSummary {
   title: string;
   description: string;
   amount: number;
+  duration?: string;
 }
 
 export interface PaymentMethod {
@@ -23,14 +24,15 @@ export interface SettlementResponse {
   projectTitle: string;
   phase: SettlementPhase;
   baseAmount: number;
-  feeRate: number;
-  gradeDiscount: number;
+  feeRate: number | string;
+  gradeDiscount: number | string;
   feeAmount: number;
   dueDate: string | null;
   payable: boolean;
   status: SettlementStatus;
   approvalNo?: string | null;
   paidAt?: string | null;
+  paymentMethodLabel?: string | null;
   failReason?: string | null;
 }
 
@@ -44,6 +46,7 @@ export interface AccountPaymentMethod {
   bankName: string | null;
   accountLast4: string | null;
   accountHolder: string | null;
+  isDefault: boolean;
 }
 
 export interface SettlementPageResponse {
