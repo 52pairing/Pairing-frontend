@@ -1,5 +1,5 @@
+import { Notifications } from "@/features/notification/components/Notifications";
+
 export default function NotificationsPage() {
-    return (
-        <div>알림</div>
-    );
+  return <Notifications />;
 }
