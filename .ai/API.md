@@ -39,6 +39,53 @@
 - 실패 처리: 프론트 흐름은 로그인 화면으로 이동하되 서버 쿠키 만료 여부는 확인 필요
 - 실제 응답: 미검증
 
+## 고객지원 챗봇 일일 한도 조회
+
+- Method / Path: `GET /api/v1/support/chatbot/quota`
+- 사용 위치: `src/features/common/support/services/support.ts`
+- 성공 응답 `data`: `{ dailyLimit: number }`
+- 화면 처리: 고객지원 FAQ 챗봇 카드에 `하루 최대 {dailyLimit}회 무료 이용` 표시
+- 로딩 처리: `무료 이용 한도 확인 중` 표시
+- 실패 처리: `무료 이용 한도 확인 필요` 표시
+- 실제 응답: 미검증
+
+## 내 1:1 문의 목록
+
+- Method / Path: `GET /api/v1/support/inquiries/mine?status={status}&page={page}&size=10`
+- 사용 위치: `src/features/common/support/services/support.ts`
+- 전체 탭은 `status` 생략, 대기 중은 `PENDING`, 답변 완료는 `ANSWERED`
+- 응답 `data`: `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last` 페이지 객체
+- 목록 필드: `inquiryNo`, `inquiryId`, `title`, `status`, `answeredAt`, `createdAt`
+- 작성자 필드는 사용자 화면에서 사용하지 않으며 항상 `null`
+- 로딩·오류와 재시도·빈 상태·이전/다음 페이지 처리
+- 실제 응답: 미검증
+
+## 1:1 문의 상세
+
+- Method / Path: `GET /api/v1/support/inquiries/{inquiryId}`
+- 사용 위치: `src/features/common/support/services/support.ts`
+- 문의 번호, 제목, 본문, 작성일, 상태와 첨부파일 표시
+- 첨부파일은 `files[].originalName`, `files[].fileUrl`만 표시하며 크기는 응답에 없어 미표시
+- 문의 유형은 API에서 제거되어 화면에도 표시하지 않음
+- `ANSWERED`: `answer`, `answererName`, `answeredAt` 표시
+- `PENDING`: `관리자가 문의 내용을 확인하고 있습니다.` 안내 표시
+- `IQ_001`: 존재하지 않는 문의, `IQ_002`: 본인이 작성하지 않은 문의 안내
+- 실제 응답: 미검증
+
+## 1:1 문의 작성
+
+- 첨부파일 업로드: `POST /api/v1/files`
+- multipart 필드: `file`, `purpose=INQUIRY_ATTACHMENT`
+- 허용 형식: PDF, JPG, JPEG, PNG / 파일당 최대 10MB
+- 업로드 응답: `fileId`, `originalName`, `fileUrl`, `mimeType`, `sizeBytes`
+- 문의 접수: `POST /api/v1/support/inquiries`
+- 요청: `{ title, content, fileIds }`
+- 제목 200자 이하, 내용 2,000자 이하이며 둘 다 필수
+- 화면 처리: 확인 모달의 `접수 하기`에서 파일을 순서대로 업로드한 후 문의 접수
+- 중복 제출 방지, 성공 토스트 후 문의 목록 이동, 실패 토스트 처리
+- 문의 접수 전 실패하면 해당 시도에서 업로드를 마친 파일을 `DELETE /api/v1/files/{fileId}`로 정리
+- 실제 파일 업로드·문의 접수 응답: 미검증
+
 ## 회원가입 메타 목록
 
 사용 위치: `src/features/auth/services/signupMeta.ts`
