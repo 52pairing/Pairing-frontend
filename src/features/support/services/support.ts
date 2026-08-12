@@ -2,6 +2,8 @@ import { apiCall } from "@/lib/api";
 
 import type {
   ChatbotQuotaResponse,
+  ChatbotMessage,
+  ChatbotQuestionRequest,
   InquiryPageResponse,
   InquiryResponse,
   InquiryStatus,
@@ -12,6 +14,18 @@ import type {
 
 export const getChatbotQuota = () =>
   apiCall<ChatbotQuotaResponse>("/api/v1/support/chatbot/quota");
+
+export const getSuggestedQuestions = () =>
+  apiCall<string[]>("/api/v1/support/chatbot/suggested-questions");
+
+export const getChatbotMessages = () =>
+  apiCall<ChatbotMessage[]>("/api/v1/support/chatbot/messages");
+
+export const sendChatbotQuestion = (request: ChatbotQuestionRequest) =>
+  apiCall<ChatbotMessage>("/api/v1/support/chatbot/questions", {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
 
 export const getMyInquiries = ({
   status,
@@ -36,12 +50,14 @@ export const getInquiry = (inquiryId: number) =>
 export const uploadInquiryFile = (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("purpose", "INQUIRY_ATTACHMENT");
 
-  return apiCall<InquiryUploadedFile>("/api/v1/files", {
-    method: "POST",
-    body: formData,
-  });
+  return apiCall<InquiryUploadedFile>(
+    "/api/v1/files?purpose=INQUIRY_ATTACHMENT",
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
 };
 
 export const deleteInquiryFile = (fileId: number) =>
