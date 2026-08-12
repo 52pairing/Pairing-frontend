@@ -534,6 +534,19 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `DRAFT` 계약은 상세보기 버튼 비활성화
 - 실제 네트워크 응답: 미검증
 
+### 클라이언트 계약 관리
+
+- 화면: `/client/contracts?tab={tab}`
+- `GET /api/v1/contracts?page={page}&size=100`으로 프로젝트 조건 없이 본인의 전체 계약 조회
+- 첫 응답의 `totalPages`가 2 이상이면 나머지 페이지를 추가 조회해 탭 필터 누락 방지
+- 탭 `ALL`: 전체 계약
+- 탭 `CLIENT_PENDING`: `clientSigned === false`
+- 탭 `CLIENT_SIGNED`: `clientSigned === true && freelancerSigned === false`
+- 탭 `ALL_SIGNED`: `clientSigned === true && freelancerSigned === true`
+- 계약 카드 UI는 프로젝트 상세의 계약 탭과 공용 컴포넌트 사용
+- 상세 이동: `/client/projects/{projectId}/contracts/{contractId}`
+- 실제 네트워크 응답: 미검증
+
 ## 계약 상세
 
 - 공용 서비스 위치: `src/features/contract/services/contracts.ts`
