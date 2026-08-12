@@ -49,6 +49,10 @@ export const getStompClient = (): Client => {
   client = new Client({
     brokerURL: resolveBrokerUrl(),
     reconnectDelay: 5000,
+    // 하트비트 10초/10초 — ALB idle timeout(60초) 대응. 서버와 값을 맞춘다.
+    // (한쪽이 0이면 STOMP 규약상 양방향 모두 꺼지므로 명시)
+    heartbeatIncoming: 10000,
+    heartbeatOutgoing: 10000,
     // 최초 연결과 재연결 모두에서 등록된 구독을 다시 붙인다.
     onConnect: () => {
       if (client) attachAllSubscriptions(client);

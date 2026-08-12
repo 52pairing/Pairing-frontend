@@ -14,6 +14,7 @@ import {
 import { Header } from "@/features/common/components/header/Header";
 import { ConfirmModal } from "@/features/common/components/Modal";
 import { useToast } from "@/features/common/hooks/useToast";
+import { ApiException } from "@/lib/api";
 
 import {
   createInquiry,
@@ -24,7 +25,31 @@ import {
 const MAX_TITLE_LENGTH = 200;
 const MAX_CONTENT_LENGTH = 2000;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ACCEPTED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+const ACCEPTED_FILE_EXTENSIONS = ["pdf", "jpg", "jpeg", "png"];
+
+function getSubmitErrorMessage(error: unknown) {
+  if (!(error instanceof ApiException)) {
+    return "문의를 접수하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+  }
+
+  if (error.errorCode === "GLOBAL_008") {
+    return "PDF, JPG, JPEG, PNG 파일만 첨부할 수 있습니다.";
+  }
+
+  if (error.errorCode === "FI_003" || error.status === 413) {
+    return "첨부파일은 파일당 최대 10MB까지 업로드할 수 있습니다.";
+  }
+
+  if (error.errorCode === "GLOBAL_015") {
+    return "첨부파일 전송 형식이 올바르지 않습니다.";
+  }
+
+  if (error.errorCode === "GLOBAL_007" || error.status >= 500) {
+    return "서버에서 파일을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+  }
+
+  return error.message || "문의를 접수하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+}
 
 export function InquiryForm() {
   const router = useRouter();
@@ -40,7 +65,13 @@ export function InquiryForm() {
 
   const addFiles = (selectedFiles: File[]) => {
     const invalidFile = selectedFiles.find(
-      (file) => !ACCEPTED_FILE_TYPES.includes(file.type) || file.size > MAX_FILE_SIZE,
+      (file) => {
+        const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+        return (
+          !ACCEPTED_FILE_EXTENSIONS.includes(extension) ||
+          file.size > MAX_FILE_SIZE
+        );
+      },
     );
 
     if (invalidFile) {
@@ -95,10 +126,10 @@ export function InquiryForm() {
       router.replace(
         `/support/inquiries/complete?inquiryId=${createdInquiry.inquiryId}`,
       );
-    } catch {
+    } catch (error) {
       await Promise.allSettled(uploadedFileIds.map(deleteInquiryFile));
       setIsConfirmOpen(false);
-      toast.error("문의를 접수하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      toast.error(getSubmitErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }

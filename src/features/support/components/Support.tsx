@@ -44,6 +44,7 @@ export function Support() {
         "페어링 이용 방법과 정책에 대해 AI 챗봇에게 질문할 수 있습니다.",
       items: ["이용 방법 및 절차 안내", "수수료·정책 관련 문의", quotaLabel],
       actionLabel: "챗봇 시작하기",
+      actionHref: "/support/chatbot",
       emphasis: true,
     },
     {

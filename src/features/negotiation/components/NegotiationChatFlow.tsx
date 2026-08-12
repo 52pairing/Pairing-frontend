@@ -156,11 +156,13 @@ export function NegotiationChatFlow({
             onGiveUp={onGiveUp}
           />
         ) : (
+          // 이 분기는 항상 totalRound >= 1(진행 중, 내 차례 아님).
+          // AI 진행 중은 isSubmitting(요청 떠 있을 때)로 이미 표시되므로, 여기선 상대 대기다.
           <WaitingNotice
             label={
               hasRejected
                 ? "상대방이 조건을 다시 입력하고 있습니다"
-                : "대리인이 협상을 진행하고 있습니다…"
+                : "상대방 응답을 기다리는 중입니다"
             }
           />
         )}
@@ -776,15 +778,20 @@ function ConditionActionPanel({
           );
           const boundText = viewerRole === "CLIENT" ? "이상이어야" : "이하여야";
           // 마지노선 비교 방식: 서버 floorComparison 우선, 없으면(배포 시점차) type 으로 추정
+          // (SCOPE/OTHER = NONE: 비교 기준 없어 안내 문구를 아예 띄우지 않음)
           const comparison =
             condition.floorComparison ??
             (condition.type === "WORK_STYLE" || condition.type === "WORK_FORM"
               ? "CHOICE"
-              : "RANGE");
+              : condition.type === "SCOPE" || condition.type === "OTHER"
+                ? "NONE"
+                : "RANGE");
           const warningText =
-            comparison === "CHOICE"
-              ? `지금 제안(${proposedText})을 수락하려면 이 값을 허용해야 합니다`
-              : `지금 제안(${proposedText})을 수락하려면 ${proposedText} ${boundText} 합니다`;
+            comparison === "NONE"
+              ? ""
+              : comparison === "CHOICE"
+                ? `지금 제안(${proposedText})을 수락하려면 이 값을 허용해야 합니다`
+                : `지금 제안(${proposedText})을 수락하려면 ${proposedText} ${boundText} 합니다`;
           const myFloorText = formatConditionValue(condition.type, condition.myFloor, labels);
           const isEditing = editOpen[condition.conditionId] === true;
           return (
@@ -838,7 +845,7 @@ function ConditionActionPanel({
                       setEditValues((prev) => ({ ...prev, [condition.conditionId]: value }))
                     }
                   />
-                  {warnIds[condition.conditionId] && proposedText ? (
+                  {warnIds[condition.conditionId] && warningText ? (
                     <p className="mt-2 text-[10px] font-semibold text-[#b54708]">
                       ⚠️ {warningText}
                     </p>

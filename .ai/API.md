@@ -43,10 +43,40 @@
 
 - Method / Path: `GET /api/v1/support/chatbot/quota`
 - 사용 위치: `src/features/common/support/services/support.ts`
-- 성공 응답 `data`: `{ dailyLimit: number }`
+- 성공 응답 `data`: `{ quotaDate, dailyLimit, usedCount, remainingCount }`
 - 화면 처리: 고객지원 FAQ 챗봇 카드에 `하루 최대 {dailyLimit}회 무료 이용` 표시
+- 챗봇 화면 우측 상단에 `{remainingCount}/{dailyLimit}회` 표시
 - 로딩 처리: `무료 이용 한도 확인 중` 표시
 - 실패 처리: `무료 이용 한도 확인 필요` 표시
+- 실제 응답: 미검증
+
+## 고객지원 FAQ 챗봇
+
+- 추천 질문: `GET /api/v1/support/chatbot/suggested-questions`
+  - 응답 `data`: `string[]`
+  - 칩 선택 시 문자열을 질문 입력창에 그대로 입력
+- 오늘 대화 이력: `GET /api/v1/support/chatbot/messages`
+  - 오늘 내 대화 전체를 시간순으로 반환
+  - 필드: `sessionId`, `question`, `answer`, `remainingQuota`, `createdAt`
+  - 진입 시 한 번 조회하고 사용자 질문·챗봇 답변 말풍선으로 복원
+- 질문 전송: `POST /api/v1/support/chatbot/questions`
+  - 첫 질문 요청: `{ question, sessionId: null }`
+  - 후속 질문 요청: `{ question, sessionId }`
+  - 후속 `sessionId`는 마지막 이력 또는 직전 응답에서 사용
+  - 응답: `sessionId`, `question`, `answer`, `remainingQuota`, `createdAt`
+  - 응답 `actions[]`: `code`, `label`, `url`
+  - 서버 공통 URL과 실제 역할별 App Router 경로가 달라 action `code`를 기준으로 `/client/*`, `/freelancer/*` 경로에 매핑
+  - 프로젝트 등록: `/client/projects/new`, 내 프로젝트·협상 목록: 역할별 `/projects`, 계약: 역할별 `/contracts`
+  - 결제수단·정산: 역할별 `/mypage/payment-methods`, `/mypage/payments`
+  - 이력서: `/freelancer/mypage/resume`, 문의 작성: `/support/inquiries/new`
+  - 이력 조회의 `actions`는 항상 빈 배열이며 직전 질문 응답의 액션만 새로 표시
+  - 응답의 `remainingQuota`로 잔여 횟수를 갱신하며 quota를 재조회하지 않음
+- 화면 처리: 초기 병렬 조회, 로딩·조회 실패·전송 실패·한도 소진 처리
+- 잔여 횟수가 1~3회면 프론트 기준 경고 배너 표시
+- 잔여 횟수 0이면 입력·추천 질문 비활성화 후 1:1 문의 안내
+- `CB_003`(429): 잔여 횟수를 0으로 갱신하고 한도 소진·1:1 문의 안내
+- `CB_004`(502): 잔여 횟수를 변경하지 않고 AI 서버 장애·1:1 문의 안내
+- `CB_001`(404)·`CB_002`(403): sessionId를 `null`로 초기화해 질문을 한 번 재시도
 - 실제 응답: 미검증
 
 ## 내 1:1 문의 목록
@@ -75,7 +105,8 @@
 ## 1:1 문의 작성
 
 - 첨부파일 업로드: `POST /api/v1/files`
-- multipart 필드: `file`, `purpose=INQUIRY_ATTACHMENT`
+- 요청 경로: `POST /api/v1/files?purpose=INQUIRY_ATTACHMENT`
+- multipart 필드: `file` (purpose는 body가 아닌 쿼리 파라미터)
 - 허용 형식: PDF, JPG, JPEG, PNG / 파일당 최대 10MB
 - 업로드 응답: `fileId`, `originalName`, `fileUrl`, `mimeType`, `sizeBytes`
 - 문의 접수: `POST /api/v1/support/inquiries`
@@ -83,6 +114,7 @@
 - 제목 200자 이하, 내용 2,000자 이하이며 둘 다 필수
 - 화면 처리: 확인 모달의 `접수 하기`에서 파일을 순서대로 업로드한 후 문의 접수
 - 중복 제출 방지, 성공 토스트 후 문의 목록 이동, 실패 토스트 처리
+- `GLOBAL_008`, `FI_003`, `GLOBAL_015`, `GLOBAL_007` 오류별 파일 형식·용량·전송 형식·서버 장애 안내
 - 문의 접수 전 실패하면 해당 시도에서 업로드를 마친 파일을 `DELETE /api/v1/files/{fileId}`로 정리
 - 실제 파일 업로드·문의 접수 응답: 미검증
 
@@ -678,10 +710,20 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 상태별 화면: `IN_PROGRESS` 로그+인라인 패널 / `AGREED` 타결 카드 / `FAILED` 결렬 카드
 - 타결 시 `chatRoomId != null`일 때만 [채팅으로 이어가기] 노출, null이면 "계약 체결 후 대화" 안내 (screen-api-map §10)
 
+### 배포·확정 (백엔드 회신 2026-08-12, develop HEAD 41895de3)
+
+- **배포 완료**: `floorComparison`(#158) `enum:["RANGE","CHOICE","NONE"]`, `PATCH /floors`(#135), `/api/ws`·`/ws` 둘 다 열림, CORS `http://localhost:17000` 등록됨 → **지금부터 실서버로 검증 가능**
+- 대기 문구 판정(확정): `agentState RUNNING/FAILED` → 배포 후 우선 처리 · `waitingForMe` → 내 차례 · `REJECTED` → 상대 재입력 · `totalRound>0` → 상대 응답 대기 · `totalRound===0` → 상대 조건 입력 중
+  - 프론트 현재: `totalRound` 규칙 반영 완료. `agentState`는 **미배포**라 타입만 준비(렌더/폴링은 배포 후)
+- `floorComparison` NONE(SCOPE/OTHER): 안내 문구 미표시로 반영
+- `PATCH /floors`: 성공 응답 `data`=상세와 동일 형태 확정(재조회 X). `AGREED` 수정 시 `CONDITION_ALREADY_LOCKED` → 현재 인라인 오류(catch)로 처리
+- STOMP: SockJS off, 하트비트 `10000,10000` 명시 반영. 인증=핸드셰이크 인터셉터(JWT 쿠키)
+- Gemini 연결됨(모델 호출 16~17초). 말풍선 `(stub)` 보이면 그 시점 파이썬 미연결 → 백엔드 통보
+
 ### 남은 확인/결정
 
-- 실제 네트워크 응답·STOMP 연결 검증 (전 항목 미검증)
-- (결정됨) 알림=협상방 가기 버튼 빨간점만 / 채팅 라우트 `/chat` / 협상 자동생성(수락 시)
-- 조건 종류별 전용 입력 UI(금액=만원 외 기간=숫자+단위, 근무방식/형태=드롭다운, 시작일=날짜선택기) — 후속 보강
-- 프리랜서 측 대칭 화면, 전역 STOMP(실시간 자동 갱신)
-- WS 배포 CORS: 프론트 오리진(프로토콜+호스트+포트) 확정 후 백엔드 `CORS_ALLOWED_ORIGINS` 등록 요청(REST+WS 공용, 재빌드 불필요). 쿠키 인증이라 `*` 불가, Vercel은 `https://*.vercel.app` 패턴 가능
+- **실서버 실동작 검증**: 로그인 STOMP 클라이언트로 붙어 실시간 흐름 + `CONNECTED` heart-beat `10000,10000` 확인 (백엔드와 같이)
+- 테스트 데이터: 매칭 수락 실경로로 `NEGOTIATING` 건 생성 예정 → **어느 테스트 계정(프리/클라)** 기준일지 백엔드에 알려주기
+- `agentState` 배포되면: RUNNING/FAILED 라벨 + **RUNNING 동안 GET 폴링(2~3s) 폴백** 추가 (STOMP 이벤트 오면 즉시 재조회·폴링 중단)
+- WS 배포 CORS: 프론트 배포 도메인/프리뷰 패턴 확정 후 `CORS_ALLOWED_ORIGINS` 등록 요청(패턴 가능: `https://*.vercel.app`)
+- 프리랜서 측 대칭 화면, 조건 종류별 입력 UI는 완료. 전역 STOMP(`/user/queue/notifications`)는 후속
