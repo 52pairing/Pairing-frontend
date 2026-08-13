@@ -1,6 +1,7 @@
 "use client";
 
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { useUnreadNotificationCount } from "@/features/notification/hooks/useUnreadNotificationCount";
 import { ClientHeader } from "./ClientHeader";
 import { FreelancerHeader } from "./FreelancerHeader";
 import { GuestHeader } from "./GuestHeader";
@@ -15,13 +16,14 @@ interface HeaderProps {
 export function Header({ role = "guest" }: HeaderProps) {
   const user = useCurrentUser();
   const currentRole = user?.role.toLowerCase() ?? role;
+  const noticeCount = useUnreadNotificationCount(user?.accountId);
 
   if (currentRole === "client") {
-    return <ClientHeader name={user?.name} />;
+    return <ClientHeader name={user?.name} noticeCount={noticeCount} />;
   }
 
   if (currentRole === "freelancer") {
-    return <FreelancerHeader name={user?.name} />;
+    return <FreelancerHeader name={user?.name} noticeCount={noticeCount} />;
   }
 
   return <GuestHeader />;

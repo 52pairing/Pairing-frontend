@@ -31,6 +31,9 @@ interface Registration {
 // 활성 구독 목록. 재연결(onConnect) 때 전부 다시 subscribe 한다.
 const registrations = new Set<Registration>();
 
+// 연결될 때마다(최초 연결 포함) 알림을 받을 리스너 목록. 재연결 감지(목록 재조회 등)에 사용한다.
+const connectListeners = new Set<() => void>();
+
 let client: Client | null = null;
 
 const attachAllSubscriptions = (activeClient: Client) => {
@@ -56,10 +59,20 @@ export const getStompClient = (): Client => {
     // 최초 연결과 재연결 모두에서 등록된 구독을 다시 붙인다.
     onConnect: () => {
       if (client) attachAllSubscriptions(client);
+      connectListeners.forEach((listener) => listener());
     },
   });
 
   return client;
+};
+
+/**
+ * STOMP 연결이 붙을 때마다(최초 연결 포함) 호출된다.
+ * 반환된 함수로 등록을 해제한다.
+ */
+export const onStompConnect = (listener: () => void): (() => void) => {
+  connectListeners.add(listener);
+  return () => connectListeners.delete(listener);
 };
 
 /** 클라이언트를 활성화한다(로그인 후 1회, 이후 호출은 무시됨). */
