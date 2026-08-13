@@ -3,8 +3,8 @@
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import { getClientProjectContracts } from "@/features/client/myprojects/contract/services/contracts";
-import type { ClientContractListItem } from "@/features/client/myprojects/contract/types/contract";
+import { getClientProjectContracts } from "@/features/contract/services/clientContracts";
+import type { ClientContractListItem } from "@/features/contract/types/clientContract";
 import { getClientProjectDetail } from "@/features/client/myprojects/services/projectDetail";
 import type { ClientProjectDetailResponse } from "@/features/client/myprojects/types/projectDetail";
 import { getProjectJobRoles } from "@/features/client/projects/services/projectPreReview";

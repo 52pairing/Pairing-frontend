@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { ClientContracts } from "@/features/client/contracts/components/ClientContracts";
+import { ClientContracts } from "@/features/contract/components/client/ClientContracts";
 
 export default function ContractsPage() {
   return (

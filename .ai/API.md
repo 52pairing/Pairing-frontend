@@ -904,5 +904,54 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 - `NEGOTIATION_STARTED`/`NEGOTIATION_PROPOSED`/`NEGOTIATION_FAILED`, `SETTLEMENT_DUE`의 실제 `linkUrl` 형식은 가이드 문서에 명시돼 있지 않아 서버 값을 그대로 이동시킵니다. 실제 협상방 경로(`/client|freelancer/projects/{projectId}/negotiation/{negotiationId}`)나 정산 경로와 다르면 확인이 필요합니다.
 - 실제 로그인 세션 기반 REST 응답, STOMP 수신, 재연결 시 재조회 동작은 테스트 계정이 없어 브라우저로 확인하지 못했습니다.
+## 회원 탈퇴 (2026-08-13)
+
+- 탈퇴 가능 여부 조회: `GET /api/v1/accounts/me/withdrawal-eligibility`
+- 회원 탈퇴: `DELETE /api/v1/accounts/me`
+- 사용 위치: `src/features/common/services/withdrawal.ts`, `src/features/common/hooks/useWithdrawal.ts`
+  - 화면: `src/features/client/mypage/components/ClientAccountCancellation.tsx`, `src/features/freelancer/mypage/components/FreelancerAccountCancellation.tsx`
+- 인증: HttpOnly 로그인 쿠키. 둘 다 로그인 필요
+- 조회 성공 응답 `data`: `{ withdrawable, blockers: [{ type, label, count, linkUrl }] }`
+  - `label`·`linkUrl`은 서버 값을 그대로 사용(프론트 조립 금지), `blockers`는 0건이면 내려오지 않음
+  - `UNPAID_SETTLEMENT`는 `count`가 항상 1이라 화면에 건수를 표시하지 않음
+- 탈퇴 요청 바디: `{ agreed: true, confirmText: "탈퇴하겠습니다", reason?: string(500자) }`
+  - `confirmText`는 프론트에서 앞뒤 공백만 정리(trim) 후 전송
+  - 탈퇴 성공 시 `data: null` → 완료 모달 표시 후 `window.location.replace("/")`로 이동
+- 화면 진입 시 조회 API를 먼저 호출해 `withdrawable === false`면 탈퇴 버튼을 비활성화하고 `blockers`를 그대로 나열
+- 실패 처리
+  - `AC_009`(확인 문구 불일치): 입력칸 아래 인라인 오류로 표시, 입력값 유지
+  - `AC_010`(진행 중인 프로젝트·계약), `AC_011`(미납 수수료): 인라인 오류 표시 + 조회 API 재호출로 안내 갱신
+  - `AC_008`(이미 탈퇴한 계정): 완료 상태로 처리해 메인으로 이동
+  - `GLOBAL_002`(agreed/confirmText 누락): 폼 검증 메시지
+  - `401`: "로그인이 필요합니다" 표시(현재 공통 `apiCall`의 `GLOBAL_009/010/011` 자동 처리와 별개로 이 화면 자체 401은 메시지만 표시, 별도 리다이렉트 미구현)
+- 실제 백엔드 성공·오류 응답: 미검증 — 테스트 계정 없어 로그인 상태 브라우저 확인 불가
+
+---
+# 채팅 도메인 (2026-08-13, 최종 매핑 재연동)
+
+- 목록: `GET /api/v1/chat-rooms` — `lastMessageAt` 기준 프론트 최신순 정렬, `unreadCount` 0이면 배지 숨김
+- 상세: `GET /api/v1/chat-rooms/{chatRoomId}`
+- 메시지: `GET /api/v1/chat-rooms/{chatRoomId}/messages?page=0&size=30` — 최신순 페이지를 시간 오름차순으로 뒤집어 표시
+- 전송: `POST /api/v1/chat-rooms/{chatRoomId}/messages`, 요청 `{ content }`, 최대 500자
+- 읽음: `POST /api/v1/chat-rooms/{chatRoomId}/read` — 방 진입 및 열린 방에서 STOMP 메시지 수신 시 호출
+- 협상으로 방 조회: `GET /api/v1/chat-rooms/by-negotiation/{negotiationId}`
+- 나가기: `POST /api/v1/chat-rooms/{chatRoomId}/leave` (`leaveEnabled`가 true일 때만 후속 UI 노출)
+- 읽지 않은 전체 채팅 수: `GET /api/v1/chat-rooms/unread-count` (서비스만 추가, 헤더 연결은 후속)
+- 합의안: `GET /api/v1/contracts/by-negotiation/{negotiationId}`. `CT_001`이면 카드만 숨김
+- 실시간 구독: `/topic/chat-rooms/{chatRoomId}`. broadcast에는 `mine`이 없으므로 `/auth/me`의 `accountId`와 `senderId`를 비교하고 내 이벤트는 무시
+- 프로필 이미지가 null이면 이름 첫 글자 아바타 표시
+- `messageType === SYSTEM`은 말풍선이 아닌 중앙 구분선, 그 외 메시지는 `mine`으로 좌우 배치
+- 프로필 이미지는 PR #199 배포 후 CloudFront 절대 URL을 그대로 사용하며 null 또는 로드 실패 시 첫 글자 아바타로 대체
+- 실제 성공·실패 응답 및 STOMP payload: 미검증
+
+### 백엔드 최종 회신 반영 (2026-08-13)
+
+- 채팅방 `status`는 `ACTIVE | CLOSED` (`OPEN` 아님)
+- `projectTitle`, `counterpartName`은 nullable
+- 프로필 이미지 필드는 PR #199 배포 후 CloudFront 절대 URL로 반환. 프론트에서 URL 조립 금지
+- 더미 데이터는 URL이 있어도 실제 객체가 없어 403일 수 있으므로 이미지 `onError` 시 첫 글자 아바타로 대체
+- STOMP broadcast도 내 메시지를 제외하지 않고 `senderId === /auth/me.accountId`로 `mine`을 계산한 뒤 `messageId`로 REST 응답과 중복 제거
+- 실제 채팅 오류: `CH_001` 방 없음, `CH_002` 비당사자, `CH_003` 입력 비활성, `CH_004` 나가기 불가, `CH_005` 이미 나간 방
+- `GET /api/v1/chat-rooms`: PostgreSQL 파라미터 타입 추론 서버 오류 수정·배포 완료, 운영 응답 200 및 채팅방 9건 확인
 
 ---
