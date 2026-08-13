@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { getContracts } from "@/features/contract/services/contracts";
+import { getContracts, getContractTabCounts } from "@/features/contract/services/contracts";
 import type { ContractListItem, ContractListPage, ContractListTab } from "@/features/contract/types/contractList";
 import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
 import { SettlementPaymentComplete } from "@/features/payment/components/SettlementPaymentComplete";
@@ -35,6 +35,17 @@ export function FreelancerContracts() {
   const [successFeeContract, setSuccessFeeContract] = useState<ContractListItem | null>(null);
   const [completedPayment, setCompletedPayment] = useState<{ settlement: SettlementResponse; contractId: number } | null>(null);
   const requestIdRef = useRef(0);
+  const [tabRows, setTabRows] = useState<Partial<Record<FreelancerContractStatus, { label: string; count: number }>>>({});
+
+  const loadTabCounts = useCallback(async () => {
+    try {
+      const rows = await getContractTabCounts();
+      const byTab = Object.fromEntries(rows.map((row) => [row.tab, row]));
+      setTabRows(Object.fromEntries(Object.entries(TAB_CODES).map(([label, code]) => [label, byTab[code] ? { label: byTab[code].label, count: byTab[code].count } : undefined])));
+    } catch {
+      setTabRows({});
+    }
+  }, []);
 
   const loadContracts = useCallback(async () => {
     const requestId = ++requestIdRef.current;
@@ -63,6 +74,12 @@ export function FreelancerContracts() {
       requestIdRef.current += 1;
     };
   }, [loadContracts]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => { if (!cancelled) void loadTabCounts(); });
+    return () => { cancelled = true; };
+  }, [loadTabCounts]);
 
   const changeStatus = (status: FreelancerContractStatus) => {
     setActiveStatus(status);
@@ -114,7 +131,7 @@ export function FreelancerContracts() {
         <h1 className="text-[20px] font-bold tracking-[-0.6px] text-theme-primary">내 계약</h1>
         <p className="mt-2 text-[11px] font-semibold text-[#748094]">계약 체결 이후 진행 상황을 확인하세요.</p>
 
-        <FreelancerContractStatusTabs activeStatus={activeStatus} onStatusChange={changeStatus} />
+        <FreelancerContractStatusTabs activeStatus={activeStatus} onStatusChange={changeStatus} rows={tabRows} />
 
         {paymentErrorMessage ? <p role="alert" className="mt-4 rounded-lg border border-[#fda29b] bg-danger-surface px-4 py-3 text-[11px] font-semibold text-theme-danger">{paymentErrorMessage}</p> : null}
 

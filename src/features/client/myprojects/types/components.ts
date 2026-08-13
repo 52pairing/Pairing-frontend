@@ -26,6 +26,8 @@ export interface ClientProjectCardProps {
 export interface ProjectStatusTabsProps {
   activeTab: ClientProjectTab;
   onTabChange: (tab: ClientProjectTab) => void;
+  counts?: Partial<Record<ClientProjectTab, number>>;
+  labels?: Partial<Record<ClientProjectTab, string>>;
 }
 
 export type ProjectDetailTab = "프로젝트 정보" | "추천 후보" | "협상" | "계약" | "진행 현황";

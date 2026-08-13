@@ -1,5 +1,26 @@
 # API
 
+## 프로젝트·계약 후속 연동 (2026-08-13)
+
+- 프로젝트 첨부 다운로드: `GET /api/v1/projects/{projectId}/files/{fileId}/download`
+  - `apiBlob`으로 요청하며 상세 응답의 `files[].originalName`을 저장 파일명으로 사용
+  - `fileUrl`은 미리보기 전용이며 다운로드에는 사용하지 않음
+  - `PJ_003`, `ACCESS_DENIED`(403), `FI_001`(404)는 공통 `ApiException` 메시지를 화면에 표시
+- 작성 리뷰: `GET /api/v1/reviews/written?page={page}&size=10`
+  - 전체 페이지를 조회한 뒤 프로젝트 계약 목록의 `contractId` 집합으로 필터링
+- 작성 대기 리뷰: `GET /api/v1/reviews/pending`
+  - 프로젝트 계약의 `contractId`와 일치하는 항목에 리뷰 작성 링크 표시
+  - 리뷰 작성 가능 여부를 프로젝트 상태로 계산하지 않음
+- 내 프로젝트 탭 건수: `GET /api/v1/projects/mine/tab-counts`
+  - 서버의 `tab`, `label`, `count` 사용, 0건 배지 숨김
+- 내 계약 탭 건수: `GET /api/v1/contracts/mine/tab-counts`
+  - 클라이언트는 `ALL`, `AWAITING_ME`, `AWAITING_COUNTERPART`, `CONCLUDED` 사용
+  - 프리랜서는 `ALL`, `AWAITING_ME`, `IN_PROGRESS`, `SETTLEMENT_PENDING`, `COMPLETED` 사용
+  - 신규 API 미배포 시 기존 목록을 유지하고 배지만 숨김
+- 실제 로그인 쿠키 기반 성공·오류 응답 및 파일 저장: 미검증
+
+---
+
 프론트에서 실제 사용하는 API와 검증 상태를 기록합니다.
 
 ## 프로젝트 도메인 기준 문서
