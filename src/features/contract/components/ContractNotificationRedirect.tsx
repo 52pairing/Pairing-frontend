@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
-import { getAllClientContracts } from "@/features/client/myprojects/contract/services/contracts";
+import { getAllClientContracts } from "@/features/contract/services/clientContracts";
 
 /**
  * 계약 알림(`CONTRACT_CREATED`/`CONTRACT_SIGNED`)의 linkUrl은 `/contracts/{contractId}`로 오지만
