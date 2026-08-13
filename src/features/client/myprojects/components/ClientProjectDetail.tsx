@@ -23,7 +23,6 @@ import { getProjectJobRoles, getProjectSkills, getProjectWorkConditions } from "
 import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
 import type { SettlementResponse } from "@/features/payment/types/payment";
 import { RecommendedCandidates } from "@/features/matching/components/RecommendedCandidates";
-import { CandidateRerollActions } from "@/features/matching/components/CandidateRerollActions";
 
 const STATUS_LABEL: Record<string, string> = {
   REGISTERED: "등록 완료",
@@ -198,9 +197,9 @@ export function ClientProjectDetail() {
 
         {errorMessage ? <p role="alert" className="mt-4 rounded-lg border border-[#fda29b] bg-danger-surface px-4 py-3 text-[12px] font-semibold text-theme-danger">{errorMessage}</p> : null}
 
-        <ProjectDetailTabs activeTab={activeTab} onTabChange={setActiveTab} rightContent={<div className="flex items-center gap-2">{activeTab === "추천 후보" ? <CandidateRerollActions projectId={project.projectId} /> : activeTab === "협상" ? <NegotiationActions /> : null}{actionMenu}</div>} />
+        <ProjectDetailTabs activeTab={activeTab} onTabChange={setActiveTab} rightContent={<div className="flex items-center gap-2">{activeTab === "협상" ? <NegotiationActions /> : null}{actionMenu}</div>} />
 
-        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} workFormLabel={workFormLabels[project.workForm] ?? project.workForm} /> : activeTab === "추천 후보" ? <RecommendedCandidates projectId={project.projectId} /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : <ProjectProgress project={project} jobRoleLabels={jobRoleLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} />}
+        {activeTab === "프로젝트 정보" ? <ProjectInformation project={project} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} workFormLabel={workFormLabels[project.workForm] ?? project.workForm} /> : activeTab === "추천 후보" ? <RecommendedCandidates projectId={project.projectId} positions={project.positions} jobRoleLabels={jobRoleLabels} skillLabels={skillLabels} /> : activeTab === "협상" ? <ProjectNegotiation /> : activeTab === "계약" ? <ProjectContracts projectId={params.projectId} /> : <ProjectProgress project={project} jobRoleLabels={jobRoleLabels} workStyleLabel={workStyleLabels[project.workStyle] ?? project.workStyle} />}
       </div>
 
       <ConfirmModal open={pendingAction !== null} title={pendingAction ? ACTION_MODAL[pendingAction].title : ""} description={pendingAction ? ACTION_MODAL[pendingAction].description : ""} confirmText={isProcessing ? "처리 중..." : pendingAction ? ACTION_MODAL[pendingAction].confirmText : "확인"} cancelText="취소" onClose={() => !isProcessing && setPendingAction(null)} onConfirm={() => void executeAction()} closeOnOverlayClick={!isProcessing} />

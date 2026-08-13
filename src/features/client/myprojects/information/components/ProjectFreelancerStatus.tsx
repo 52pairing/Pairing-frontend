@@ -10,9 +10,17 @@ import type { MatchingRequestItem } from "@/features/client/myprojects/types/pro
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "요청 대기",
   REQUESTED: "요청 대기",
+  REQUEST_PENDING: "요청 대기",
+  REJECTED: "거절",
+  ACCEPTED: "수락",
   NEGOTIATING: "협상중",
   CONTRACT_PENDING: "계약 대기",
   CONTRACTED: "계약 완료",
+  IN_PROGRESS: "진행중",
+  COMPLETION_PENDING: "완료 대기",
+  CLOSED: "종료",
+  TERMINATED: "중도 종료",
+  NEGOTIATION_FAILED: "협상 결렬",
 };
 
 const AVATAR_COLORS = ["bg-[#3975ef]", "bg-[#7c3aed]", "bg-[#16a34a]"];
@@ -45,7 +53,7 @@ export function ProjectFreelancerStatus({ projectId, jobRoleLabels }: ProjectFre
           {items.map((item, index) => {
             const statusLabel = STATUS_LABEL[item.status] ?? item.status;
             return (
-              <article key={item.matchingRequestId ?? `${item.counterpartName}-${index}`} className="flex min-h-[86px] items-center justify-between rounded-[12px] border border-theme px-4 py-3">
+              <article key={item.requestId} className="flex min-h-[86px] items-center justify-between rounded-[12px] border border-theme px-4 py-3">
                 <div className="flex items-center gap-4">
                   <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[17px] font-extrabold text-white ${AVATAR_COLORS[index % AVATAR_COLORS.length]}`}>{item.counterpartName.slice(0, 1)}</span>
                   <div>
@@ -58,21 +66,21 @@ export function ProjectFreelancerStatus({ projectId, jobRoleLabels }: ProjectFre
                 </div>
                 {/* 협상중(NEGOTIATING)일 때만 협상방 진입. 매칭 수락 시 서버가 협상방을 자동 생성한다.
                     수락 전(요청 대기)이나 계약 단계에서는 버튼 없음. */}
-                {item.status === "NEGOTIATING" && item.negotiationId != null ? (
+                <div className="flex items-center gap-2"><Link href={`/client/projects/${projectId}/requests/${item.requestId}`} className="flex h-[46px] items-center rounded-[10px] border border-theme px-4 text-[12px] font-bold text-theme-secondary">상세보기</Link>{item.status === "NEGOTIATING" && item.negotiationId != null ? (
                   <Link
                     href={`/client/projects/${projectId}/negotiation/${item.negotiationId}`}
                     className="relative flex h-[46px] min-w-[100px] items-center justify-center rounded-[10px] bg-brand px-5 text-[13px] font-bold text-white hover:bg-brand"
                   >
                     협상방 가기
                     {/* 협상 시작·내부 변동 시 새 제안 빨간점 (매칭 응답 newProposalCount) */}
-                    {item.newProposalCount > 0 ? (
+                    {(item.newProposalCount ?? 0) > 0 ? (
                       <span
                         aria-label="새 제안 있음"
                         className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-[#f04438]"
                       />
                     ) : null}
                   </Link>
-                ) : null}
+                ) : null}</div>
               </article>
             );
           })}

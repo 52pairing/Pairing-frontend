@@ -1,19 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { MyPagePasswordChange } from "@/features/auth/components/MyPagePasswordChange";
+import { getMatchingSettings, updateMatchingSettings } from "@/features/matching/services/matching";
+import type { MatchingSettingsResponse } from "@/features/matching/types/matching";
 import { FreelancerMyPageLayout } from "./FreelancerMyPageLayout";
 
 const EMPTY_VALUE = "확인 필요";
 
 export function FreelancerProfile() {
   const user = useCurrentUser();
-  const [isMatchingEnabled, setIsMatchingEnabled] = useState(true);
+  const [matchingSettings, setMatchingSettings] = useState<MatchingSettingsResponse | null>(null);
+  const [matchingError, setMatchingError] = useState("");
+  const [isMatchingSaving, setIsMatchingSaving] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const initial = user?.name?.trim().charAt(0) || "프";
+
+  useEffect(() => {
+    let cancelled = false;
+    getMatchingSettings().then((response) => { if (!cancelled) setMatchingSettings(response); }).catch((error) => { if (!cancelled) setMatchingError(error instanceof Error ? error.message : "매칭 설정을 불러오지 못했습니다."); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const toggleMatchingPaused = async () => {
+    if (!matchingSettings || isMatchingSaving) return;
+    setIsMatchingSaving(true);
+    setMatchingError("");
+    try {
+      const nextSettings = matchingSettings.aiMatchingAgreed
+        ? { aiMatchingAgreed: true, matchingPaused: !matchingSettings.matchingPaused }
+        : { aiMatchingAgreed: true, matchingPaused: false };
+      setMatchingSettings(await updateMatchingSettings(nextSettings));
+    } catch (error) { setMatchingError(error instanceof Error ? error.message : "매칭 설정을 변경하지 못했습니다."); }
+    finally { setIsMatchingSaving(false); }
+  };
+
+  const toggleMatchingAgreement = async () => {
+    if (!matchingSettings || isMatchingSaving) return;
+    setIsMatchingSaving(true);
+    setMatchingError("");
+    try {
+      setMatchingSettings(await updateMatchingSettings({ aiMatchingAgreed: !matchingSettings.aiMatchingAgreed, matchingPaused: matchingSettings.matchingPaused }));
+    } catch (error) { setMatchingError(error instanceof Error ? error.message : "AI 매칭 동의 설정을 변경하지 못했습니다."); }
+    finally { setIsMatchingSaving(false); }
+  };
 
   return (
     <FreelancerMyPageLayout activeMenu="profile">
@@ -103,20 +136,21 @@ export function FreelancerProfile() {
             <button
               type="button"
               role="switch"
-              aria-checked={isMatchingEnabled}
+              aria-checked={matchingSettings ? matchingSettings.aiMatchingAgreed && !matchingSettings.matchingPaused : false}
               aria-label="AI 매칭"
-              onClick={() => setIsMatchingEnabled((enabled) => !enabled)}
-              className={`relative mt-0.5 h-6 w-11 shrink-0 overflow-hidden rounded-full transition-colors ${isMatchingEnabled ? "bg-brand" : "bg-surface-muted"}`}
+              disabled={!matchingSettings || isMatchingSaving}
+              onClick={() => void toggleMatchingPaused()}
+              className={`relative mt-0.5 h-6 w-11 shrink-0 overflow-hidden rounded-full transition-colors disabled:cursor-not-allowed ${matchingSettings?.aiMatchingAgreed && !matchingSettings.matchingPaused ? "bg-brand" : "bg-surface-muted"}`}
             >
               <span
-                className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${isMatchingEnabled ? "translate-x-5" : "translate-x-0"}`}
+                className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${matchingSettings?.aiMatchingAgreed && !matchingSettings.matchingPaused ? "translate-x-5" : "translate-x-0"}`}
               />
             </button>
             <div className="min-w-0">
               <p
-                className={`text-[13px] font-bold ${isMatchingEnabled ? "text-emerald-600" : "text-theme-secondary"}`}
+                className={`text-[13px] font-bold ${matchingSettings?.matchable ? "text-emerald-600" : "text-theme-secondary"}`}
               >
-                AI 매칭 {isMatchingEnabled ? "받는 중" : "중지됨"}
+                {isMatchingSaving ? "AI 매칭 설정 저장 중" : !matchingSettings ? "AI 매칭 설정 확인 중" : matchingSettings.matchable ? "AI 매칭 받는 중" : "AI 매칭 중지됨"}
               </p>
               <p className="mt-1 break-words text-[12px] font-semibold leading-5 text-theme-muted">
                 프로필과 이력서를 기반으로 새로운 프로젝트 추천을 받을 수
@@ -124,6 +158,9 @@ export function FreelancerProfile() {
               </p>
             </div>
           </div>
+          {matchingSettings ? <div className="mt-4 flex min-w-0 items-center justify-between gap-4 border-t border-theme pt-4"><div className="min-w-0"><p className="text-[12px] font-bold text-theme-primary">AI 매칭 활용 동의</p><p className="mt-1 text-[11px] font-semibold text-theme-muted">동의를 철회하면 새로운 추천 대상에서 제외됩니다.</p></div><button type="button" role="switch" aria-label="AI 매칭 활용 동의" aria-checked={matchingSettings.aiMatchingAgreed} disabled={isMatchingSaving} onClick={() => void toggleMatchingAgreement()} className={`relative h-6 w-11 shrink-0 overflow-hidden rounded-full transition-colors disabled:cursor-not-allowed ${matchingSettings.aiMatchingAgreed ? "bg-brand" : "bg-surface-muted"}`}><span className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${matchingSettings.aiMatchingAgreed ? "translate-x-5" : "translate-x-0"}`} /></button></div> : null}
+          {matchingSettings?.unmatchableReason ? <p className="mt-4 rounded-lg border border-[#f1dfa6] bg-[#fff8d9] px-3 py-3 text-[11px] font-semibold leading-5 text-[#a15c22]">{matchingSettings.unmatchableReason}</p> : null}
+          {matchingError ? <p role="alert" className="mt-4 text-[11px] font-semibold text-theme-danger">{matchingError}</p> : null}
           <p className="mt-5 break-words rounded-lg border border-blue-200 bg-blue-50 px-3 py-3 text-[11px] font-semibold leading-5 text-blue-600 sm:px-4">
             현재 진행 중인 요청과 협상에는 영향을 주지 않습니다.
           </p>

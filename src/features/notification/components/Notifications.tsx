@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { LoginRole } from "@/features/auth/types";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
@@ -9,6 +9,8 @@ import { Header } from "@/features/common/components/header/Header";
 import { useToast } from "@/features/common/hooks/useToast";
 import { MOCK_NOTIFICATIONS } from "@/features/notification/constants/mockNotifications";
 import type { NotificationItem } from "@/features/notification/types/notification";
+import { useMatchingNotifications } from "@/features/matching/stomp/useMatchingNotifications";
+import type { MatchingNotification } from "@/features/matching/types/matching";
 
 export function Notifications() {
   const router = useRouter();
@@ -17,6 +19,15 @@ export function Notifications() {
   const role: LoginRole = user?.role ?? "CLIENT";
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
+
+  const handleMatchingNotification = useCallback((notification: MatchingNotification) => {
+    const requestId = notification.linkUrl.match(/\/requests\/(\d+)/)?.[1];
+    const positionId = notification.linkUrl.match(/\/positions\/(\d+)\//)?.[1];
+    const href = requestId ? `/matchings/requests/${requestId}` : role === "CLIENT" && positionId ? `/matchings/positions/${positionId}/candidates` : "/notifications";
+    const fallbackTitle = notification.type === "MATCHING_REQUESTED" ? "새로운 매칭 요청이 도착했습니다." : notification.type === "MATCHING_ACCEPTED" ? "매칭 요청이 수락되었습니다." : notification.type === "MATCHING_REJECTED" ? "매칭 요청 결과를 확인해 주세요." : "AI 재추천이 완료되었습니다.";
+    setNotifications((current) => [{ id: Date.now(), role, type: "MATCHING", title: notification.title ?? fallbackTitle, description: notification.message ?? "자세한 내용을 확인해 주세요.", createdAt: "방금 전", isRead: false, href }, ...current]);
+  }, [role]);
+  useMatchingNotifications(user?.accountId, handleMatchingNotification);
 
   const visibleNotifications = useMemo(
     () => notifications.filter((notification) => notification.role === role),

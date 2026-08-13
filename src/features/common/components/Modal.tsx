@@ -198,6 +198,7 @@ interface ConfirmModalProps {
   closeOnOverlayClick?: boolean;
   confirmDisabled?: boolean;
   cancelDisabled?: boolean;
+  children?: ReactNode;
 }
 
 /**
@@ -220,6 +221,7 @@ export const ConfirmModal = ({
   closeOnOverlayClick = true,
   confirmDisabled = false,
   cancelDisabled = false,
+  children,
 }: ConfirmModalProps) => {
   const titleId = useId();
   const descriptionId = useId();
@@ -255,6 +257,7 @@ export const ConfirmModal = ({
               {description}
             </p>
           ) : null}
+          {children}
         </div>
 
         <div className="flex w-full gap-3 pt-6">

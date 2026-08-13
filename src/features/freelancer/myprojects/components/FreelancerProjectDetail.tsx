@@ -1,144 +1,69 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
+import { getProjectJobRoles, getProjectSkills } from "@/features/client/projects/services/projectPreReview";
+import { acceptMatchingRequest, getMatchingRequestDetail, rejectMatchingRequest } from "@/features/matching/services/matching";
+import type { MatchingRequestResponse } from "@/features/matching/types/matching";
 import { ProjectRejectModals } from "./ProjectRejectModals";
+import { ApiException } from "@/lib/api";
 
-const PROJECT_DETAILS = {
-  "1": {
-    title: "B2B 주문 관리 서비스 리뉴얼",
-    company: "주식회사 오이랩 · IT/소프트웨어 기업",
-    role: "프론트엔드 개발자",
-    budget: "월 6,000,000원",
-    duration: "4개월",
-    startDate: "2026.09.01",
-    workType: "재택 / 풀타임",
-    experience: "3년 이상",
-    summary: "B2B 주문 관리 서비스의 사용자 화면과 관리자 기능을 리뉴얼합니다.",
-    responsibilities: "React 기반 화면 개발, 주문 관리 기능 및 공통 컴포넌트 구현",
-    skills: ["React", "Next.js", "TypeScript", "Zustand"],
-  },
-  "2": {
-    title: "핀테크 대시보드 개발",
-    company: "파이낸스온 · 금융 IT 기업",
-    role: "프론트엔드 개발자",
-    budget: "월 7,000,000원",
-    duration: "3개월",
-    startDate: "2026.08.01",
-    workType: "재택 / 풀타임",
-    experience: "4년 이상",
-    summary: "금융 데이터를 한눈에 확인할 수 있는 핀테크 대시보드를 개발합니다.",
-    responsibilities: "대시보드 UI 개발, 데이터 시각화 및 API 연동",
-    skills: ["React", "TypeScript", "D3.js"],
-  },
-  "3": {
-    title: "AI 서비스 프론트엔드",
-    company: "딥랩 · AI/ML 기업",
-    role: "프론트엔드 개발자",
-    budget: "월 6,500,000원",
-    duration: "6개월",
-    startDate: "2026.07.01",
-    workType: "상주 / 풀타임",
-    experience: "5년 이상",
-    summary: "AI 기반 업무 지원 서비스의 프론트엔드를 구축합니다.",
-    responsibilities: "서비스 화면 개발, AI 응답 UI 및 상태 관리",
-    skills: ["React", "Next.js"],
-  },
-  "4": {
-    title: "이커머스 리뉴얼 프로젝트",
-    company: "쇼핑랩 · 커머스 기업",
-    role: "프론트엔드 개발자",
-    budget: "월 5,800,000원",
-    duration: "5개월",
-    startDate: "2026.08.15",
-    workType: "재택 / 파트타임",
-    experience: "3년 이상",
-    summary: "기존 이커머스 서비스의 구매 경험과 주요 화면을 개선합니다.",
-    responsibilities: "상품·주문 화면 리뉴얼 및 반응형 UI 개발",
-    skills: ["React", "TypeScript"],
-  },
-} as const;
+const STATUS_LABEL: Record<string, string> = { REQUEST_PENDING: "검토 중", REJECTED: "거절됨", ACCEPTED: "수락됨", NEGOTIATING: "협상 중", NEGOTIATION_FAILED: "협상 결렬", CONTRACT_PENDING: "계약 대기", CONTRACTED: "계약 완료", IN_PROGRESS: "진행 중", COMPLETION_PENDING: "완료 대기", CLOSED: "종료됨", TERMINATED: "중도 종료" };
 
 export function FreelancerProjectDetail() {
   const params = useParams<{ projectId: string }>();
+  const router = useRouter();
+  const requestId = Number(params.projectId);
+  const [project, setProject] = useState<MatchingRequestResponse | null>(null);
+  const [labels, setLabels] = useState<Record<string, string>>({});
   const [isRejectOpen, setIsRejectOpen] = useState(false);
-  const project = PROJECT_DETAILS[params.projectId as keyof typeof PROJECT_DETAILS] ?? PROJECT_DETAILS["1"];
+  const [error, setError] = useState("");
+  const [rejectError, setRejectError] = useState("");
+  const [processing, setProcessing] = useState(false);
+
+  const load = useCallback(async () => {
+    try { setProject(await getMatchingRequestDetail(requestId)); setError(""); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "요청 상세를 불러오지 못했습니다."); }
+  }, [requestId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => { if (!cancelled) void load(); });
+    void Promise.all([getProjectJobRoles(), getProjectSkills()])
+      .then(([roles, skills]) => setLabels(Object.fromEntries([...roles, ...skills].map(({ code, label }) => [code, label]))))
+      .catch(() => setLabels({}));
+    return () => { cancelled = true; };
+  }, [load]);
+
+  if (!project) return <main className="min-h-screen bg-surface-subtle px-4 py-6 text-center text-[12px] text-theme-muted">{error || "프로젝트 제안을 불러오고 있습니다."}</main>;
+
+  const accept = async () => {
+    if (processing) return;
+    setProcessing(true);
+    try {
+      const result = await acceptMatchingRequest(requestId);
+      setProject(result);
+      if (result.status === "NEGOTIATING" && result.negotiationId) router.push(`/freelancer/projects/${result.projectId}/negotiation/${result.negotiationId}`);
+    } catch (cause) { const message = cause instanceof Error ? cause.message : "수락하지 못했습니다."; if (cause instanceof ApiException && cause.errorCode === "MT_016") await load(); setError(message); }
+    finally { setProcessing(false); }
+  };
 
   return (
     <main className="min-h-screen bg-surface-subtle px-4 py-6 text-theme-primary sm:px-5">
       <div className="mx-auto w-full max-w-[1000px]">
-        <Link
-          href="/freelancer/projects"
-          className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#3478f6] hover:text-[#1f62d1]"
-        >
-          <span aria-hidden="true">←</span> 제안 목록
-        </Link>
-
-        <section className="mt-5 rounded-xl border border-theme bg-surface px-6 py-7">
-          <h1 className="text-[16px] font-bold tracking-[-0.4px]">{project.title}</h1>
-          <p className="mt-3 text-[11px] font-semibold text-theme-secondary">{project.company}</p>
-        </section>
-
-        <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-6">
-          <h2 className="text-[14px] font-bold">프로젝트 정보</h2>
-          <dl className="mt-5 grid grid-cols-1 gap-x-20 gap-y-4 text-[11px] sm:grid-cols-2">
-            <DetailInfo label="역할" value={project.role} />
-            <DetailInfo label="예산" value={project.budget} />
-            <DetailInfo label="기간" value={project.duration} />
-            <DetailInfo label="시작일" value={project.startDate} />
-            <DetailInfo label="근무 형태" value={project.workType} />
-            <DetailInfo label="경력 요건" value={project.experience} />
-          </dl>
-        </section>
-
-        <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-6">
-          <h2 className="text-[14px] font-bold">상세 정보</h2>
-          <dl className="mt-5 space-y-4 text-[11px]">
-            <DetailInfo label="프로젝트 상황" value={project.summary} />
-            <DetailInfo label="담당 업무" value={project.responsibilities} />
-            <div>
-              <dt className="text-theme-muted">요구 기술</dt>
-              <dd className="mt-3 flex flex-wrap gap-2">
-                {project.skills.map((skill) => (
-                  <span key={skill} className="rounded-md bg-[#eef3f8] px-3 py-1.5 font-semibold text-brand">
-                    {skill}
-                  </span>
-                ))}
-              </dd>
-            </div>
-          </dl>
-        </section>
-
-        <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setIsRejectOpen(true)}
-            className="h-9 rounded-lg border border-[#f04438] bg-surface px-5 text-[11px] font-bold text-theme-danger hover:bg-danger-surface"
-          >
-            거절
-          </button>
-          <button type="button" className="h-9 rounded-lg bg-brand px-5 text-[11px] font-bold text-white hover:bg-brand">
-            수락 및 협상 시작
-          </button>
-        </div>
+        <Link href="/freelancer/projects" className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#3478f6] hover:text-[#1f62d1]"><span aria-hidden="true">←</span> 제안 목록</Link>
+        {error ? <p role="alert" className="mt-4 text-[11px] font-semibold text-theme-danger">{error}</p> : null}
+        <section className="mt-5 rounded-xl border border-theme bg-surface px-6 py-7"><h1 className="text-[16px] font-bold tracking-[-0.4px]">{project.projectTitle}</h1><p className="mt-3 text-[11px] font-semibold text-theme-secondary">{project.companyName ?? project.counterpartName}{project.companyProfile ? ` · ${project.companyProfile}` : ""}</p></section>
+        <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-6"><h2 className="text-[14px] font-bold">프로젝트 정보</h2><dl className="mt-5 grid grid-cols-1 gap-x-20 gap-y-4 text-[11px] sm:grid-cols-2"><DetailInfo label="역할" value={labels[project.jobRole] ?? project.jobRole} /><DetailInfo label="예산" value={project.budgetAmount == null ? "협의" : `월 ${project.budgetAmount.toLocaleString("ko-KR")}원`} /><DetailInfo label="기간" value={project.periodLabel ?? "확인 필요"} /><DetailInfo label="시작일" value={project.startDesiredDate ?? "협의"} /><DetailInfo label="근무 형태" value={project.workLabel ?? "협의"} /><DetailInfo label="경력 요건" value={project.minCareerYears == null ? "무관" : `${project.minCareerYears}년 이상`} /></dl></section>
+        <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-6"><h2 className="text-[14px] font-bold">상세 정보</h2><dl className="mt-5 space-y-4 text-[11px]"><DetailInfo label="담당 업무" value={project.mainTask ?? "확인 필요"} /><div><dt className="text-theme-muted">요구 기술</dt><dd className="mt-3 flex flex-wrap gap-2">{project.skills.map((skill) => <span key={skill} className="rounded-md bg-[#eef3f8] px-3 py-1.5 font-semibold text-brand">{labels[skill] ?? skill}</span>)}</dd></div></dl></section>
+        <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-4"><p className="text-[11px] text-theme-muted">현재 상태</p><p className="mt-1 text-[13px] font-bold text-theme-primary">{STATUS_LABEL[project.status] ?? project.status}</p>{project.rejectReason ? <p className="mt-2 text-[11px] font-semibold text-theme-danger">{project.rejectReason === "EXPIRED" ? "응답 기한이 만료되었습니다." : project.rejectReason === "DIRECT_REJECT" ? "거절한 제안입니다." : "협상이 결렬되었습니다."}</p> : null}{project.status === "NEGOTIATING" && project.negotiationId ? <Link href={`/freelancer/projects/${project.projectId}/negotiation/${project.negotiationId}`} className="mt-3 inline-flex h-9 items-center rounded-lg bg-brand px-5 text-[11px] font-bold text-white">협상방 입장</Link> : null}</section>
+        {project.status === "REQUEST_PENDING" ? <div className="mt-4 flex gap-2"><button type="button" disabled={processing} onClick={() => { setRejectError(""); setIsRejectOpen(true); }} className="h-9 rounded-lg border border-[#f04438] bg-surface px-5 text-[11px] font-bold text-theme-danger hover:bg-danger-surface disabled:opacity-40">거절</button><button type="button" disabled={processing} onClick={() => void accept()} className="h-9 rounded-lg bg-brand px-5 text-[11px] font-bold text-white hover:bg-brand disabled:opacity-40">{processing ? "처리 중" : "수락 및 협상 시작"}</button></div> : null}
       </div>
-
-      <ProjectRejectModals
-        open={isRejectOpen}
-        projectTitle={project.title}
-        onClose={() => setIsRejectOpen(false)}
-      />
+      <ProjectRejectModals open={isRejectOpen} projectTitle={project.projectTitle} errorMessage={rejectError} onClose={() => setIsRejectOpen(false)} onConfirm={async (reason) => { try { setProject(await rejectMatchingRequest(requestId, reason)); } catch (cause) { setRejectError(cause instanceof Error ? cause.message : "거절하지 못했습니다."); if (cause instanceof ApiException && cause.errorCode === "MT_016") await load(); throw cause; } }} />
     </main>
   );
 }
 
-function DetailInfo({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="grid grid-cols-[90px_1fr] gap-3">
-      <dt className="text-theme-muted">{label}</dt>
-      <dd className="font-semibold text-theme-primary">{value}</dd>
-    </div>
-  );
-}
+function DetailInfo({ label, value }: { label: string; value: string }) { return <div className="grid grid-cols-[90px_1fr] gap-3"><dt className="text-theme-muted">{label}</dt><dd className="font-semibold text-theme-primary">{value}</dd></div>; }

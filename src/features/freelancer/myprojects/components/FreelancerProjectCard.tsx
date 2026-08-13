@@ -9,7 +9,7 @@ export interface FreelancerProjectCardProps {
   result?: "응답 기한 마감" | "거절함";
   notice?: string;
   deadline?: string;
-  aiMatch: number;
+  aiMatch?: number;
   industry: string;
   companySize: string;
   position: string;
@@ -28,6 +28,8 @@ export interface FreelancerProjectCardProps {
     headcount: string;
   };
   onReject?: () => void;
+  onAccept?: () => void;
+  negotiationHref?: string;
 }
 
 export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
@@ -70,9 +72,7 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
         <h2 className={`text-[14px] font-bold tracking-[-0.35px] ${isEnded ? "text-[#727d8e]" : "text-theme-primary"}`}>
           {props.title}
         </h2>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${isEnded ? "bg-[#f1f5fb] text-[#7e9dcc]" : "bg-[#edf4ff] text-[#3478f6]"}`}>
-          AI {props.aiMatch}%
-        </span>
+        {props.aiMatch != null ? <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${isEnded ? "bg-[#f1f5fb] text-[#7e9dcc]" : "bg-[#edf4ff] text-[#3478f6]"}`}>AI {props.aiMatch}%</span> : null}
       </div>
       <p className="mt-1 text-[11px] font-medium text-theme-muted">
         {props.industry} · {props.companySize}
@@ -113,13 +113,13 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
           {!isEnded && props.state === "검토 중" ? (
             <>
               <button type="button" onClick={props.onReject} className={secondaryButtonClass}>거절</button>
-              <button type="button" className={primaryButtonClass}>수락 및 협상 시작</button>
+              <button type="button" onClick={props.onAccept} className={primaryButtonClass}>수락 및 협상 시작</button>
             </>
           ) : null}
           {!isEnded && props.state === "협상 중" ? (
             <span className="relative">
               <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-[#f04438]" />
-              <button type="button" className={primaryButtonClass}>협상방 입장</button>
+              {props.negotiationHref ? <Link href={props.negotiationHref} className={`flex items-center ${primaryButtonClass}`}>협상방 입장</Link> : <button type="button" className={primaryButtonClass}>협상방 입장</button>}
             </span>
           ) : null}
         </div>
