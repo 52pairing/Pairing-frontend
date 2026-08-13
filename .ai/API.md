@@ -792,3 +792,14 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `agentState` 배포되면: RUNNING/FAILED 라벨 + **RUNNING 동안 GET 폴링(2~3s) 폴백** 추가 (STOMP 이벤트 오면 즉시 재조회·폴링 중단)
 - WS 배포 CORS: 프론트 배포 도메인/프리뷰 패턴 확정 후 `CORS_ALLOWED_ORIGINS` 등록 요청(패턴 가능: `https://*.vercel.app`)
 - 프리랜서 측 대칭 화면, 조건 종류별 입력 UI는 완료. 전역 STOMP(`/user/queue/notifications`)는 후속
+# 비로그인 메인 노출 리뷰 (2026-08-13)
+
+- `GET /api/v1/home/site-reviews?size=6`
+- 로그인 및 인증 쿠키 없이 호출하며 `size` 허용 범위는 1~20
+- 응답 `data`는 페이징 객체가 아닌 배열
+- 항목: `siteReviewId`, `writerRole`, `writerName`, `score`, `content`, `projectTitle`, `visibility`, `promoted`, `createdAt`
+- `content`, `projectTitle`은 nullable이며 작성자명은 서버가 마스킹한 값을 그대로 표시
+- 빈 배열 또는 조회 실패 시 리뷰 섹션을 유지하고 `아직 공개된 이용자 리뷰가 없습니다.` 안내 표시
+- 실제 백엔드 성공·오류 응답: 미검증
+
+---
