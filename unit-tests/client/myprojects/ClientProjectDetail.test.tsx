@@ -41,7 +41,7 @@ jest.mock("@/features/client/projects/services/projectPreReview", () => ({
 jest.mock("@/features/client/myprojects/information/components/ProjectInformation", () => ({
   ProjectInformation: ({ workStyleLabel }: { workStyleLabel: string }) => <div>프로젝트 정보 화면 · {workStyleLabel}</div>,
 }));
-jest.mock("@/features/client/myprojects/contract/components/ProjectContracts", () => ({
+jest.mock("@/features/contract/components/client/ProjectContracts", () => ({
   ProjectContracts: ({ projectId }: { projectId: string }) => <div>계약 화면 {projectId}</div>,
 }));
 jest.mock("@/features/client/myprojects/progress/components/ProjectProgress", () => ({

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { ClientContractCardProps, ClientContractListItem } from "@/features/client/myprojects/contract/types/contract";
+import type { ClientContractCardProps, ClientContractListItem } from "@/features/contract/types/clientContract";
 
 const formatAmount = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 const formatDate = (date: string) => date.replaceAll("-", ".");

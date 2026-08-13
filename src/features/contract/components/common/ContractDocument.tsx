@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ContractCompleteModal } from "@/features/contract/components/ContractCompleteModal";
+import { ContractCompleteModal } from "@/features/contract/components/common/ContractCompleteModal";
 import { ConfirmModal, WarningIcon } from "@/features/common/components/Modal";
 import {
   downloadContractPdf,

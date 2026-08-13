@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { ClientContractListItem } from "@/features/client/myprojects/contract/types/contract";
+import type { ClientContractListItem } from "@/features/contract/types/clientContract";
 import type { ClientProjectDetailResponse } from "@/features/client/myprojects/types/projectDetail";
 import type { ClientProjectTab } from "@/features/client/myprojects/types/projectList";
 
