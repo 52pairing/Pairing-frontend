@@ -12,7 +12,10 @@ import { nextStep, prevStep } from "@/features/client/projects/constants/steps";
 import { useProjectRegister } from "@/features/client/projects/context/ProjectRegisterContext";
 import { getProjectWorkConditions } from "@/features/client/projects/services/projectPreReview";
 import type { ProjectWorkConditionsResponse } from "@/features/client/projects/types/preReview";
-import type { WorkMethod, WorkType } from "@/features/client/projects/types/project";
+import type {
+  WorkMethod,
+  WorkType,
+} from "@/features/client/projects/types/project";
 
 const STEP = 2;
 const MIN_BUDGET_IN_TEN_THOUSAND_WON = 500;
@@ -66,7 +69,9 @@ export function ProjectBasicInfo() {
       const response = await getProjectWorkConditions();
 
       setWorkConditions(response);
-      setPeriodUnit((current) => current || response.periodUnits[0]?.code || "");
+      setPeriodUnit(
+        (current) => current || response.periodUnits[0]?.code || "",
+      );
     } catch (error) {
       setMetaError(
         error instanceof Error
@@ -84,7 +89,9 @@ export function ProjectBasicInfo() {
         if (cancelled) return;
 
         setWorkConditions(response);
-        setPeriodUnit((current) => current || response.periodUnits[0]?.code || "");
+        setPeriodUnit(
+          (current) => current || response.periodUnits[0]?.code || "",
+        );
       })
       .catch((error) => {
         if (cancelled) return;
@@ -104,8 +111,7 @@ export function ProjectBasicInfo() {
   const budgetNumber = Number(budget.replace(/,/g, "")) || 0;
   const budgetWithVat = budgetNumber ? Math.round(budgetNumber * 1.1) : 0;
   const today = getLocalDateString();
-  const isStartDateValid =
-    startDate.length > 0 && startDate >= today;
+  const isStartDateValid = startDate.length > 0 && startDate >= today;
 
   const handleBudgetChange = (event: ChangeEvent<HTMLInputElement>) => {
     const onlyNumber = event.target.value.replace(/[^\d]/g, "");
@@ -169,7 +175,11 @@ export function ProjectBasicInfo() {
   };
 
   return (
-    <ProjectRegisterShell currentStep={STEP} backHref="/client" backLabel="홈으로">
+    <ProjectRegisterShell
+      currentStep={STEP}
+      backHref="/client"
+      backLabel="홈으로"
+    >
       <div className="mx-auto mt-8 max-w-[660px]">
         <header>
           <h1 className="text-[20px] font-extrabold tracking-[-0.04em] text-theme-primary">
@@ -234,18 +244,12 @@ export function ProjectBasicInfo() {
               )}
             </label>
 
-            {startDate.length > 0 && !isStartDateValid ? (
-              <p role="alert" className="mt-2 text-[10px] font-semibold text-theme-danger">
-                프로젝트 시작 희망일은 오늘 이후 날짜로 선택해주세요.
-              </p>
-            ) : (
+            {startDate.length > 0 && !isStartDateValid && (
               <p
-                className={`mt-2 text-[10px] font-semibold ${
-                  startDate.length === 0 ? "text-theme-danger" : "text-theme-secondary"
-                }`}
+                role="alert"
+                className="mt-2 text-[10px] font-semibold text-theme-danger"
               >
-                시작 희망일은 협의 가능 여부와 관계없이 필수입니다. 오늘 이후
-                날짜를 선택해주세요.
+                프로젝트 시작 희망일은 오늘 이후 날짜로 선택해주세요.
               </p>
             )}
           </div>
@@ -299,7 +303,9 @@ export function ProjectBasicInfo() {
               className="h-[43px] w-[185px] rounded-[8px] border border-theme bg-surface px-4 text-right text-[13px] font-bold text-theme-primary outline-none placeholder:text-[#8e97a5] focus:border-brand"
             />
 
-            <span className="text-[11px] font-bold text-theme-secondary">만원</span>
+            <span className="text-[11px] font-bold text-theme-secondary">
+              만원
+            </span>
           </div>
 
           {/* 입력 후 표시 */}
@@ -310,12 +316,16 @@ export function ProjectBasicInfo() {
           )}
 
           <p className="mt-2 text-[10px] text-theme-muted">
-            전체 프로젝트 기준 총예산 · 최소 500만원 · 최대 10억원(100,000만원) · 부가세 별도 ·
-            만 원 단위 입력
+            전체 프로젝트 기준 총예산 · 최소 500만원 · 최대 10억원(100,000만원)
+            · 부가세 별도 · 만 원 단위 입력
           </p>
 
-          {!isBudgetValid && (budget.length > 0 || budgetValidationRequested) ? (
-            <p role="alert" className="mt-2 text-[10px] font-semibold text-theme-danger">
+          {!isBudgetValid &&
+          (budget.length > 0 || budgetValidationRequested) ? (
+            <p
+              role="alert"
+              className="mt-2 text-[10px] font-semibold text-theme-danger"
+            >
               프로젝트 전체 예산은 500만원 이상 100,000만원 이하로 입력해주세요.
             </p>
           ) : null}
@@ -357,7 +367,9 @@ export function ProjectBasicInfo() {
 
         {metaError ? (
           <div className="mt-6 flex items-center justify-between rounded-[8px] border border-[#fda29b] bg-danger-surface px-4 py-3">
-            <p className="text-[11px] font-semibold text-theme-danger">{metaError}</p>
+            <p className="text-[11px] font-semibold text-theme-danger">
+              {metaError}
+            </p>
             <button
               type="button"
               onClick={() => void loadWorkConditions()}
