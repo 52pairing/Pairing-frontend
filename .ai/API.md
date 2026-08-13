@@ -802,6 +802,28 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 빈 배열 또는 조회 실패 시 리뷰 섹션을 유지하고 `아직 공개된 이용자 리뷰가 없습니다.` 안내 표시
 - 실제 백엔드 성공·오류 응답: 미검증
 
+## 회원 탈퇴 (2026-08-13)
+
+- 탈퇴 가능 여부 조회: `GET /api/v1/accounts/me/withdrawal-eligibility`
+- 회원 탈퇴: `DELETE /api/v1/accounts/me`
+- 사용 위치: `src/features/common/services/withdrawal.ts`, `src/features/common/hooks/useWithdrawal.ts`
+  - 화면: `src/features/client/mypage/components/ClientAccountCancellation.tsx`, `src/features/freelancer/mypage/components/FreelancerAccountCancellation.tsx`
+- 인증: HttpOnly 로그인 쿠키. 둘 다 로그인 필요
+- 조회 성공 응답 `data`: `{ withdrawable, blockers: [{ type, label, count, linkUrl }] }`
+  - `label`·`linkUrl`은 서버 값을 그대로 사용(프론트 조립 금지), `blockers`는 0건이면 내려오지 않음
+  - `UNPAID_SETTLEMENT`는 `count`가 항상 1이라 화면에 건수를 표시하지 않음
+- 탈퇴 요청 바디: `{ agreed: true, confirmText: "탈퇴하겠습니다", reason?: string(500자) }`
+  - `confirmText`는 프론트에서 앞뒤 공백만 정리(trim) 후 전송
+  - 탈퇴 성공 시 `data: null` → 완료 모달 표시 후 `window.location.replace("/")`로 이동
+- 화면 진입 시 조회 API를 먼저 호출해 `withdrawable === false`면 탈퇴 버튼을 비활성화하고 `blockers`를 그대로 나열
+- 실패 처리
+  - `AC_009`(확인 문구 불일치): 입력칸 아래 인라인 오류로 표시, 입력값 유지
+  - `AC_010`(진행 중인 프로젝트·계약), `AC_011`(미납 수수료): 인라인 오류 표시 + 조회 API 재호출로 안내 갱신
+  - `AC_008`(이미 탈퇴한 계정): 완료 상태로 처리해 메인으로 이동
+  - `GLOBAL_002`(agreed/confirmText 누락): 폼 검증 메시지
+  - `401`: "로그인이 필요합니다" 표시(현재 공통 `apiCall`의 `GLOBAL_009/010/011` 자동 처리와 별개로 이 화면 자체 401은 메시지만 표시, 별도 리다이렉트 미구현)
+- 실제 백엔드 성공·오류 응답: 미검증 — 테스트 계정 없어 로그인 상태 브라우저 확인 불가
+
 ---
 # 채팅 도메인 (2026-08-13, 최종 매핑 재연동)
 
