@@ -75,14 +75,14 @@ export interface ProjectUpdateRequest {
 }
 
 export interface MatchingRequestItem {
-  matchingRequestId?: number;
+  requestId: number;
   counterpartName: string;
   jobRole: string;
   status: string;
   negotiationId: number | null;
-  currentRound: number;
-  maxRound: number;
-  newProposalCount: number;
+  currentRound: number | null;
+  maxRound: number | null;
+  newProposalCount: number | null;
 }
 
 export interface MatchingRequestPage {
