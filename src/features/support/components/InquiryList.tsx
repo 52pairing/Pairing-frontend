@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 
+import type { CurrentUserResponse } from "@/features/auth/types";
 import { Header } from "@/features/common/components/header/Header";
 
 import { getMyInquiries } from "../services/support";
@@ -25,7 +26,12 @@ function formatDate(value: string | null, fallback = "—") {
   return value.slice(0, 10).replaceAll("-", ".");
 }
 
-export function InquiryList() {
+interface InquiryListProps {
+  // 서버에서 미리 조회한 로그인 사용자 (헤더 깜빡임 방지용)
+  initialUser?: CurrentUserResponse | null;
+}
+
+export function InquiryList({ initialUser = null }: InquiryListProps) {
   const [filter, setFilter] = useState<InquiryFilter>("ALL");
   const [page, setPage] = useState(0);
   const [inquiryPage, setInquiryPage] = useState<InquiryPageResponse | null>(null);
@@ -78,7 +84,7 @@ export function InquiryList() {
 
   return (
     <>
-      <Header role="guest" />
+      <Header role="guest" initialUser={initialUser} />
       <main className="flex-1 bg-background px-5 pb-20 pt-10 text-theme-primary sm:px-8 sm:pt-12">
         <div className="mx-auto w-full max-w-[1050px]">
           <Link
