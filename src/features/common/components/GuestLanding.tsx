@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { StepArrow } from "@/features/common/components/SharedUI";
 import { FaqSection } from "@/features/common/components/FaqSection";
+import { getSiteReviews } from "@/features/common/services/siteReviews";
 
 const STATS = [
   { value: "99%", label: "프로젝트 완수율" },
@@ -63,38 +64,6 @@ const FEATURES = [
   },
 ];
 
-// 리뷰 API 연동 전까지 사용하는 더미 데이터
-const REVIEWS = [
-  {
-    name: "김OO",
-    role: "클라이언트",
-    rating: 5,
-    content:
-      "복잡한 협상을 AI Agent가 대신 조율해줘서 계약까지 빠르게 진행됐습니다. 추천 근거도 명확해서 믿음이 갔어요.",
-  },
-  {
-    name: "박OO",
-    role: "프리랜서",
-    rating: 5,
-    content:
-      "희망 단가 협상 과정이 부담스럽지 않았고, 계약서 생성도 자동으로 돼서 행정 부담이 줄었습니다.",
-  },
-  {
-    name: "이OO",
-    role: "클라이언트",
-    rating: 4,
-    content:
-      "매칭 후보의 AI 적합도 점수와 근거 설명이 인상적이었습니다. 최종 선택을 직접 할 수 있어 좋았어요.",
-  },
-  {
-    name: "최OO",
-    role: "프리랜서",
-    rating: 5,
-    content:
-      "프로필 등록 후 빠르게 적합한 프로젝트 요청이 왔고, 협상도 AI가 도와줘서 수월하게 진행됐습니다.",
-  },
-];
-
 const FREELANCER_GRADE_SUMMARY = [
   {
     tier: "주니어",
@@ -132,7 +101,9 @@ const CLIENT_GRADE_SUMMARY = [
 ];
 
 // 비로그인 사용자에게 보여주는 메인 랜딩 페이지
-export function GuestLanding() {
+export async function GuestLanding() {
+  const reviews = await getSiteReviews(6);
+
   return (
     <>
       {/* 히어로 */}
@@ -246,7 +217,6 @@ export function GuestLanding() {
         </div>
       </section>
 
-      {/* 이용자 리뷰 (더미 데이터, API 연동 전) */}
       <section className="bg-surface-subtle px-4 py-16">
         <div className="mx-auto max-w-[1200px]">
           <SectionHeading
@@ -254,32 +224,51 @@ export function GuestLanding() {
             desc="실제 이용자들의 솔직한 후기를 확인해보세요."
           />
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
-            {REVIEWS.map((review) => (
-              <div
-                key={`${review.name}-${review.role}`}
-                className="rounded-xl border border-theme bg-surface px-6 py-5"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-bold text-theme-secondary">
-                      {review.name[0]}
-                    </span>
-                    <div>
-                      <p className="text-sm font-bold text-theme-primary">
-                        {review.name}
-                      </p>
-                      <p className="text-xs text-theme-muted">{review.role}</p>
+          {reviews.length > 0 ? (
+            <div className="mt-10 grid gap-4 md:grid-cols-2">
+              {reviews.map((review) => (
+                <div
+                  key={review.siteReviewId}
+                  className="rounded-xl border border-theme bg-surface px-6 py-5"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-sm font-bold text-theme-secondary">
+                        {review.writerName.trim().charAt(0) || "?"}
+                      </span>
+                      <div>
+                        <p className="text-sm font-bold text-theme-primary">
+                          {review.writerName}
+                        </p>
+                        <p className="text-xs text-theme-muted">
+                          {review.writerRole === "CLIENT"
+                            ? "클라이언트"
+                            : "프리랜서"}
+                        </p>
+                      </div>
                     </div>
+                    <StarRating rating={review.score} />
                   </div>
-                  <StarRating rating={review.rating} />
+                  {review.projectTitle && (
+                    <p className="mt-4 text-xs font-semibold text-theme-muted">
+                      {review.projectTitle}
+                    </p>
+                  )}
+                  {review.content && (
+                    <p className="mt-2 text-sm leading-relaxed text-theme-secondary">
+                      {review.content}
+                    </p>
+                  )}
                 </div>
-                <p className="mt-4 text-sm leading-relaxed text-theme-secondary">
-                  {review.content}
-                </p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-10 rounded-xl border border-theme bg-surface px-6 py-12 text-center">
+              <p className="text-sm font-semibold text-theme-secondary">
+                아직 공개된 이용자 리뷰가 없습니다.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
