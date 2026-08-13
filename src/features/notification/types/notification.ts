@@ -1,18 +1,41 @@
-import type { LoginRole } from "@/features/auth/types";
-
 export type NotificationType =
-  | "MATCHING"
-  | "NEGOTIATION"
-  | "CONTRACT"
-  | "MESSAGE";
+  | "MATCHING_RECOMMENDED"
+  | "MATCHING_REQUESTED"
+  | "MATCHING_ACCEPTED"
+  | "MATCHING_REJECTED"
+  | "NEGOTIATION_STARTED"
+  | "NEGOTIATION_PROPOSED"
+  | "NEGOTIATION_FAILED"
+  | "CONTRACT_CREATED"
+  | "CONTRACT_SIGNED"
+  | "CONTRACT_REJECTED"
+  | "SETTLEMENT_DUE"
+  | "INQUIRY_ANSWERED";
 
 export interface NotificationItem {
-  id: number;
-  role: LoginRole;
+  notificationId: number;
   type: NotificationType;
   title: string;
-  description: string;
+  content: string;
+  linkUrl: string | null;
+  read: boolean;
   createdAt: string;
-  isRead: boolean;
-  href: string;
+}
+
+export interface NotificationPage {
+  content: NotificationItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface UnreadCountResponse {
+  unreadCount: number;
+}
+
+export interface GetNotificationsParams {
+  unreadOnly?: boolean;
+  page?: number;
+  size?: number;
 }

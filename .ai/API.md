@@ -720,7 +720,8 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 #### 추가 클라리피케이션 (2차)
 
 - 협상 화면의 근무형태 토글(상주/혼합/재택)은 **`WORK_STYLE`** 이다. `WORK_FORM`(FULL_TIME/PART_TIME/ANY)은 **협상 화면에 안 나옴**. 혼합=`ANY`(`HYBRID` 보내면 거부).
-- 헤더 배지 3종은 소스가 다름: 말풍선=`GET /chat-rooms/unread-count`, 종=`GET /notifications/unread-count`, 카드 빨간점=매칭 `newProposalCount`. **종은 당분간 협상으로 안 켜짐**(협상 도메인은 알림 미발행) → 헤더에 협상 배지 재연결 금지.
+- 헤더 배지 3종은 소스가 다름: 말풍선=`GET /chat-rooms/unread-count`(미연동), 종=`GET /notifications/unread-count`, 카드 빨간점=매칭 `newProposalCount`.
+- (2026-08-13 갱신) 종 배지는 `frontend-notification-integration.md` 연동으로 실제 `unread-count`에 연결했습니다. **다만 협상 3종(`NEGOTIATION_STARTED/PROPOSED/FAILED`) 알림은 여전히 발행되지 않아** 협상이 시작·제안·결렬돼도 종 배지가 켜지지 않습니다. 협상 도메인에서 알림 발행 호출이 붙으면 프론트 수정 없이 반영됩니다. 상세는 아래 "알림" 절 참고.
 - 빨간점: 켜기=매칭 응답 `newProposalCount > 0`, 끄기=협상방 진입 시 `POST /negotiations/{id}/read`. (이미 반영)
 - 메시지에 `(stub)` 표기 = AI 서버 폴백 상태(상대 제시값 무조건 수락 → 1라운드 전조건 합의). 프론트 문제 아님, AWS 설정 후 자연어로 전환.
 - 상단 상태 배지는 `status` 기준(결렬/타결/협상 중) — 이미 반영. 초기 카드의 "상시" 값은 존재하지 않으므로 무시.
@@ -801,5 +802,107 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `content`, `projectTitle`은 nullable이며 작성자명은 서버가 마스킹한 값을 그대로 표시
 - 빈 배열 또는 조회 실패 시 리뷰 섹션을 유지하고 `아직 공개된 이용자 리뷰가 없습니다.` 안내 표시
 - 실제 백엔드 성공·오류 응답: 미검증
+
+## AI 매칭 추천 후보 1차 연동 (2026-08-13)
+
+- 서비스: `src/features/matching/services/matching.ts`
+- 타입: `src/features/matching/types/matching.ts`
+- 화면: 클라이언트 프로젝트 상세 > 추천 후보
+- `GET /api/v1/matchings/positions/{positionId}/candidates`
+  - 프로젝트 상세의 실제 `positions[].positionId`로 포지션 탭별 조회
+  - `headcount`를 선택 상한으로 사용
+  - `lowScoreWarned`, `budgetWarned`는 독립 배너로 모두 표시
+  - 카드에는 숫자 적합도를 표시하지 않고 `fitReasons`를 중립 태그로 표시
+  - `requested=true`는 요청 완료, `rejected=true`는 카드 비활성 처리
+- `POST /api/v1/matchings/candidates/{candidateId}/rejection`
+  - 요청 body 없음
+  - 성공 응답의 최신 `CandidateListResponse`로 후보 목록을 즉시 교체
+- `POST /api/v1/matchings/requests`
+  - 요청: `{ positionId, candidateIds }`
+  - `candidateIds`는 `freelancerId`가 아니라 후보 조회의 `candidateId`
+  - 성공 후 해당 포지션 후보 목록을 재조회해 `requested` 상태 동기화
+- `MT_005`, `MT_014`, `MT_017` 사용자 안내 분기 반영
+- `MT_017`은 안내 후 후보 목록 재조회
+- 실제 로그인 세션 기반 성공·오류 응답: 미검증
+
+## AI 매칭 나머지 화면 연동 (2026-08-13)
+
+- `POST /api/v1/matchings/positions/{positionId}/rerecommendations`
+  - 무료 `{ type: "FREE" }`, 유료 `{ type: "PAID", quantity }`
+  - 202 접수 후 요청 버튼을 잠그고 `MATCHING_RECOMMENDED` 알림을 기다림
+  - 완료 알림 수신 시 해당 포지션 후보를 재조회
+- `GET /api/v1/matchings/requests/received?tab={tab}&page={page}&size={size}`
+  - 프리랜서 제안 목록의 `ALL/REVIEWING/NEGOTIATING/CLOSED` 탭에 연결
+  - `rejectReason=EXPIRED`와 `DIRECT_REJECT` 문구 분기
+- `GET /api/v1/matchings/requests/{requestId}`
+  - 프리랜서 제안 상세에서 호출하며 상세 전용 `mainTask` 표시
+- `POST /api/v1/matchings/requests/{requestId}/acceptance`
+  - `NEGOTIATING + negotiationId`면 협상방 이동
+  - 조건 완전 일치로 `CONTRACT_PENDING`이 오면 상세 상태 유지
+- `POST /api/v1/matchings/requests/{requestId}/rejection`
+  - 선택 사유를 `{ reason }`으로 전송, 공백/미입력은 `{}` 전송, 최대 255자
+  - `MT_016`은 상세 재조회
+- `GET`, `PUT /api/v1/freelancers/me/matching-settings`
+  - 조회 응답으로 토글 초기화, 변경 시 `aiMatchingAgreed`, `matchingPaused` 둘 다 전송
+  - `matchable`, `unmatchableReason`을 서버 기준으로 표시
+- WebSocket `/topic/users/{accountId}/notifications`
+  - 공용 STOMP 클라이언트를 재사용하며 재추천 화면에서 `MATCHING_RECOMMENDED` 완료 신호 처리
+  - 알림 목록 REST 계약과 클라이언트 요청 상세 라우트는 문서에 없어 알림 센터 목데이터 교체는 미적용
+- 유료 재추천은 기존 화면 디자인을 유지하면서 프론트엔드·백엔드 각 `positionId`로 요청하고, 모든 포지션의 `MATCHING_RECOMMENDED` 이벤트를 받은 뒤 후보 탭으로 이동
+- 유료 수량 상한은 각 포지션의 보낸 요청 목록에서 종료되지 않은 요청을 제외한 남은 자리로 제한
+- 받은 요청 목록에 메타 라벨, `expiresAt` D-day, 자동 만료 안내, 서버 페이지 이동 적용
+- 클라이언트 프리랜서 현황의 `requestId`로 `/client/projects/{projectId}/requests/{requestId}` 상세 화면 연결
+- 알림 화면이 열려 있는 동안 4종 매칭 STOMP 이벤트를 실시간 항목으로 추가. 알림 이력 REST 계약이 없어 새로고침 후 영속 복원은 불가
+- 매칭 설정에서 일시 중지/재개와 AI 활용 동의/철회를 각각 서버에 저장
+- 실제 로그인 쿠키 기반 REST/STOMP 응답: 미검증
+- 받은 요청 목록은 서버 `page/totalPages`로 10건씩 이동하며, 거절 모달에서 선택 사유를 최대 255자로 전송합니다.
+- 수락·거절의 `MT_016` 발생 시 서버 메시지를 표시하고 목록/상세를 다시 조회해 자동 만료 상태로 동기화합니다.
+- 매칭 설정은 `aiMatchingAgreed`와 `matchingPaused`를 별도 스위치로 표시하되 PUT에는 두 값을 항상 함께 보내며 `unmatchableReason`은 서버 문구 그대로 표시합니다.
+- 알림의 요청 링크는 역할별 상세로 변환하고 재추천 링크는 포지션 후보 API를 재조회하는 전용 결과 화면으로 연결합니다.
+- 재추천 알림에 `projectId`가 없어 특정 프로젝트 상세로 직접 이동하는 것은 현재 계약상 불가능합니다.
+
+## 알림 센터 (2026-08-13, `frontend-notification-integration.md` 연동)
+
+- 타입: `src/features/notification/types/notification.ts`
+- REST 서비스: `src/features/notification/services/notification.ts`
+- STOMP: `src/features/notification/stomp/useNotificationStream.ts`(전체 타입 공용), 헤더 배지 `src/features/notification/hooks/useUnreadNotificationCount.ts`
+- 화면: `src/features/notification/components/Notifications.tsx` (`/notifications`)
+- 이전까지 목데이터였던 알림 센터를 실제 REST로 교체했습니다. 위 "AI 매칭 나머지 화면 연동"의 매칭 전용 STOMP(`useMatchingNotifications`)는 그대로 두고, 알림 센터·헤더 배지는 전체 타입을 수신하는 별도 구독을 추가했습니다(같은 토픽에 구독자 2개, `subscribeTopic`이 지원).
+
+### REST
+
+| Method | Path | 용도|
+| --- | --- | --- |
+| GET | `/api/v1/notifications?unreadOnly=false&page=0&size=20` | 목록(최신순 고정) |
+| GET | `/api/v1/notifications/unread-count` | 헤더 종 배지 |
+| PUT | `/api/v1/notifications/{notificationId}/read` | 읽음 처리 |
+| PUT | `/api/v1/notifications/read-all` | 모두 읽음 |
+| DELETE | `/api/v1/notifications/{notificationId}` | 삭제 |
+| DELETE | `/api/v1/notifications` | 모두 삭제 |
+
+- 알림 객체: `{ notificationId, type, title, content, linkUrl, read, createdAt }`. `title`·`content`는 서버가 완성한 문구라 프론트에서 조립하지 않습니다.
+- 목록은 "더 보기" 버튼으로 다음 페이지를 이어 붙입니다(서버 `page/totalPages` 기준).
+- 클릭 시 `read`가 아니면 `PUT .../read` 호출과 함께 로컬 상태를 낙관적으로 갱신하고, `linkUrl`이 있으면 **그대로** `router.push`합니다(경로 재구성 금지).
+- 삭제/모두 읽음/모두 삭제는 실패 시 이전 상태로 롤백하고 토스트로 안내합니다.
+
+### 실시간 (STOMP)
+
+- 구독 경로: `/topic/users/{accountId}/notifications` (기존 협상/매칭과 같은 공용 클라이언트 `src/features/negotiation/stomp/client.ts` 재사용)
+- 수신 payload는 알림 객체와 같지만 `read` 필드가 없어 프론트에서 `false`로 채웁니다.
+- 수신 시 토스트 표시 + 목록 맨 위에 추가, 헤더 배지는 재조회 없이 `+1`.
+- 재연결 감지를 위해 `client.ts`에 `onStompConnect` 리스너 레지스트리를 추가했습니다(기존 매칭/협상 구독 동작에는 영향 없음, 추가 전용 변경). 알림 센터는 재연결 시 목록 1페이지를 다시 조회합니다(끊긴 동안 온 알림은 STOMP로 재전송되지 않기 때문).
+- `INQUIRY_ANSWERED`는 관리자 서버가 생성해 실시간 push가 오지 않습니다(REST 목록·배지는 정상 반영). 프론트에서 별도 처리 없이 새로고침/재진입 시 보이는 것을 그대로 둡니다.
+
+### `CONTRACT_CREATED`/`CONTRACT_SIGNED` linkUrl 리다이렉트
+
+- 가이드 문서상 두 타입의 `linkUrl`은 `/contracts/{contractId}`로 오지만, 실제 화면은 역할별로 분리돼 있습니다(프리랜서 `/freelancer/contracts/{contractId}`, 클라이언트 `/client/projects/{projectId}/contracts/{contractId}`).
+- 계약 상세 응답(`GET /api/v1/contracts/{contractId}`, `ContractDetailResponse`)에는 `projectId`가 없어 클라이언트 쪽은 기존에 검증된 `getAllClientContracts()`(계약 목록, `projectId` 포함)에서 `contractId`로 찾아 이동합니다.
+- 리다이렉트 페이지: `src/app/contracts/[contractId]/page.tsx` → `src/features/contract/components/ContractNotificationRedirect.tsx` (매칭 알림의 `MatchingNotificationRedirect`와 동일한 패턴).
+- 목록에서 못 찾으면(가입 계약이 아니거나 데이터 지연 등) `/client/contracts` 목록으로 이동합니다.
+
+### 미검증·확인 필요
+
+- `NEGOTIATION_STARTED`/`NEGOTIATION_PROPOSED`/`NEGOTIATION_FAILED`, `SETTLEMENT_DUE`의 실제 `linkUrl` 형식은 가이드 문서에 명시돼 있지 않아 서버 값을 그대로 이동시킵니다. 실제 협상방 경로(`/client|freelancer/projects/{projectId}/negotiation/{negotiationId}`)나 정산 경로와 다르면 확인이 필요합니다.
+- 실제 로그인 세션 기반 REST 응답, STOMP 수신, 재연결 시 재조회 동작은 테스트 계정이 없어 브라우저로 확인하지 못했습니다.
 
 ---

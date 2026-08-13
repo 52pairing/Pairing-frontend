@@ -1,74 +1,161 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { LoginRole } from "@/features/auth/types";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { ConfirmModal, WarningIcon } from "@/features/common/components/Modal";
+import { ErrorState } from "@/features/common/components/ErrorState";
 import { Header } from "@/features/common/components/header/Header";
+import { LoadingState } from "@/features/common/components/Loading";
 import { useToast } from "@/features/common/hooks/useToast";
-import { MOCK_NOTIFICATIONS } from "@/features/notification/constants/mockNotifications";
+import {
+  deleteAllNotifications,
+  deleteNotification,
+  getNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from "@/features/notification/services/notification";
+import { useNotificationStream } from "@/features/notification/stomp/useNotificationStream";
 import type { NotificationItem } from "@/features/notification/types/notification";
-import { useMatchingNotifications } from "@/features/matching/stomp/useMatchingNotifications";
-import type { MatchingNotification } from "@/features/matching/types/matching";
+import { ApiException } from "@/lib/api";
+
+const PAGE_SIZE = 20;
 
 export function Notifications() {
   const router = useRouter();
   const toast = useToast();
   const user = useCurrentUser();
-  const role: LoginRole = user?.role ?? "CLIENT";
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [status, setStatus] = useState<"loading" | "error" | "ready">("loading");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
 
-  const handleMatchingNotification = useCallback((notification: MatchingNotification) => {
-    const requestId = notification.linkUrl.match(/\/requests\/(\d+)/)?.[1];
-    const positionId = notification.linkUrl.match(/\/positions\/(\d+)\//)?.[1];
-    const href = requestId ? `/matchings/requests/${requestId}` : role === "CLIENT" && positionId ? `/matchings/positions/${positionId}/candidates` : "/notifications";
-    const fallbackTitle = notification.type === "MATCHING_REQUESTED" ? "새로운 매칭 요청이 도착했습니다." : notification.type === "MATCHING_ACCEPTED" ? "매칭 요청이 수락되었습니다." : notification.type === "MATCHING_REJECTED" ? "매칭 요청 결과를 확인해 주세요." : "AI 재추천이 완료되었습니다.";
-    setNotifications((current) => [{ id: Date.now(), role, type: "MATCHING", title: notification.title ?? fallbackTitle, description: notification.message ?? "자세한 내용을 확인해 주세요.", createdAt: "방금 전", isRead: false, href }, ...current]);
-  }, [role]);
-  useMatchingNotifications(user?.accountId, handleMatchingNotification);
-
-  const visibleNotifications = useMemo(
-    () => notifications.filter((notification) => notification.role === role),
-    [notifications, role],
-  );
-  const unreadCount = visibleNotifications.filter((notification) => !notification.isRead).length;
-
-  const handleNotificationClick = (notification: NotificationItem) => {
-    if (!notification.isRead) {
-      setNotifications((current) =>
-        current.map((item) =>
-          item.id === notification.id ? { ...item, isRead: true } : item,
-        ),
+  const loadFirstPage = useCallback(async () => {
+    setStatus("loading");
+    setErrorMessage("");
+    try {
+      const result = await getNotifications({ page: 0, size: PAGE_SIZE });
+      setNotifications(result.content);
+      setPage(0);
+      setHasMore(result.page + 1 < result.totalPages);
+      setStatus("ready");
+    } catch (error) {
+      setStatus("error");
+      setErrorMessage(
+        error instanceof ApiException || error instanceof Error
+          ? error.message
+          : "알림을 불러오지 못했습니다.",
       );
     }
-    router.push(notification.href);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) void loadFirstPage();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [loadFirstPage]);
+
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const result = await getNotifications({ page: nextPage, size: PAGE_SIZE });
+      setNotifications((current) => [...current, ...result.content]);
+      setPage(result.page);
+      setHasMore(result.page + 1 < result.totalPages);
+    } catch {
+      toast.error("알림을 더 불러오지 못했습니다.");
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
-  const handleDelete = (notificationId: number) => {
-    setNotifications((current) => current.filter((item) => item.id !== notificationId));
-    toast.success("알림을 삭제했습니다.");
+  const handleRealtimeNotification = useCallback(
+    (notification: NotificationItem) => {
+      setNotifications((current) => [notification, ...current]);
+      toast.info(notification.title);
+    },
+    [toast],
+  );
+  const handleReconnect = useCallback(() => {
+    void loadFirstPage();
+  }, [loadFirstPage]);
+  useNotificationStream(user?.accountId, handleRealtimeNotification, {
+    onReconnect: handleReconnect,
+  });
+
+  const unreadCount = useMemo(
+    () => notifications.filter((notification) => !notification.read).length,
+    [notifications],
+  );
+
+  const handleNotificationClick = async (notification: NotificationItem) => {
+    if (!notification.read) {
+      setNotifications((current) =>
+        current.map((item) =>
+          item.notificationId === notification.notificationId
+            ? { ...item, read: true }
+            : item,
+        ),
+      );
+      try {
+        await markNotificationAsRead(notification.notificationId);
+      } catch {
+        // 읽음 처리 실패는 화면 이동을 막지 않는다.
+      }
+    }
+    if (notification.linkUrl) router.push(notification.linkUrl);
   };
 
-  const handleReadAll = () => {
+  const handleDelete = async (notificationId: number) => {
+    const previous = notifications;
+    setNotifications((current) => current.filter((item) => item.notificationId !== notificationId));
+    try {
+      await deleteNotification(notificationId);
+      toast.success("알림을 삭제했습니다.");
+    } catch {
+      setNotifications(previous);
+      toast.error("알림을 삭제하지 못했습니다.");
+    }
+  };
+
+  const handleReadAll = async () => {
     if (unreadCount === 0) return;
-
-    setNotifications((current) =>
-      current.map((item) => (item.role === role ? { ...item, isRead: true } : item)),
-    );
-    toast.success("모든 알림을 읽음 처리했습니다.");
+    const previous = notifications;
+    setNotifications((current) => current.map((item) => ({ ...item, read: true })));
+    try {
+      await markAllNotificationsAsRead();
+      toast.success("모든 알림을 읽음 처리했습니다.");
+    } catch {
+      setNotifications(previous);
+      toast.error("모든 알림을 읽음 처리하지 못했습니다.");
+    }
   };
 
-  const handleDeleteAll = () => {
-    setNotifications((current) => current.filter((item) => item.role !== role));
+  const handleDeleteAll = async () => {
+    const previous = notifications;
+    setNotifications([]);
     setIsDeleteAllModalOpen(false);
-    toast.success("모든 알림을 삭제했습니다.");
+    try {
+      await deleteAllNotifications();
+      toast.success("모든 알림을 삭제했습니다.");
+    } catch {
+      setNotifications(previous);
+      toast.error("모든 알림을 삭제하지 못했습니다.");
+    }
   };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header role={role === "FREELANCER" ? "freelancer" : "client"} />
+      <Header role={user?.role === "FREELANCER" ? "freelancer" : "client"} />
       <main className="flex-1 px-5 pb-20 pt-10 sm:px-8 sm:pt-12">
         <section className="mx-auto w-full max-w-[700px]" aria-labelledby="notifications-title">
           <div className="flex items-center justify-between gap-4">
@@ -83,7 +170,7 @@ export function Notifications() {
             <div className="flex shrink-0 items-center gap-1 text-[12px] font-bold sm:gap-2 sm:text-[13px]">
               <button
                 type="button"
-                onClick={handleReadAll}
+                onClick={() => void handleReadAll()}
                 disabled={unreadCount === 0}
                 className="rounded-md px-2 py-2 text-[#3478f6] transition hover:bg-[#eef5ff] disabled:cursor-not-allowed disabled:text-theme-muted disabled:hover:bg-transparent"
               >
@@ -93,7 +180,7 @@ export function Notifications() {
               <button
                 type="button"
                 onClick={() => setIsDeleteAllModalOpen(true)}
-                disabled={visibleNotifications.length === 0}
+                disabled={notifications.length === 0}
                 className="rounded-md px-2 py-2 text-theme-danger transition hover:bg-danger-surface disabled:cursor-not-allowed disabled:text-theme-muted disabled:hover:bg-transparent"
               >
                 모두 삭제
@@ -101,17 +188,35 @@ export function Notifications() {
             </div>
           </div>
 
-          {visibleNotifications.length > 0 ? (
-            <ul className="mt-7 space-y-2" aria-label="알림 목록">
-              {visibleNotifications.map((notification) => (
-                <NotificationCard
-                  key={notification.id}
-                  notification={notification}
-                  onOpen={handleNotificationClick}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </ul>
+          {status === "loading" ? (
+            <LoadingState className="mt-7" message="알림을 불러오는 중입니다." />
+          ) : status === "error" ? (
+            <ErrorState className="mt-7" description={errorMessage} onRetry={() => void loadFirstPage()} />
+          ) : notifications.length > 0 ? (
+            <>
+              <ul className="mt-7 space-y-2" aria-label="알림 목록">
+                {notifications.map((notification) => (
+                  <NotificationCard
+                    key={notification.notificationId}
+                    notification={notification}
+                    onOpen={(item) => void handleNotificationClick(item)}
+                    onDelete={(id) => void handleDelete(id)}
+                  />
+                ))}
+              </ul>
+              {hasMore ? (
+                <div className="mt-4 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => void handleLoadMore()}
+                    disabled={isLoadingMore}
+                    className="rounded-lg border border-theme bg-surface px-4 py-2 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isLoadingMore ? "불러오는 중..." : "더 보기"}
+                  </button>
+                </div>
+              ) : null}
+            </>
           ) : (
             <EmptyNotifications />
           )}
@@ -126,7 +231,7 @@ export function Notifications() {
         cancelText="취소"
         variant="danger"
         icon={<WarningIcon />}
-        onConfirm={handleDeleteAll}
+        onConfirm={() => void handleDeleteAll()}
         onClose={() => setIsDeleteAllModalOpen(false)}
       />
     </div>
@@ -143,7 +248,7 @@ function NotificationCard({ notification, onOpen, onDelete }: NotificationCardPr
   return (
     <li
       className={`group flex min-h-[86px] overflow-hidden rounded-[10px] border transition ${
-        notification.isRead
+        notification.read
           ? "border-theme bg-surface hover:bg-surface-subtle"
           : "border-[#c9dcfa] bg-[#eef5ff] hover:bg-[#e6f0ff] dark:border-[#315d91] dark:bg-[#172a44] dark:hover:bg-[#1b3150]"
       }`}
@@ -155,22 +260,22 @@ function NotificationCard({ notification, onOpen, onDelete }: NotificationCardPr
         aria-label={`${notification.title} 상세 페이지로 이동`}
       >
         <span
-          className={`mt-[7px] h-2 w-2 shrink-0 rounded-full ${notification.isRead ? "bg-transparent" : "bg-[#3478f6]"}`}
+          className={`mt-[7px] h-2 w-2 shrink-0 rounded-full ${notification.read ? "bg-transparent" : "bg-[#3478f6]"}`}
           aria-hidden="true"
         />
         <span className="min-w-0 flex-1">
-          <span className={`block text-[13px] leading-5 text-theme-primary sm:text-[14px] ${notification.isRead ? "font-medium" : "font-bold"}`}>
+          <span className={`block text-[13px] leading-5 text-theme-primary sm:text-[14px] ${notification.read ? "font-medium" : "font-bold"}`}>
             {notification.title}
           </span>
           <span className="mt-1 block text-[11px] leading-5 text-theme-secondary sm:text-[12px]">
-            {notification.description}
+            {notification.content}
           </span>
           <time className="mt-1 block text-[11px] text-theme-muted">{notification.createdAt}</time>
         </span>
       </button>
       <button
         type="button"
-        onClick={() => onDelete(notification.id)}
+        onClick={() => onDelete(notification.notificationId)}
         aria-label={`${notification.title} 알림 삭제`}
         className="m-2 flex h-10 w-10 shrink-0 items-center justify-center self-start rounded-lg text-theme-muted transition hover:bg-danger-surface hover:text-theme-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-danger"
       >
