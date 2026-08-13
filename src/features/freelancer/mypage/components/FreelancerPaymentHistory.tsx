@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { FreelancerMyPageSidebar } from "@/features/freelancer/components/FreelancerMyPageSidebar";
+import { FreelancerMyPageLayout } from "./FreelancerMyPageLayout";
 
 const PAYMENT_FILTERS = ["전체", "결제 완료", "결제 실패", "환불"] as const;
 type PaymentFilter = (typeof PAYMENT_FILTERS)[number];
@@ -29,13 +29,8 @@ export function FreelancerPaymentHistory() {
     .reduce((total, payment) => total + payment.amount, 0);
 
   return (
-    <main className="min-h-screen bg-surface-subtle px-4 py-7 text-theme-primary sm:px-5">
-      <div className="mx-auto w-full max-w-[1200px]">
-        <h1 className="text-[24px] font-extrabold tracking-[-0.04em]">마이페이지</h1>
-        <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-start">
-          <FreelancerMyPageSidebar activeMenu="payments" />
-
-          <section className="min-w-0 flex-1 rounded-xl border border-theme bg-surface px-5 py-6 sm:px-7">
+    <FreelancerMyPageLayout activeMenu="payments">
+          <section className="min-w-0 overflow-hidden rounded-xl border border-theme bg-surface px-5 py-6 sm:px-7">
             <h2 className="text-[16px] font-bold">수수료 결제 내역</h2>
             <div className="mt-5 flex flex-wrap gap-2">
               {PAYMENT_FILTERS.map((filter) => {
@@ -62,10 +57,10 @@ export function FreelancerPaymentHistory() {
             {visiblePayments.length > 0 ? (
               <div className="mt-5 divide-y divide-[#e5e9ef] border-b border-theme">
                 {visiblePayments.map((payment) => (
-                  <article key={payment.id} className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
+                <article key={payment.id} className="flex min-w-0 flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
                       <h3 className="text-[13px] font-bold">{payment.projectTitle}</h3>
-                      <p className="mt-1.5 text-[11px] font-semibold text-theme-muted">{payment.company} · {payment.paymentMethod} · {payment.paidAt}</p>
+                      <p className="mt-1.5 break-words text-[11px] font-semibold leading-5 text-theme-muted">{payment.company} · {payment.paymentMethod} · {payment.paidAt}</p>
                     </div>
                     <div className="text-left sm:text-right">
                       <strong className="text-[16px] font-extrabold">{formatWon(payment.amount)}</strong>
@@ -78,9 +73,7 @@ export function FreelancerPaymentHistory() {
               <div className="mt-5 flex h-28 items-center justify-center rounded-lg border border-theme text-[11px] font-semibold text-theme-muted">해당 상태의 결제 내역이 없습니다.</div>
             )}
           </section>
-        </div>
-      </div>
-    </main>
+    </FreelancerMyPageLayout>
   );
 }
 

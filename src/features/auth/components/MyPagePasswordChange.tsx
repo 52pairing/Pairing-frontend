@@ -11,6 +11,8 @@ import { ApiException } from "@/lib/api";
 
 interface MyPagePasswordChangeProps {
   role: "CLIENT" | "FREELANCER";
+  embedded?: boolean;
+  onClose?: () => void;
 }
 
 type PasswordStep = "email" | "password" | "done";
@@ -23,7 +25,7 @@ const isValidPassword = (value: string) =>
   /[0-9]/.test(value) &&
   /[^A-Za-z0-9]/.test(value);
 
-export function MyPagePasswordChange({ role }: MyPagePasswordChangeProps) {
+export function MyPagePasswordChange({ role, embedded = false, onClose }: MyPagePasswordChangeProps) {
   const user = useCurrentUser();
   const otp = useEmailOtp({ email: user?.email ?? "", purpose: "PASSWORD_CHANGE" });
   const [step, setStep] = useState<PasswordStep>("email");
@@ -57,38 +59,39 @@ export function MyPagePasswordChange({ role }: MyPagePasswordChangeProps) {
 
   const sidebar = role === "CLIENT" ? <ClientMyPageSidebar activeMenu="password" /> : <FreelancerMyPageSidebar activeMenu="password" />;
   const isPasswordStepValid = isValidPassword(password) && password === passwordConfirm;
+  const passwordSection = (
+    <section className="min-h-[410px] min-w-0 overflow-hidden rounded-xl border border-theme bg-surface px-5 py-6 shadow-[0_1px_2px_rgba(16,24,40,0.02)] sm:px-7 sm:py-7">
+      <div className="flex items-start justify-between gap-4">
+        <div><h2 className="text-[17px] font-extrabold tracking-[-0.02em]">비밀번호 변경</h2><p className="mt-1.5 text-[12px] font-medium text-theme-muted">안전한 계정 사용을 위해 이메일 인증이 필요합니다.</p></div>
+        {embedded && onClose ? <button type="button" onClick={onClose} className="shrink-0 text-[12px] font-semibold text-theme-muted hover:text-brand">닫기</button> : null}
+      </div>
+      <PasswordStepper step={step} />
+      {step === "email" ? <EmailVerificationStep userEmail={user?.email} otp={otp} onNext={handleNext} onCancel={onClose} /> : null}
+      {step === "password" ? <PasswordForm password={password} passwordConfirm={passwordConfirm} error={formError} isSubmitting={isSubmitting} isValid={isPasswordStepValid} onPasswordChange={setPassword} onPasswordConfirmChange={setPasswordConfirm} onPrevious={() => setStep("email")} onSubmit={handlePasswordChange} /> : null}
+      {step === "done" ? <CompletionStep /> : null}
+    </section>
+  );
+
+  if (embedded) {
+    return (
+      <div className="mt-6 border-t border-theme pt-1">
+        <PasswordStepper step={step} />
+        {step === "email" ? <EmailVerificationStep userEmail={user?.email} otp={otp} onNext={handleNext} onCancel={onClose} /> : null}
+        {step === "password" ? <PasswordForm password={password} passwordConfirm={passwordConfirm} error={formError} isSubmitting={isSubmitting} isValid={isPasswordStepValid} onPasswordChange={setPassword} onPasswordConfirmChange={setPasswordConfirm} onPrevious={() => setStep("email")} onSubmit={handlePasswordChange} /> : null}
+        {step === "done" ? <CompletionStep /> : null}
+      </div>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-surface-subtle px-4 py-10 text-theme-primary sm:px-6 lg:py-12">
-      <div className="mx-auto w-full max-w-[1090px]">
-        <h1 className="text-[26px] font-extrabold tracking-[-0.04em]">마이페이지</h1>
-        <div className="mt-9 flex flex-col gap-6 md:flex-row md:items-start">
+    <main className="min-h-screen overflow-x-hidden bg-surface-subtle px-4 py-8 text-theme-primary sm:px-6 lg:py-12">
+      <div className="mx-auto w-full max-w-[1105px]">
+        <h1 className="text-[23px] font-extrabold tracking-[-0.04em] sm:text-[26px]">마이페이지</h1>
+        <div className="mt-8 grid min-w-0 grid-cols-1 gap-6 md:grid-cols-[200px_minmax(0,1fr)] md:items-start">
           {sidebar}
           <div className="min-w-0 flex-1 space-y-4">
             <AccountSummary name={user?.name} email={user?.email} role={role} />
-            <section className="min-h-[410px] rounded-[14px] border border-theme bg-surface px-5 py-7 shadow-[0_1px_2px_rgba(16,24,40,0.02)] sm:px-8 sm:py-8">
-              <h2 className="text-[17px] font-extrabold tracking-[-0.02em]">비밀번호 변경</h2>
-              <p className="mt-1.5 text-[12px] font-medium text-theme-muted">안전한 계정 사용을 위해 이메일 인증이 필요합니다.</p>
-              <PasswordStepper step={step} />
-
-              {step === "email" ? (
-                <EmailVerificationStep userEmail={user?.email} otp={otp} onNext={handleNext} />
-              ) : null}
-              {step === "password" ? (
-                <PasswordForm
-                  password={password}
-                  passwordConfirm={passwordConfirm}
-                  error={formError}
-                  isSubmitting={isSubmitting}
-                  isValid={isPasswordStepValid}
-                  onPasswordChange={setPassword}
-                  onPasswordConfirmChange={setPasswordConfirm}
-                  onPrevious={() => setStep("email")}
-                  onSubmit={handlePasswordChange}
-                />
-              ) : null}
-              {step === "done" ? <CompletionStep /> : null}
-            </section>
+            {passwordSection}
           </div>
         </div>
       </div>
@@ -98,17 +101,17 @@ export function MyPagePasswordChange({ role }: MyPagePasswordChangeProps) {
 
 function AccountSummary({ name, email, role }: { name?: string; email?: string; role: "CLIENT" | "FREELANCER" }) {
   return (
-    <section className="rounded-[14px] border border-theme bg-surface px-7 py-7 shadow-[0_1px_2px_rgba(16,24,40,0.02)] sm:px-8">
+    <section className="min-w-0 overflow-hidden rounded-xl border border-theme bg-surface px-5 py-6 shadow-[0_1px_2px_rgba(16,24,40,0.02)] sm:px-7 sm:py-7">
       <h2 className="text-[16px] font-bold">기본 정보</h2>
-      <div className="mt-8 flex items-center gap-5">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-surface-muted text-[28px] font-bold text-brand" aria-hidden="true">{name?.trim().charAt(0) || "기"}</div>
-        <div>
-          <p className="text-[20px] font-extrabold">{name ?? (role === "CLIENT" ? "기업 회원" : "프리랜서 회원")}</p>
-          <p className="mt-1 text-[13px] font-semibold text-theme-secondary">{role === "CLIENT" ? "담당자" : "이름"}: {name ?? "불러오는 중"}</p>
+      <div className="mt-7 flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
+        <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-surface-muted text-[26px] font-bold text-brand" aria-hidden="true">{name?.trim().charAt(0) || "기"}</div>
+        <div className="min-w-0">
+          <p className="break-words text-[20px] font-extrabold">{name ?? (role === "CLIENT" ? "기업 회원" : "프리랜서 회원")}</p>
+          <p className="mt-1 break-words text-[13px] font-semibold text-theme-secondary">{role === "CLIENT" ? "담당자" : "이름"}: {name ?? "불러오는 중"}</p>
         </div>
       </div>
-      <dl className="mt-7 grid gap-5 sm:grid-cols-2">
-        <div><dt className="text-[12px] font-semibold text-theme-muted">업무 이메일</dt><dd className="mt-1 text-[14px] font-bold">{email ?? "불러오는 중"}</dd></div>
+      <dl className="mt-7 grid gap-x-16 gap-y-5 border-t border-theme pt-6 sm:grid-cols-2">
+        <div className="min-w-0"><dt className="text-[12px] font-semibold text-theme-muted">업무 이메일</dt><dd className="mt-1 break-all text-[14px] font-bold">{email ?? "불러오는 중"}</dd></div>
         <div><dt className="text-[12px] font-semibold text-theme-muted">계정 유형</dt><dd className="mt-1 text-[14px] font-bold">{role === "CLIENT" ? "클라이언트" : "프리랜서"}</dd></div>
       </dl>
     </section>
@@ -138,7 +141,7 @@ function PasswordStepper({ step }: { step: PasswordStep }) {
 
 type EmailOtpState = ReturnType<typeof useEmailOtp>;
 
-function EmailVerificationStep({ userEmail, otp, onNext }: { userEmail?: string; otp: EmailOtpState; onNext: () => void }) {
+function EmailVerificationStep({ userEmail, otp, onNext, onCancel }: { userEmail?: string; otp: EmailOtpState; onNext: () => void; onCancel?: () => void }) {
   return (
     <div className="mt-8 border-t border-theme pt-6">
       <div className="flex items-start gap-3 rounded-[10px] bg-surface-subtle px-4 py-3.5">
@@ -148,15 +151,15 @@ function EmailVerificationStep({ userEmail, otp, onNext }: { userEmail?: string;
       {!otp.sent ? (
         <button type="button" onClick={otp.handleSend} disabled={!userEmail || otp.isSending || otp.remainingSendCount === 0} className="mt-3 h-11 w-full rounded-[7px] bg-brand text-[13px] font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-theme-muted">{otp.isSending ? "인증 코드 발송 중..." : "인증 코드 발송"}</button>
       ) : (
-        <div className="mt-3 flex gap-2">
-          <div className="relative min-w-0 flex-1"><input aria-label="인증 코드 6자리" value={otp.code} onChange={(event) => otp.setCode(event.target.value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} placeholder="인증 코드 6자리 입력" className="h-11 w-full rounded-[7px] border border-theme bg-surface px-4 pr-16 text-center text-[13px] font-bold tracking-[0.28em] outline-none transition placeholder:tracking-normal placeholder:text-theme-muted focus:border-brand focus:ring-2 focus:ring-brand/10" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-theme-danger">{Math.floor(otp.secondsLeft / 60)}:{String(otp.secondsLeft % 60).padStart(2, "0")}</span></div>
-          <button type="button" onClick={otp.handleVerify} disabled={otp.code.length !== 6 || otp.secondsLeft <= 0 || otp.isConfirming || otp.verified} className="h-11 rounded-[7px] bg-brand px-6 text-[13px] font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-theme-muted">{otp.isConfirming ? "확인 중" : "확인"}</button>
+        <div className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row">
+          <div className="relative min-w-0 flex-1"><input aria-label="인증 코드 6자리" value={otp.code} onChange={(event) => otp.setCode(event.target.value.replace(/\D/g, ""))} inputMode="numeric" maxLength={6} placeholder="인증 코드 6자리 입력" className="h-11 w-full rounded-[7px] border border-theme bg-surface px-4 pr-16 text-center text-[13px] font-bold tracking-[0.28em] outline-none transition placeholder:tracking-normal placeholder:text-theme-muted hover:border-brand focus:border-brand focus:ring-2 focus:ring-brand/10" /><span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-theme-danger">{Math.floor(otp.secondsLeft / 60)}:{String(otp.secondsLeft % 60).padStart(2, "0")}</span></div>
+          <button type="button" onClick={otp.handleVerify} disabled={otp.code.length !== 6 || otp.secondsLeft <= 0 || otp.isConfirming || otp.verified} className="h-11 shrink-0 rounded-[7px] bg-brand px-6 text-[13px] font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-theme-muted">{otp.isConfirming ? "확인 중" : "확인"}</button>
         </div>
       )}
       {otp.verified ? <p className="mt-3 flex items-center gap-1.5 text-[12px] font-bold text-emerald-600"><span className="flex h-4 w-4 items-center justify-center rounded-full border border-emerald-500 text-[9px]">✓</span> 인증이 완료되었습니다.</p> : null}
       {otp.sent && !otp.verified ? <button type="button" onClick={otp.handleSend} disabled={otp.isSending || otp.secondsLeft > 0 || otp.remainingSendCount === 0} className="mt-3 text-[11px] font-semibold text-theme-muted underline underline-offset-2 disabled:no-underline">인증 코드 재발송</button> : null}
       {otp.error ? <p role="alert" className="mt-2 text-[12px] font-semibold text-theme-danger">{otp.error}</p> : null}
-      <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => history.back()} className="h-10 rounded-[7px] border border-theme px-5 text-[12px] font-bold text-theme-secondary transition hover:bg-surface-subtle">취소</button><button type="button" onClick={onNext} disabled={!otp.verified} className="h-10 rounded-[7px] bg-brand px-6 text-[12px] font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-theme-muted">다음</button></div>
+      <div className="mt-6 flex flex-wrap justify-end gap-2"><button type="button" onClick={() => onCancel ? onCancel() : history.back()} className="h-10 rounded-[7px] border border-theme px-5 text-[12px] font-bold text-theme-secondary transition hover:bg-surface-subtle">취소</button><button type="button" onClick={onNext} disabled={!otp.verified} className="h-10 rounded-[7px] bg-brand px-6 text-[12px] font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-theme-muted">다음</button></div>
     </div>
   );
 }
@@ -180,13 +183,13 @@ function PasswordForm(props: PasswordFormProps) {
   return (
     <div className="mt-8 border-t border-theme pt-6">
       <label htmlFor="myPageNewPassword" className="text-[12px] font-bold text-theme-secondary">새 비밀번호</label>
-      <div className="relative mt-2"><input id="myPageNewPassword" type={showPassword ? "text" : "password"} value={props.password} maxLength={20} onChange={(event) => props.onPasswordChange(event.target.value)} placeholder="영문·숫자·특수문자 포함 8~20자" className="h-11 w-full rounded-[7px] border border-theme bg-surface px-4 pr-12 text-[13px] outline-none transition placeholder:text-theme-muted focus:border-brand focus:ring-2 focus:ring-brand/10" /><VisibilityButton visible={showPassword} onClick={() => setShowPassword((value) => !value)} /></div>
+      <div className="relative mt-2"><input id="myPageNewPassword" type={showPassword ? "text" : "password"} value={props.password} maxLength={20} onChange={(event) => props.onPasswordChange(event.target.value)} placeholder="영문·숫자·특수문자 포함 8~20자" className="h-11 w-full rounded-[7px] border border-theme bg-surface px-4 pr-12 text-[13px] outline-none transition placeholder:text-theme-muted hover:border-brand focus:border-brand focus:ring-2 focus:ring-brand/10" /><VisibilityButton visible={showPassword} onClick={() => setShowPassword((value) => !value)} /></div>
       <label htmlFor="myPagePasswordConfirm" className="mt-4 block text-[12px] font-bold text-theme-secondary">새 비밀번호 확인</label>
-      <div className="relative mt-2"><input id="myPagePasswordConfirm" type={showPasswordConfirm ? "text" : "password"} value={props.passwordConfirm} maxLength={20} onChange={(event) => props.onPasswordConfirmChange(event.target.value)} placeholder="새 비밀번호를 한 번 더 입력해 주세요" className="h-11 w-full rounded-[7px] border border-theme bg-surface px-4 pr-12 text-[13px] outline-none transition placeholder:text-theme-muted focus:border-brand focus:ring-2 focus:ring-brand/10" /><VisibilityButton visible={showPasswordConfirm} onClick={() => setShowPasswordConfirm((value) => !value)} /></div>
+      <div className="relative mt-2"><input id="myPagePasswordConfirm" type={showPasswordConfirm ? "text" : "password"} value={props.passwordConfirm} maxLength={20} onChange={(event) => props.onPasswordConfirmChange(event.target.value)} placeholder="새 비밀번호를 한 번 더 입력해 주세요" className="h-11 w-full rounded-[7px] border border-theme bg-surface px-4 pr-12 text-[13px] outline-none transition placeholder:text-theme-muted hover:border-brand focus:border-brand focus:ring-2 focus:ring-brand/10" /><VisibilityButton visible={showPasswordConfirm} onClick={() => setShowPasswordConfirm((value) => !value)} /></div>
       <div className="mt-4 rounded-[9px] bg-surface-subtle px-4 py-3 text-[11px] font-medium leading-5 text-theme-muted"><p>• 8~20자로 입력해 주세요.</p><p>• 영문 대문자·소문자, 숫자, 특수문자를 각각 1개 이상 포함해 주세요.</p></div>
       {props.passwordConfirm && props.password !== props.passwordConfirm ? <p role="alert" className="mt-2 text-[12px] font-semibold text-theme-danger">비밀번호가 일치하지 않습니다.</p> : null}
       {props.error ? <p role="alert" className="mt-2 text-[12px] font-semibold text-theme-danger">{props.error}</p> : null}
-      <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={props.onPrevious} className="h-10 rounded-[7px] border border-theme px-5 text-[12px] font-bold text-theme-secondary transition hover:bg-surface-subtle">이전</button><button type="button" onClick={props.onSubmit} disabled={!props.isValid || props.isSubmitting} className="h-10 rounded-[7px] bg-brand px-6 text-[12px] font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-theme-muted">{props.isSubmitting ? "변경 중..." : "변경 완료"}</button></div>
+      <div className="mt-6 flex flex-wrap justify-end gap-2"><button type="button" onClick={props.onPrevious} className="h-10 rounded-[7px] border border-theme px-5 text-[12px] font-bold text-theme-secondary transition hover:bg-surface-subtle">이전</button><button type="button" onClick={props.onSubmit} disabled={!props.isValid || props.isSubmitting} className="h-10 rounded-[7px] bg-brand px-6 text-[12px] font-bold text-white transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-theme-muted">{props.isSubmitting ? "변경 중..." : "변경 완료"}</button></div>
     </div>
   );
 }

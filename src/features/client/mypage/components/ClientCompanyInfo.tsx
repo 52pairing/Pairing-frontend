@@ -134,7 +134,7 @@ function CompanyEditForm({
   onChange: (key: keyof CompanyForm, value: string) => void;
 }) {
   const inputClass =
-    "h-11 w-full rounded-md border border-theme bg-surface px-4 text-[13px] font-semibold text-theme-primary outline-none transition placeholder:text-theme-muted focus:border-brand";
+    "h-11 w-full rounded-md border border-theme bg-surface px-4 text-[13px] font-semibold text-theme-primary outline-none transition placeholder:text-theme-muted hover:border-brand focus:border-brand";
   const readOnlyClass = `${inputClass} bg-surface-subtle text-theme-muted`;
   return (
     <div className="mt-7 grid gap-x-4 gap-y-4 sm:grid-cols-2">

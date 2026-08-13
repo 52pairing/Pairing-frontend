@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { FreelancerMyPageLayout } from "./FreelancerMyPageLayout";
 
 interface ProfileRegistrationShellProps {
   step: 1 | 2;
@@ -9,11 +10,11 @@ interface ProfileRegistrationShellProps {
 
 export function ProfileRegistrationShell({ step, title, description, children }: ProfileRegistrationShellProps) {
   return (
-    <main className="min-h-screen bg-surface-subtle px-4 py-10 text-theme-primary sm:px-6 sm:py-12">
-      <div className="mx-auto w-full max-w-[660px]">
-        <h1 className="text-[24px] font-extrabold leading-tight tracking-[-0.04em] sm:text-[27px]">{title}</h1>
+    <FreelancerMyPageLayout activeMenu={step === 1 ? "profile" : "resume"}>
+      <div className="mx-auto w-full max-w-[720px]">
+        <h2 className="break-words text-[22px] font-extrabold leading-tight tracking-[-0.04em] sm:text-[25px]">{title}</h2>
         <p className="mt-2 text-[11px] font-semibold text-theme-secondary">{description}</p>
-        <div className="mt-7 flex items-center text-[10px] font-bold">
+        {step === 1 ? <div className="mt-7 flex items-center text-[10px] font-bold">
           <div className={`flex items-center gap-2 ${step === 1 ? "text-brand" : "text-theme-success"}`}>
             <span className={`flex h-6 w-6 items-center justify-center rounded-full text-brand-contrast ${step === 1 ? "bg-brand" : "bg-emerald-500"}`}>
               {step === 1 ? "1" : "✓"}
@@ -21,14 +22,14 @@ export function ProfileRegistrationShell({ step, title, description, children }:
             기본 프로필
           </div>
           <div className="mx-3 h-px flex-1 bg-theme sm:mx-4" />
-          <div className={step === 2 ? "text-brand" : "text-theme-muted"}>
-            <span className={`mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-brand-contrast ${step === 2 ? "bg-brand" : "bg-surface-muted text-theme-muted"}`}>2</span>
+          <div className="text-theme-muted">
+            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-theme-muted">2</span>
             이력서 <span className="font-medium text-theme-muted">/ 2단계</span>
           </div>
-        </div>
-        <div className="mt-6">{children}</div>
+        </div> : null}
+        <div className={step === 1 ? "mt-6" : "mt-5"}>{children}</div>
       </div>
-    </main>
+    </FreelancerMyPageLayout>
   );
 }
 

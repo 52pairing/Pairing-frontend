@@ -14,8 +14,8 @@ interface HeaderShellProps {
 export function HeaderShell({ homeHref, nav, actions }: HeaderShellProps) {
   return (
     <header className="top-0 z-40 h-[60px] border-b border-theme bg-surface">
-      <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-8">
-        <Link href={homeHref} aria-label="Pairing 홈" className="flex items-center">
+      <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-8">
+        <Link href={homeHref} aria-label="Pairing 홈" className="flex min-w-0 shrink items-center">
           <ThemeLogo priority />
         </Link>
 
@@ -23,7 +23,7 @@ export function HeaderShell({ homeHref, nav, actions }: HeaderShellProps) {
           {nav}
         </nav>
 
-        <div className="flex min-w-[180px] items-center justify-end gap-3">
+        <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 sm:min-w-[180px] sm:gap-3">
           <ThemeControl />
           {actions}
         </div>

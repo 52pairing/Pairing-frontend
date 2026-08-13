@@ -13,7 +13,11 @@ interface ProfileMenuProps {
 }
 
 // 클라이언트/프리랜서 Header에서 공통으로 사용하는 프로필 드롭다운
-export function ProfileMenu({ label, myPageHref, profileManageHref }: ProfileMenuProps) {
+export function ProfileMenu({
+  label,
+  myPageHref,
+  profileManageHref,
+}: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -58,14 +62,14 @@ export function ProfileMenu({ label, myPageHref, profileManageHref }: ProfileMen
         </span>
         <span>{label}</span>
         <span className="flex items-center">
-            <Image
-                src="/icons/ChevronDownIcon.svg"
-                alt=""
-                width={16}
-                height={16}
-                aria-hidden="true"
-                className="shrink-0"
-            />
+          <Image
+            src="/icons/ChevronDownIcon.svg"
+            alt=""
+            width={16}
+            height={16}
+            aria-hidden="true"
+            className="shrink-0"
+          />
         </span>
       </button>
 
@@ -78,15 +82,6 @@ export function ProfileMenu({ label, myPageHref, profileManageHref }: ProfileMen
           >
             마이페이지
           </Link>
-          {profileManageHref ? (
-            <Link
-              href={profileManageHref}
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2 text-sm text-theme-secondary hover:bg-surface-subtle"
-            >
-              프로필 등록·관리
-            </Link>
-          ) : null}
           <Link
             href="/support"
             onClick={() => setOpen(false)}
