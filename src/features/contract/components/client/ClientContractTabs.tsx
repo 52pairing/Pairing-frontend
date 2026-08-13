@@ -1,4 +1,4 @@
-import type { ClientContractTabsProps } from "@/features/client/myprojects/contract/types/contract";
+import type { ClientContractTabsProps } from "@/features/contract/types/clientContract";
 
 export const CLIENT_CONTRACT_TABS = [
   { tab: "ALL", label: "전체" },

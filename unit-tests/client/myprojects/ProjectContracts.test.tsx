@@ -1,12 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { ProjectContracts } from "@/features/client/myprojects/contract/components/ProjectContracts";
-import { getClientProjectContracts } from "@/features/client/myprojects/contract/services/contracts";
+import { ProjectContracts } from "@/features/contract/components/client/ProjectContracts";
+import { getClientProjectContracts } from "@/features/contract/services/clientContracts";
 import { getProjectJobRoles } from "@/features/client/projects/services/projectPreReview";
 import { contractItem, contractPage } from "./fixtures";
 
-jest.mock("@/features/client/myprojects/contract/services/contracts", () => ({
+jest.mock("@/features/contract/services/clientContracts", () => ({
   getClientProjectContracts: jest.fn(),
 }));
 

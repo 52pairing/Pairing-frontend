@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { getContracts } from "@/features/contract/services/contracts";
-import { FreelancerContracts } from "@/features/freelancer/mycontracts/components/FreelancerContracts";
+import { FreelancerContracts } from "@/features/contract/components/freelancer/FreelancerContracts";
 import { getMySettlements } from "@/features/payment/services/settlementPayment";
 import { contractListPage, freelancerContract } from "./fixtures";
 

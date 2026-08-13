@@ -1,5 +1,59 @@
 # WORKLOG
 
+## 2026-08-13 — 1:1 채팅 최종 API 재연동
+
+- 최종 백엔드 매핑에 맞춰 채팅 REST 경로를 `/api/v1/chat-rooms`로 정정했습니다.
+- 계약을 협상 ID로 조회해 직무와 최종 합의안 카드에 단가·기간·시작일·근무 조건·특약사항을 표시합니다.
+- STOMP broadcast에는 `mine`이 없으므로 현재 계정 ID와 발신자 ID를 비교해 내 전송 이벤트를 제외합니다.
+- 공통 API 에러의 `code`와 기존 `errorCode`를 모두 처리하도록 호환했습니다.
+- 백엔드 최종 회신에 따라 방 상태를 `ACTIVE | CLOSED`로 수정하고 nullable 상대방·프로젝트를 방어 처리했습니다.
+- 채팅 전용 STOMP 훅을 분리하고 broadcast의 `mine`을 현재 계정으로 계산한 뒤 `messageId`로 중복 제거합니다.
+- CloudFront 절대 프로필 URL을 그대로 사용하며 403·로드 실패 시 첫 글자 아바타로 대체합니다.
+- 서버의 PostgreSQL 파라미터 타입 추론 오류 수정·배포 후 채팅방 목록 API 200 및 9건 반환이 확인되었습니다.
+
+### 검증
+
+- [x] 변경 파일 ESLint
+- [x] `git diff --check`
+- [ ] TypeScript — 기존 프리랜서 마이페이지의 `lucide-react` 모듈 해석 오류 2건
+- [ ] 실제 API·STOMP·프로필 이미지 — 인증 가능한 테스트 계정 및 파일 URL 규칙 확인 필요
+
+---
+
+## 2026-08-13 — 계약 도메인 구조 정리
+
+- 공통 계약 상세·서명 컴포넌트를 `features/contract/components/common`으로 모았습니다.
+- 프리랜서 계약 목록 컴포넌트를 `features/contract/components/freelancer`로 모았습니다.
+- 클라이언트 전체·프로젝트별 계약 목록 컴포넌트를 `features/contract/components/client`로 모았습니다.
+- 클라이언트 전용 계약 서비스와 타입도 `features/contract`의 `services`·`types`로 이동하고 모든 import와 테스트 Mock 경로를 갱신했습니다.
+
+### 검증
+
+- [x] 계약 관련 테스트 6 suites, 31 tests
+- [x] 변경 파일 ESLint
+- [x] `git diff --check`
+- [ ] `npx tsc --noEmit` — 기존 프리랜서 마이페이지의 미설치 `lucide-react` import 2건
+- [ ] 실제 브라우저·API — 구조 이동 작업으로 미실행
+
+---
+
+## 2026-08-13 — 1:1 채팅 API 연동
+
+- 채팅 목 데이터를 REST 기반 목록·상세·메시지 조회와 전송·읽음 처리로 교체했습니다.
+- 채팅방별 STOMP 구독, 메시지 ID 중복 방지, 날짜·시각·상대시간 표시를 추가했습니다.
+- 빈 상태, API 오류, 입력 비활성화, 전송 중 중복 요청 방지, 500자 제한을 반영했습니다.
+- 협상 기준 채팅방 조회 경로를 최종 명세로 수정했습니다.
+- 백엔드 작업 중인 계약 요약 조회 경로와 직무 필드는 추측하지 않고 후속 연동 대상으로 남겼습니다.
+
+### 검증
+
+- [x] 채팅 변경 파일 ESLint
+- [x] `git diff --check`
+- [ ] TypeScript — 기존 프리랜서 마이페이지의 `lucide-react` 모듈 해석 오류 2건
+- [ ] 실제 API·STOMP·브라우저 — 인증 가능한 테스트 계정 필요
+
+---
+
 ## 2026-08-13 — 이력서 상단 안내 및 수정 버튼 정렬
 
 - 이력서 보기 화면의 반영 안내 문구와 `수정하기` 버튼을 같은 행의 양쪽에 배치했습니다.
