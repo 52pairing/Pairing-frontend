@@ -4,19 +4,34 @@ export const FREELANCER_MY_PAGE_MENU = [
   { label: "기본 정보", value: "profile", href: "/freelancer/mypage/profile" },
   { label: "내 이력서", value: "resume", href: "/freelancer/mypage/resume" },
   { label: "리뷰 관리", value: "reviews", href: "/freelancer/mypage/reviews" },
-  { label: "결제수단", value: "payment-methods", href: "/freelancer/mypage/payment-methods" },
-  { label: "결제 내역", value: "payments", href: "/freelancer/mypage/payments" },
-  { label: "비밀번호 변경", value: "password", href: "/freelancer/mypage/password" },
+  {
+    label: "결제수단",
+    value: "payment-methods",
+    href: "/freelancer/mypage/payment-methods",
+  },
+  {
+    label: "결제 내역",
+    value: "payments",
+    href: "/freelancer/mypage/payments",
+  },
+  {
+    label: "비밀번호 변경",
+    value: "password",
+    href: "/freelancer/mypage/password",
+  },
 ] as const;
 
-export type FreelancerMyPageMenu = (typeof FREELANCER_MY_PAGE_MENU)[number]["value"];
+export type FreelancerMyPageMenu =
+  (typeof FREELANCER_MY_PAGE_MENU)[number]["value"];
 export type FreelancerMyPageActiveMenu = FreelancerMyPageMenu | "cancel";
 
 interface FreelancerMyPageSidebarProps {
   activeMenu: FreelancerMyPageActiveMenu;
 }
 
-export function FreelancerMyPageSidebar({ activeMenu }: FreelancerMyPageSidebarProps) {
+export function FreelancerMyPageSidebar({
+  activeMenu,
+}: FreelancerMyPageSidebarProps) {
   return (
     <aside className="w-full shrink-0 rounded-xl border border-theme bg-surface py-2 sm:w-[215px]">
       <nav aria-label="프리랜서 마이페이지 메뉴">
@@ -28,10 +43,10 @@ export function FreelancerMyPageSidebar({ activeMenu }: FreelancerMyPageSidebarP
                 <Link
                   href={menu.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex h-12 items-center px-5 text-[13px] font-semibold transition-colors ${
+                  className={`flex h-12 items-center px-5 text-[13px] font-semibold ${
                     isActive
                       ? "bg-[#edf2f7] text-brand"
-                      : "text-theme-secondary hover:bg-surface-subtle hover:text-theme-secondary"
+                      : "text-theme-secondary hover:bg-surface-subtle hover:text-[#142B4]"
                   }`}
                 >
                   {menu.label}

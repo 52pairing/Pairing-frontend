@@ -34,6 +34,16 @@ export function FreelancerMain() {
             AI가 회사 규모, 기술 스택, 예산을 분석해
             <br />딱 맞는 프로젝트를 먼저 추천해 드립니다.
           </p>
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Link
+              href="/freelancer/mypage/profile"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-white px-5 text-[11px] font-extrabold text-[#17365d] transition hover:bg-[#edf4fa]"
+            >
+              프로필 등록하기
+              <span className="ml-2 text-[14px]" aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -58,12 +68,12 @@ export function FreelancerMain() {
               </p>
 
               <h3 className="mt-[9px] text-[11px] font-extrabold text-theme-primary">
-                프로젝트 요청 받기
+                프로필 등록하기
               </h3>
 
               <p className="mt-[10px] text-[8px] leading-[1.8] text-theme-secondary">
-                클라이언트가 AI 추천 결과를 통해 프리랜서에게 직접 프로젝트를
-                제안합니다.
+                희망 조건과 경력, 포트폴리오를 등록하면 AI 맞춤 추천이
+                시작됩니다.
               </p>
             </article>
 
@@ -76,11 +86,12 @@ export function FreelancerMain() {
               </p>
 
               <h3 className="mt-[9px] text-[11px] font-extrabold text-theme-primary">
-                조건 협상 진행
+                프로젝트 요청 받기
               </h3>
 
               <p className="mt-[10px] text-[8px] leading-[1.8] text-theme-secondary">
-                AI 협상 채널에서 급여·기간·범위를 최대 15라운드 내 조율합니다.
+                클라이언트가 AI 추천 결과를 통해 프리랜서에게 직접 프로젝트를
+                제안합니다.
               </p>
             </article>
 
@@ -93,12 +104,12 @@ export function FreelancerMain() {
               </p>
 
               <h3 className="mt-[9px] text-[11px] font-extrabold text-theme-primary">
-                계약 성사
+                조건 협상 및 계약
               </h3>
 
               <p className="mt-[10px] text-[8px] leading-[1.8] text-theme-secondary">
-                협상이 완료되면 표준 계약서가 자동 생성됩니다. 서명 후 즉시
-                착수금이 처리됩니다.
+                AI 협상 채널에서 조건을 조율하고, 완료되면 표준 계약서가
+                생성됩니다.
               </p>
             </article>
           </div>
