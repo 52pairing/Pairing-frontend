@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { getChatRoomByNegotiation } from "@/features/chat/services/chatRooms";
-import { getClientProjectContracts } from "@/features/client/myprojects/contract/services/contracts";
+import { getClientProjectContracts } from "@/features/contract/services/clientContracts";
 import type { ProgressContract, ProjectProgressProps } from "@/features/client/myprojects/types/components";
 import { getContractDetail } from "@/features/contract/services/contracts";
 

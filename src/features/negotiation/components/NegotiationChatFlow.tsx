@@ -80,8 +80,9 @@ export function NegotiationChatFlow({
   // 대리인 A2A 상태 (비동기 전환)
   const agentRunning = detail.agentState === "RUNNING";
   const agentFailed = detail.agentState === "FAILED";
-  // 내 마지노선을 이미 냈는지 (내 것만 conditions[].myFloor 로 내려옴)
-  const hasSubmittedFloor = conditions.some((condition) => condition.myFloor != null);
+  // 내 마지노선을 다 냈는지. 아직 안 낸 조건이 하나라도 있으면 입력 화면을 띄워야 한다.
+  // (서버가 AMOUNT 는 프리랜서 minAcceptAmount 로 프리필해 내려주므로 some() 은 항상 true → every() 로 판정)
+  const hasSubmittedFloor = conditions.every((condition) => condition.myFloor != null);
   const isSetup =
     detail.status === "IN_PROGRESS" && detail.totalRound === 0 && !hasSubmittedFloor;
   const isWaitingOpponentFloor =
@@ -636,16 +637,21 @@ function SetupPanel({
   isSubmitting: boolean;
   onStart: (values: Array<{ conditionType: ConditionType; value: string }>) => void;
 }) {
+  // 아직 안 낸 조건만 입력·전송한다. 서버가 이미 채워 준 조건(myFloor != null,
+  // 예: 프리랜서 AMOUNT=최소 수용가)을 다시 보내면 NG_006(이미 제출)이 난다.
+  const pending = conditions.filter((condition) => condition.myFloor == null);
+  const prefilled = conditions.filter((condition) => condition.myFloor != null);
+
   // 조건별 "서버 전송 형식" 값 저장 (위젯이 변환해서 올려줌)
   const [values, setValues] = useState<Record<number, string>>({});
 
-  const canStart = conditions.every(
+  const canStart = pending.every(
     (condition) => (values[condition.conditionId] ?? "").trim() !== "",
   );
 
   const handleStart = () => {
     onStart(
-      conditions.map((condition) => ({
+      pending.map((condition) => ({
         conditionType: condition.type,
         value: values[condition.conditionId] ?? "",
       })),
@@ -659,7 +665,26 @@ function SetupPanel({
           협상 전 마지노선을 입력해 주세요. 이 선을 넘는 조건은 대리인이 자동 거절합니다.
         </p>
         <div className="mt-4 flex flex-col gap-3">
-          {conditions.map((condition) => {
+          {/* 서버가 미리 채워 준 조건(예: 최소 수용가) — 안내만, 재전송하지 않음 */}
+          {prefilled.map((condition) => (
+            <div
+              key={condition.conditionId}
+              className="rounded-[8px] border border-[#e2e5ea] bg-[#fafafe] px-3 py-2"
+            >
+              <p className="text-[10px] font-bold text-theme-secondary">
+                {floorFieldLabel(condition.type, viewerRole)}
+              </p>
+              <p className="mt-1 text-[13px] font-bold text-theme-primary">
+                {formatConditionValue(condition.type, condition.myFloor, labels)}
+              </p>
+              <p className="mt-1 text-[10px] text-theme-muted">
+                등록해두신 값이 자동 반영됐습니다. 협상 시작 후 수정할 수 있어요.
+              </p>
+            </div>
+          ))}
+
+          {/* 아직 안 낸 조건 입력 */}
+          {pending.map((condition) => {
             const hint = formatConditionValue(
               condition.type,
               opponentValue(condition, viewerRole),

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { ProjectDetailTabs } from "@/features/client/myprojects/components/ProjectDetailTabs";
-import { ProjectContracts } from "@/features/client/myprojects/contract/components/ProjectContracts";
+import { ProjectContracts } from "@/features/contract/components/client/ProjectContracts";
 import { ProjectInformation } from "@/features/client/myprojects/information/components/ProjectInformation";
 import { NegotiationActions, ProjectNegotiation } from "@/features/negotiation/components/ProjectNegotiation";
 import { ProjectProgress } from "@/features/client/myprojects/progress/components/ProjectProgress";

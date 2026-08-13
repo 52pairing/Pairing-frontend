@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 
 import { ProjectProgress } from "@/features/client/myprojects/progress/components/ProjectProgress";
 import { getChatRoomByNegotiation } from "@/features/chat/services/chatRooms";
-import { getClientProjectContracts } from "@/features/client/myprojects/contract/services/contracts";
+import { getClientProjectContracts } from "@/features/contract/services/clientContracts";
 import { getContractDetail } from "@/features/contract/services/contracts";
 import { contractItem, contractPage, projectDetail } from "./fixtures";
 
@@ -12,7 +12,7 @@ const push = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
 }));
-jest.mock("@/features/client/myprojects/contract/services/contracts", () => ({
+jest.mock("@/features/contract/services/clientContracts", () => ({
   getClientProjectContracts: jest.fn(),
 }));
 jest.mock("@/features/contract/services/contracts", () => ({

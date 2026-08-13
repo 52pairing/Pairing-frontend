@@ -29,6 +29,9 @@ export const getContracts = ({
 export const getContractDetail = (contractId: number) =>
   apiCall<ContractDetailResponse>(`/api/v1/contracts/${contractId}`);
 
+export const getContractByNegotiation = (negotiationId: number) =>
+  apiCall<ContractDetailResponse>(`/api/v1/contracts/by-negotiation/${negotiationId}`);
+
 export const downloadContractPdf = (contractId: number) =>
   apiBlob(`/api/v1/contracts/${contractId}/pdf`);
 
