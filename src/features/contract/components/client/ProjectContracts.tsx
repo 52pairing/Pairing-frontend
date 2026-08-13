@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { ClientContractCard } from "@/features/client/myprojects/contract/components/ClientContractCard";
-import { getClientProjectContracts } from "@/features/client/myprojects/contract/services/contracts";
-import type { ClientContractPage } from "@/features/client/myprojects/contract/types/contract";
+import { ClientContractCard } from "@/features/contract/components/client/ClientContractCard";
+import { getClientProjectContracts } from "@/features/contract/services/clientContracts";
+import type { ClientContractPage } from "@/features/contract/types/clientContract";
 import { getProjectJobRoles } from "@/features/client/projects/services/projectPreReview";
 
 export function ProjectContracts({ projectId }: { projectId: string }) {

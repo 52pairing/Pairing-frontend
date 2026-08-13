@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { ContractOverview } from "@/features/contract/components/ContractOverview";
+import { ContractOverview } from "@/features/contract/components/common/ContractOverview";
 import { downloadContractPdf, getContractDetail } from "@/features/contract/services/contracts";
 import { ApiException } from "@/lib/api";
 import { contractDetail } from "./fixtures";

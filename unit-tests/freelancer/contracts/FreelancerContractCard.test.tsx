@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import {
   FreelancerContractCard,
   getContractAction,
-} from "@/features/freelancer/mycontracts/components/FreelancerContractCard";
+} from "@/features/contract/components/freelancer/FreelancerContractCard";
 import { freelancerContract } from "./fixtures";
 
 describe("FreelancerContractCard", () => {

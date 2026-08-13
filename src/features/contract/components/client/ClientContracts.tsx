@@ -3,10 +3,10 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { ClientContractTabs, CLIENT_CONTRACT_TABS } from "@/features/client/contracts/components/ClientContractTabs";
-import { ClientContractCard } from "@/features/client/myprojects/contract/components/ClientContractCard";
-import { getAllClientContracts } from "@/features/client/myprojects/contract/services/contracts";
-import type { ClientContractListItem, ClientContractTab } from "@/features/client/myprojects/contract/types/contract";
+import { ClientContractTabs, CLIENT_CONTRACT_TABS } from "@/features/contract/components/client/ClientContractTabs";
+import { ClientContractCard } from "@/features/contract/components/client/ClientContractCard";
+import { getAllClientContracts } from "@/features/contract/services/clientContracts";
+import type { ClientContractListItem, ClientContractTab } from "@/features/contract/types/clientContract";
 import { getProjectJobRoles } from "@/features/client/projects/services/projectPreReview";
 
 const isContractTab = (value: string | null): value is ClientContractTab =>

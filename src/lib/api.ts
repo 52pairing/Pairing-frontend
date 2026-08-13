@@ -10,7 +10,8 @@ interface ApiSuccessBody<T> {
 
 // API 실패 응답 형식
 interface ApiErrorBody {
-  errorCode: string;
+  errorCode?: string;
+  code?: string;
   message: string;
   status: number;
   traceId: string;
@@ -54,8 +55,9 @@ const requestRefresh = async () => {
       if (response.ok) return;
 
       const error = (await response.json()) as ApiErrorBody;
-      notifySessionEnd(error.errorCode === "AU_015" ? "duplicate" : "expired");
-      throw new ApiException(error.errorCode, error.message, response.status);
+      const errorCode = error.errorCode ?? error.code ?? "UNKNOWN_ERROR";
+      notifySessionEnd(errorCode === "AU_015" ? "duplicate" : "expired");
+      throw new ApiException(errorCode, error.message, response.status);
     })().finally(() => {
       refreshRequest = null;
     });
@@ -90,7 +92,7 @@ export async function apiCall<T>(
   let res = await request();
   let body = await res.json();
 
-  if (!res.ok && (body as ApiErrorBody).errorCode === "GLOBAL_009") {
+  if (!res.ok && getApiErrorCode(body as ApiErrorBody) === "GLOBAL_009") {
     await requestRefresh();
     res = await request();
     body = await res.json();
@@ -104,11 +106,12 @@ export async function apiCall<T>(
   // 요청 실패 시 백엔드 에러 정보를 공통 예외로 변환
   const error = body as ApiErrorBody;
 
-  if (error.errorCode === "GLOBAL_010") notifySessionEnd("expired");
-  if (error.errorCode === "GLOBAL_011") notifySessionEnd("duplicate");
+  const errorCode = getApiErrorCode(error);
+  if (errorCode === "GLOBAL_010") notifySessionEnd("expired");
+  if (errorCode === "GLOBAL_011") notifySessionEnd("duplicate");
 
   throw new ApiException(
-    error.errorCode,
+    errorCode,
     error.message,
     res.status,
   );
@@ -125,17 +128,21 @@ export async function apiBlob(path: string): Promise<Blob> {
   if (!response.ok) {
     let error = (await response.json()) as ApiErrorBody;
 
-    if (error.errorCode === "GLOBAL_009") {
+    if (getApiErrorCode(error) === "GLOBAL_009") {
       await requestRefresh();
       response = await request();
       if (response.ok) return response.blob();
       error = (await response.json()) as ApiErrorBody;
     }
 
-    if (error.errorCode === "GLOBAL_010") notifySessionEnd("expired");
-    if (error.errorCode === "GLOBAL_011") notifySessionEnd("duplicate");
-    throw new ApiException(error.errorCode, error.message, response.status);
+    const errorCode = getApiErrorCode(error);
+    if (errorCode === "GLOBAL_010") notifySessionEnd("expired");
+    if (errorCode === "GLOBAL_011") notifySessionEnd("duplicate");
+    throw new ApiException(errorCode, error.message, response.status);
   }
 
   return response.blob();
 }
+
+const getApiErrorCode = (error: ApiErrorBody) =>
+  error.errorCode ?? error.code ?? "UNKNOWN_ERROR";
