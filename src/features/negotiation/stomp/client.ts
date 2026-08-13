@@ -61,6 +61,13 @@ export const getStompClient = (): Client => {
       if (client) attachAllSubscriptions(client);
       connectListeners.forEach((listener) => listener());
     },
+    // 연결 실패·종료 진단용 로그 (어디서 끊기는지 확인)
+    onWebSocketClose: (event) => {
+      console.warn("[STOMP] socket closed", event?.code);
+    },
+    onStompError: (frame) => {
+      console.error("[STOMP] broker error", frame?.headers?.["message"]);
+    },
   });
 
   return client;
@@ -79,6 +86,22 @@ export const onStompConnect = (listener: () => void): (() => void) => {
 export const activateStomp = (): void => {
   const activeClient = getStompClient();
   if (!activeClient.active) activeClient.activate();
+};
+
+/**
+ * 로그인 성공 시점에 호출해 STOMP를 강제로 다시 연결한다.
+ * 로그인 전(쿠키 없음)에 핸드셰이크가 거절돼 죽은 연결을 새 쿠키로 되살리기 위함.
+ * 이미 연결돼 있으면 아무 것도 하지 않는다.
+ */
+export const reactivateStomp = async (): Promise<void> => {
+  const activeClient = getStompClient();
+  if (activeClient.connected) return;
+  try {
+    await activeClient.deactivate();
+  } catch {
+    // 비활성화 실패는 무시하고 재활성화 시도
+  }
+  activeClient.activate();
 };
 
 /**
