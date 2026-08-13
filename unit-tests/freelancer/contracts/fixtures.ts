@@ -1,0 +1,83 @@
+import type { ContractDetailResponse } from "@/features/contract/types/contractDetail";
+import type { ContractListItem, ContractListPage } from "@/features/contract/types/contractList";
+
+export const freelancerContract: ContractListItem = {
+  contractId: 31,
+  contractNo: "CT-2026-0031",
+  projectId: 7,
+  projectTitle: "쇼핑몰 리뉴얼",
+  jobRole: "프론트엔드 개발자",
+  counterpartName: "페어링 주식회사",
+  clientBusinessField: "커머스",
+  status: "SIGN_PENDING",
+  totalAmount: 30_000_000,
+  payUnit: "MONTHLY",
+  payAmount: 5_000_000,
+  startDate: "2026-09-01",
+  endDate: "2027-02-28",
+  createdAt: "2026-08-13T10:00:00",
+  workStyle: "REMOTE",
+  signatureRequired: true,
+  clientSigned: true,
+  freelancerSigned: false,
+  depositPaid: false,
+  payableSettlementId: null,
+};
+
+export const contractListPage = (
+  content: ContractListItem[] = [freelancerContract],
+  overrides: Partial<ContractListPage> = {},
+): ContractListPage => ({
+  content,
+  page: 0,
+  size: 10,
+  totalElements: content.length,
+  totalPages: 1,
+  first: true,
+  last: true,
+  ...overrides,
+});
+
+export const contractDetail: ContractDetailResponse = {
+  contractId: 31,
+  contractNo: "CT-2026-0031",
+  projectTitle: "쇼핑몰 리뉴얼",
+  negotiationId: 20,
+  clientName: "페어링 주식회사",
+  freelancerName: "김프리",
+  jobRole: "프론트엔드 개발자",
+  status: "SIGN_PENDING",
+  client: {
+    companyName: "페어링 주식회사",
+    businessNo: "000-00-00000",
+    representative: "홍대표",
+    address: "서울",
+    phone: "02-0000-0000",
+  },
+  freelancer: {
+    name: "김프리",
+    phone: "010-0000-0000",
+    jobRole: "프론트엔드 개발자",
+    settlementAccount: "확인 완료",
+  },
+  totalAmount: 30_000_000,
+  payUnit: "MONTHLY",
+  payAmount: 5_000_000,
+  startDate: "2026-09-01",
+  endDate: "2027-02-28",
+  workStyle: "REMOTE",
+  workForm: "FULL_TIME",
+  workLocation: null,
+  inspectionDays: 7,
+  paymentDays: 10,
+  confidentialYears: 2,
+  penaltyRate: 10,
+  specialTerms: "주 1회 회의",
+  clauses: [{ no: 1, title: "목적", content: "프로젝트 수행을 목적으로 합니다." }],
+  signatures: [
+    { partyRole: "CLIENT", name: "홍대표", status: "SIGNED", signedAt: "2026-08-13", signatureImageUrl: null },
+    { partyRole: "FREELANCER", name: "김프리", status: "PENDING", signedAt: null, signatureImageUrl: null },
+  ],
+  signedAt: null,
+  createdAt: "2026-08-13T10:00:00",
+};
