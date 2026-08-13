@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 
 import { Header } from "@/features/common/components/header/Header";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
@@ -19,6 +25,7 @@ import { BotIcon } from "./SupportIcons";
 
 const MAX_QUESTION_LENGTH = 500;
 const LOW_QUOTA_THRESHOLD = 3;
+const DEFAULT_DAILY_LIMIT = 10;
 const initialMessages = [
   "안녕하세요. 페어링 고객지원 챗봇입니다.",
   "서비스 이용 방법이나 정책에 대해 궁금한 내용을 질문해 주세요.",
@@ -42,7 +49,7 @@ function getQuotaStyles(isQuotaExhausted: boolean, isLowQuota: boolean) {
   }
 
   return {
-    card: "border-transparent text-brand",
+    card: "border-theme bg-surface text-brand",
     track: "bg-surface-muted",
     bar: "bg-blue-600",
   };
@@ -77,10 +84,11 @@ function getActionUrl(code: string, role: LoginRole | undefined, serverUrl: stri
 export function SupportChatbot() {
   const currentUser = useCurrentUser();
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const hasCompletedInitialScrollRef = useRef(false);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<ChatbotMessage[]>([]);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
-  const [dailyLimit, setDailyLimit] = useState(0);
+  const [dailyLimit, setDailyLimit] = useState(DEFAULT_DAILY_LIMIT);
   const [remainingCount, setRemainingCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -117,9 +125,13 @@ export function SupportChatbot() {
     };
   }, [retryCount]);
 
-  useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, pendingQuestion, isSending, sendError]);
+  useLayoutEffect(() => {
+    if (isLoading) return;
+
+    const behavior = hasCompletedInitialScrollRef.current ? "smooth" : "auto";
+    messageEndRef.current?.scrollIntoView({ behavior });
+    hasCompletedInitialScrollRef.current = true;
+  }, [isLoading, messages, pendingQuestion, isSending, sendError]);
 
   const handleRetry = () => {
     setIsLoading(true);
@@ -184,7 +196,8 @@ export function SupportChatbot() {
   };
 
   const remainingRatio = dailyLimit > 0 ? (remainingCount / dailyLimit) * 100 : 0;
-  const isQuotaExhausted = !isLoading && dailyLimit > 0 && remainingCount === 0;
+  const isQuotaExhausted =
+    !isLoading && !loadError && dailyLimit > 0 && remainingCount === 0;
   const isLowQuota = remainingCount > 0 && remainingCount <= LOW_QUOTA_THRESHOLD;
   const quotaStyles = getQuotaStyles(isQuotaExhausted, isLowQuota);
 
@@ -193,19 +206,27 @@ export function SupportChatbot() {
       <Header role="guest" />
       <main className="flex h-[calc(100dvh-60px)] flex-none overflow-hidden bg-background px-5 py-7 text-theme-primary sm:px-8 sm:py-9">
         <div className="mx-auto flex min-h-0 w-full max-w-[900px] flex-1 flex-col">
-          <div className="flex items-start justify-between gap-5">
+          <Link
+            href="/support"
+            className="flex h-10 w-fit shrink-0 items-center gap-1 rounded-[9px] border border-theme bg-surface px-3 text-[13px] font-semibold text-theme-secondary hover:bg-surface-subtle"
+          >
+            <span aria-hidden="true">←</span> 고객지원으로 돌아가기
+          </Link>
+
+          <div className="mt-5 flex items-start justify-between gap-5">
             <div className="flex min-w-0 items-center gap-4">
-              <Link href="/support" className="flex h-10 shrink-0 items-center gap-1 rounded-[9px] border border-theme bg-surface px-3 text-[13px] font-semibold text-theme-secondary hover:bg-surface-subtle">
-                <span aria-hidden="true">←</span> 뒤로
-              </Link>
               <h1 className="truncate text-xl font-extrabold tracking-[-0.03em] sm:text-2xl">페어링 FAQ 챗봇</h1>
             </div>
 
             <div className={`w-[128px] shrink-0 rounded-[12px] border px-4 py-3 text-right ${quotaStyles.card}`}>
               <p className={`text-[11px] font-semibold ${isLowQuota || isQuotaExhausted ? "text-current" : "text-theme-muted"}`}>오늘 남은 AI 상담</p>
               <p className="mt-2 text-xl font-extrabold">
-                {isLoading ? "-" : remainingCount}
-                <span className={`ml-1 text-xs font-semibold ${isLowQuota || isQuotaExhausted ? "text-current" : "text-theme-muted"}`}>/ {isLoading ? "-" : dailyLimit}회</span>
+                {isLoading ? (
+                  <span className="text-sm font-semibold text-theme-muted">
+                    확인 중
+                  </span>
+                ) : remainingCount}
+                <span className={`ml-1 text-xs font-semibold ${isLowQuota || isQuotaExhausted ? "text-current" : "text-theme-muted"}`}>/ {dailyLimit}회</span>
               </p>
               <div className={`mt-2 h-1 overflow-hidden rounded-full ${quotaStyles.track}`}>
                 <div className={`h-full rounded-full transition-[width] ${quotaStyles.bar}`} style={{ width: `${remainingRatio}%` }} />
@@ -215,7 +236,9 @@ export function SupportChatbot() {
 
           <section aria-label="챗봇 대화" className="mt-12 flex min-h-0 flex-1 flex-col sm:mt-16">
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-2">
-              {initialMessages.map((message) => <BotBubble key={message}>{message}</BotBubble>)}
+              {!isLoading
+                ? initialMessages.map((message) => <BotBubble key={message}>{message}</BotBubble>)
+                : null}
 
               {isLoading ? <p role="status" className="py-8 text-center text-sm text-theme-secondary">오늘의 대화를 불러오고 있습니다.</p> : null}
               {!isLoading && loadError ? (
@@ -258,7 +281,7 @@ export function SupportChatbot() {
                 <div role="alert">
                   <BotBubble>{sendError}</BotBubble>
                   {isAiUnavailable ? (
-                    <div className="mt-2 ml-12">
+                    <div className="mt-3 ml-12">
                       <Link
                         href="/support/inquiries"
                         className="inline-flex rounded-lg border border-theme-danger bg-surface px-4 py-2 text-xs font-bold text-theme-danger hover:bg-danger-surface"

@@ -1,48 +1,22 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Header } from "@/features/common/components/header/Header";
 
-import { getChatbotQuota } from "../services/support";
 import { SupportCard } from "./SupportCard";
 import { BotIcon, ChatIcon, InfoIcon } from "./SupportIcons";
 
-function getQuotaLabel(dailyLimit: number | null, loadFailed: boolean) {
-  if (loadFailed) return "무료 이용 한도 확인 필요";
-  if (dailyLimit === null) return "무료 이용 한도 확인 중";
-  return `하루 최대 ${dailyLimit}회 무료 이용`;
-}
+const CHATBOT_DAILY_LIMIT_LABEL = "하루 최대 10회 무료 이용";
 
 export function Support() {
-  const [dailyLimit, setDailyLimit] = useState<number | null>(null);
-  const [quotaLoadFailed, setQuotaLoadFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getChatbotQuota()
-      .then((quota) => {
-        if (!cancelled) setDailyLimit(quota.dailyLimit);
-      })
-      .catch(() => {
-        if (!cancelled) setQuotaLoadFailed(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const quotaLabel = getQuotaLabel(dailyLimit, quotaLoadFailed);
-
   const supportOptions = [
     {
       title: "FAQ 챗봇",
       caption: "AI 자동 응답 · 즉시 이용 가능",
       description:
         "페어링 이용 방법과 정책에 대해 AI 챗봇에게 질문할 수 있습니다.",
-      items: ["이용 방법 및 절차 안내", "수수료·정책 관련 문의", quotaLabel],
+      items: [
+        "이용 방법 및 절차 안내",
+        "수수료·정책 관련 문의",
+        CHATBOT_DAILY_LIMIT_LABEL,
+      ],
       actionLabel: "챗봇 시작하기",
       actionHref: "/support/chatbot",
       emphasis: true,

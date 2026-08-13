@@ -20,6 +20,7 @@ describe("InquiryList", () => {
     expect(await screen.findByText("계약 진행 문의")).toBeInTheDocument();
     expect(screen.getByText("수수료 문의")).toBeInTheDocument();
     expect(screen.getByText("답변 대기중")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "고객지원으로 돌아가기" })).toHaveAttribute("href", "/support");
     expect(screen.getByRole("link", { name: "새 문의 작성" })).toHaveAttribute("href", "/support/inquiries/new");
     expect(screen.getAllByRole("link", { name: "상세 보기" })[0]).toHaveAttribute("href", "/support/inquiries/1");
     expect(mockGetMyInquiries).toHaveBeenCalledWith({ status: undefined, page: 0 });

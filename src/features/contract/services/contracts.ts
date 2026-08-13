@@ -1,6 +1,6 @@
 import { apiBlob, apiCall } from "@/lib/api";
 import type { ContractDetailResponse } from "@/features/contract/types/contractDetail";
-import type { ContractListPage, ContractListTab } from "@/features/contract/types/contractList";
+import type { ContractListPage, ContractListTab, ContractTabCount } from "@/features/contract/types/contractList";
 
 interface GetContractsParams {
   tab: ContractListTab;
@@ -56,3 +56,8 @@ export const signContract = (
       ...(signatureFileId != null ? { signatureFileId } : {}),
     }),
   });
+
+export const getContractTabCounts = (projectId?: number) => {
+  const query = projectId == null ? "" : `?projectId=${projectId}`;
+  return apiCall<ContractTabCount[]>(`/api/v1/contracts/mine/tab-counts${query}`);
+};

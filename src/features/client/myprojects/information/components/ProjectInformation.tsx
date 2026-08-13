@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { ProjectFreelancerStatus } from "@/features/client/myprojects/information/components/ProjectFreelancerStatus";
+import { downloadProjectFile } from "@/features/client/myprojects/services/projectDetail";
 import type { ProjectInformationProps } from "@/features/client/myprojects/types/components";
 
 const PERIOD_UNIT_LABEL: Record<string, string> = {
@@ -39,7 +40,30 @@ export function ProjectInformation({
 }: ProjectInformationProps) {
   const deadlineLabel = getDeadlineLabel(project.recruitDeadline);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [downloadingFileId, setDownloadingFileId] = useState<number | null>(null);
+  const [downloadError, setDownloadError] = useState("");
   const isRemote = project.workStyle === "REMOTE" || workStyleLabel.includes("재택");
+
+  const handleDownload = async (fileId: number, originalName: string) => {
+    if (downloadingFileId != null) return;
+    setDownloadingFileId(fileId);
+    setDownloadError("");
+    try {
+      const blob = await downloadProjectFile(project.projectId, fileId);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = originalName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setDownloadError(error instanceof Error ? error.message : "첨부자료를 다운로드하지 못했습니다.");
+    } finally {
+      setDownloadingFileId(null);
+    }
+  };
 
   return (
     <>
@@ -98,11 +122,12 @@ export function ProjectInformation({
                           <span className="truncate font-semibold text-theme-secondary">{file.originalName}</span>
                           <span className="shrink-0 text-theme-muted">{formatFileSize(file.sizeBytes)}</span>
                         </div>
-                        <a href={file.fileUrl} download={file.originalName} target="_blank" rel="noreferrer" className="shrink-0 font-bold text-brand hover:underline">다운로드</a>
+                        <button type="button" disabled={downloadingFileId != null} onClick={() => void handleDownload(file.fileId, file.originalName)} className="shrink-0 font-bold text-brand hover:underline disabled:cursor-not-allowed disabled:text-theme-muted">{downloadingFileId === file.fileId ? "다운로드 중..." : "다운로드"}</button>
                       </li>
                     ))}
                   </ul>
                 ) : <p className="mt-3 text-[11px] text-theme-muted">첨부된 자료가 없습니다.</p>}
+                {downloadError ? <p role="alert" className="mt-2 text-[11px] font-semibold text-theme-danger">{downloadError}</p> : null}
               </div>
             </div>
           </div>

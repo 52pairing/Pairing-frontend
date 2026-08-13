@@ -58,11 +58,11 @@ export function ProjectRegisterIntro() {
             <GuideCard title="AI 사전 검수 안내">
               <GuideLine>
                 등록 전 AI가 현재 Pairing에 등록된 프리랜서 중 프로젝트 조건에
-                맞는 예상 후보 수와 매칭 가능성을 확인합니다.
+                맞는 매칭 가능 인원과 매칭 가능성을 확인합니다.
               </GuideLine>
 
               <GuideLine>
-                직군별 예상 후보 수와 매칭이 어려운 조건을 분석하고, 조정이
+                직군별 매칭 가능 인원과 매칭이 어려운 조건을 분석하고, 조정이
                 필요한 항목을 안내합니다.
               </GuideLine>
 

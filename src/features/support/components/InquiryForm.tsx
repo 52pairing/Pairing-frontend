@@ -145,7 +145,7 @@ export function InquiryForm() {
             className="inline-flex items-center gap-1 text-sm font-semibold text-theme-secondary hover:text-theme-primary"
           >
             <span aria-hidden="true">←</span>
-            목록
+            1대1 문의로 돌아가기
           </Link>
 
           <h1 className="mt-3 text-[28px] font-extrabold tracking-[-0.04em] sm:text-[31px]">

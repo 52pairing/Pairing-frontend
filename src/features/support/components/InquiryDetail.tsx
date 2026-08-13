@@ -87,7 +87,7 @@ export function InquiryDetail() {
               href="/support/inquiries"
               className="shrink-0 rounded-lg border border-theme bg-surface px-4 py-2 text-sm font-bold text-theme-secondary hover:bg-surface-subtle"
             >
-              목록으로
+              1대1 문의로 돌아가기
             </Link>
           </div>
 

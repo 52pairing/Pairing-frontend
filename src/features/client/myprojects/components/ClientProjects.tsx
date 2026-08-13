@@ -7,6 +7,7 @@ import { ClientProjectCard } from "@/features/client/myprojects/components/Clien
 import { ProjectStatusTabs } from "@/features/client/myprojects/components/ProjectStatusTabs";
 import {
   completeProject,
+  getMyProjectTabCounts,
   getMyProjects,
 } from "@/features/client/myprojects/services/clientProjects";
 import {
@@ -59,6 +60,20 @@ export function ClientProjects() {
   const [paymentProject, setPaymentProject] = useState<ClientProjectListItem | null>(null);
   const [completionProject, setCompletionProject] = useState<ClientProjectListItem | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [tabCounts, setTabCounts] = useState<Partial<Record<ClientProjectTab, number>>>({});
+  const [tabLabels, setTabLabels] = useState<Partial<Record<ClientProjectTab, string>>>({});
+
+  const loadTabCounts = useCallback(async () => {
+    try {
+      const rows = await getMyProjectTabCounts();
+      setTabCounts(Object.fromEntries(rows.map((row) => [row.tab, row.count])));
+      setTabLabels(Object.fromEntries(rows.map((row) => [row.tab, row.label])));
+    } catch {
+      // 목록 조회는 유지하고 배지만 숨깁니다.
+      setTabCounts({});
+      setTabLabels({});
+    }
+  }, []);
 
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
@@ -91,6 +106,12 @@ export function ClientProjects() {
     };
   }, [loadProjects]);
 
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => { if (!cancelled) void loadTabCounts(); });
+    return () => { cancelled = true; };
+  }, [loadTabCounts]);
+
   const changeTab = (tab: ClientProjectTab) => {
     setActiveTab(tab);
     setPage(0);
@@ -105,6 +126,7 @@ export function ClientProjects() {
 
     try {
       await completeProject(completionProject.projectId);
+      await loadTabCounts();
       setCompletionProject(null);
       changeTab("COMPLETION_PENDING");
     } catch (error) {
@@ -143,7 +165,7 @@ export function ClientProjects() {
           내 프로젝트
         </h1>
 
-        <ProjectStatusTabs activeTab={activeTab} onTabChange={changeTab} />
+        <ProjectStatusTabs activeTab={activeTab} onTabChange={changeTab} counts={tabCounts} labels={tabLabels} />
 
         {errorMessage ? (
           <div role="alert" className="mt-6 flex h-[150px] flex-col items-center justify-center gap-3 rounded-[14px] border border-[#fda29b] bg-surface text-[12px] font-medium text-theme-danger">

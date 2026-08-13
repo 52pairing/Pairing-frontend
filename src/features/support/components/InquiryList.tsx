@@ -81,7 +81,14 @@ export function InquiryList() {
       <Header role="guest" />
       <main className="flex-1 bg-background px-5 pb-20 pt-10 text-theme-primary sm:px-8 sm:pt-12">
         <div className="mx-auto w-full max-w-[1050px]">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <Link
+            href="/support"
+            className="flex h-10 w-fit shrink-0 items-center gap-1 rounded-[9px] border border-theme bg-surface px-3 text-[13px] font-semibold text-theme-secondary hover:bg-surface-subtle"
+          >
+            <span aria-hidden="true">←</span> 고객지원으로 돌아가기
+          </Link>
+
+          <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-[28px] font-extrabold tracking-[-0.04em] sm:text-[32px]">
                 1:1 문의

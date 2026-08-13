@@ -26,6 +26,7 @@ describe("InquiryDetail", () => {
     expect(await screen.findByRole("heading", { name: "계약 진행 문의" })).toBeInTheDocument();
     expect(screen.getByText("대기 중")).toBeInTheDocument();
     expect(screen.getByText("관리자가 문의 내용을 확인하고 있습니다.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "1대1 문의로 돌아가기" })).toHaveAttribute("href", "/support/inquiries");
     expect(screen.getByRole("link", { name: /화면.png/ })).toHaveAttribute("href", "https://example.com/screen.png");
     expect(mockGetInquiry).toHaveBeenCalledWith(1);
   });

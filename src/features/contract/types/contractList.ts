@@ -1,6 +1,8 @@
 export type ContractListTab =
   | "ALL"
   | "AWAITING_ME"
+  | "AWAITING_COUNTERPART"
+  | "CONCLUDED"
   | "IN_PROGRESS"
   | "SETTLEMENT_PENDING"
   | "COMPLETED";
@@ -46,4 +48,10 @@ export interface ContractListPage {
   totalPages: number;
   first: boolean;
   last: boolean;
+}
+
+export interface ContractTabCount {
+  tab: ContractListTab;
+  label: string;
+  count: number;
 }
