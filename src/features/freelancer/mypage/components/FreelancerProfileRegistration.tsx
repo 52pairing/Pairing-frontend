@@ -424,7 +424,7 @@ export function FreelancerProfileRegistration() {
                       ),
                     )
                   }
-                  className="h-8 rounded-md border border-theme bg-surface px-2 text-[10px]"
+                  className="h-8 rounded-md border border-theme bg-surface px-2 text-[10px] outline-none hover:border-brand hover:outline-2 hover:outline-brand focus:border-brand focus:outline-2 focus:outline-brand"
                 >
                   <option>초급</option>
                   <option>중급</option>

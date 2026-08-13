@@ -1,5 +1,5 @@
-import { FreelancerMyPagePlaceholder } from "@/features/freelancer/mypage/components/FreelancerMyPagePlaceholder";
+import { FreelancerReviews } from "@/features/freelancer/mypage/components/FreelancerReviews";
 
 export default function FreelancerReviewsPage() {
-  return <FreelancerMyPagePlaceholder activeMenu="reviews" title="리뷰 관리" description="리뷰 관리 화면은 추후 구현 예정입니다." />;
+  return <FreelancerReviews />;
 }

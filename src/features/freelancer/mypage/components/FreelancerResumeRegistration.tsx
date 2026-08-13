@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FileText, Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { formatPhoneNumber } from "@/features/auth/utils/formatPhoneNumber";
@@ -17,12 +16,6 @@ const RESUME_STORAGE_KEY = "pairing.freelancer.profile.step2";
 const PROFILE_STORAGE_KEY = "pairing.freelancer.profile.step1";
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_PORTFOLIO_SIZE = 100 * 1024 * 1024;
-const TERMS = [
-  "프로젝트 프로필 정보 수집 및 이용 동의",
-  "클라이언트에게 프로필 정보 제공 동의",
-  "AI 매칭을 위한 프로필 분석 동의",
-  "경력 및 포트폴리오 정보 활용 동의",
-] as const;
 type ResumeDraft = {
   phone: string;
   email: string;
@@ -40,7 +33,6 @@ type ResumeDraft = {
   isEmployed: boolean;
   educationStatus: string;
   links: { type: string; url: string }[];
-  agreements: boolean[];
   certificateDate: string;
   certificateName: string;
   certificateIssuer: string;
@@ -80,7 +72,6 @@ const EMPTY_RESUME_DRAFT: ResumeDraft = {
   isEmployed: false,
   educationStatus: "졸업",
   links: [],
-  agreements: TERMS.map(() => false),
   certificateDate: "",
   certificateName: "",
   certificateIssuer: "",
@@ -156,11 +147,7 @@ export function FreelancerResumeRegistration() {
   const currentUser = useCurrentUser();
   const formRef = useRef<HTMLFormElement>(null);
   const [initialDraft] = useState(loadResumeDraft);
-  const [screen, setScreen] = useState<Screen>("form");
-  const [agreements, setAgreements] = useState<boolean[]>(
-    initialDraft.agreements,
-  );
-  const agreed = agreements.every(Boolean);
+  const [screen, setScreen] = useState<Screen>("review");
   const name = currentUser?.name ?? "회원정보 확인 중";
   const [phone, setPhone] = useState(initialDraft.phone);
   const [email, setEmail] = useState(initialDraft.email);
@@ -245,7 +232,6 @@ export function FreelancerResumeRegistration() {
         isEmployed,
         educationStatus,
         links,
-        agreements,
         certificateDate,
         certificateName,
         certificateIssuer,
@@ -270,7 +256,6 @@ export function FreelancerResumeRegistration() {
     isEmployed,
     educationStatus,
     links,
-    agreements,
     certificateDate,
     certificateName,
     certificateIssuer,
@@ -291,8 +276,7 @@ export function FreelancerResumeRegistration() {
     departmentRank.trim() &&
     careerTask.trim() &&
     summary.trim() &&
-    portfolioName &&
-    agreed,
+    portfolioName,
   );
   const review = () => {
     if (!isValid) {
@@ -332,15 +316,14 @@ export function FreelancerResumeRegistration() {
         certificateScore={certificateScore}
         certificateNote={certificateNote}
         onEdit={() => setScreen("form")}
-        onComplete={() => setScreen("complete")}
       />
     );
 
   return (
     <ProfileRegistrationShell
       step={2}
-      title="이력서와 포트폴리오를 등록해 주세요."
-      description="경력과 포트폴리오는 클라이언트가 프로젝트를 선택할 때 활용됩니다."
+      title="내 이력서"
+      description="이력서와 포트폴리오 정보를 관리합니다."
     >
       <form
         ref={formRef}
@@ -351,6 +334,7 @@ export function FreelancerResumeRegistration() {
           if (!isValid) scrollToFirstError(formRef.current);
         }}
       >
+        <ResumeSaveStatus />
         <FormCard>
           <CardTitle>기본 정보</CardTitle>
           <div className="mt-5 grid items-start gap-6 sm:grid-cols-[132px_1fr]">
@@ -541,6 +525,8 @@ export function FreelancerResumeRegistration() {
           <AddButton>＋ 학력 추가</AddButton>
         </FormCard>
 
+        <ResumePreferenceCards />
+
         <FormCard>
           <CardTitle>경력사항</CardTitle>
           <EntryBox>
@@ -692,6 +678,7 @@ export function FreelancerResumeRegistration() {
           ) : null}
         </FormCard>
 
+        <div id="portfolio" className="scroll-mt-6">
         <FormCard>
           <CardTitle>포트폴리오</CardTitle>
           <p className="mt-1 text-[11px] text-theme-muted">
@@ -761,6 +748,7 @@ export function FreelancerResumeRegistration() {
             <ErrorText>포트폴리오 PDF 파일을 등록해 주세요.</ErrorText>
           ) : null}
         </FormCard>
+        </div>
 
         <FormCard>
           <CardTitle optional>GitHub</CardTitle>
@@ -838,54 +826,14 @@ export function FreelancerResumeRegistration() {
           ) : null}
         </FormCard>
 
-        <FormCard>
-          <CardTitle>약관 동의</CardTitle>
-          <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-lg border border-theme p-4 text-[12px] font-bold">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(event) =>
-                setAgreements(TERMS.map(() => event.target.checked))
-              }
-              className="h-4 w-4 accent-[var(--brand)]"
-            />{" "}
-            전체 동의
-          </label>
-          <div className="mt-2 space-y-2 text-[11px] text-theme-secondary">
-            {TERMS.map((term, index) => (
-              <label
-                key={term}
-                className="flex cursor-pointer items-center gap-3 rounded-md border border-theme px-4 py-3"
-              >
-                <input
-                  type="checkbox"
-                  checked={agreements[index]}
-                  onChange={(event) =>
-                    setAgreements((current) =>
-                      current.map((checked, itemIndex) =>
-                        itemIndex === index ? event.target.checked : checked,
-                      ),
-                    )
-                  }
-                  className="h-4 w-4 shrink-0 accent-[var(--brand)]"
-                />
-                <span className="flex-1">[필수] {term}</span>
-                <span className="text-[10px] font-bold text-brand">보기</span>
-              </label>
-            ))}
-          </div>
-          {showErrors && !agreed ? (
-            <ErrorText>필수 약관에 동의해 주세요.</ErrorText>
-          ) : null}
-        </FormCard>
-
-        <div className="flex items-center justify-between pt-3">
-          <Link
-            href="/freelancer/mypage/profile"
+        <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={() => setScreen("review")}
             className="rounded-md border border-theme bg-surface px-5 py-3 text-[12px] font-bold"
           >
-            ← 이전
-          </Link>
+            수정 취소
+          </button>
           <div className="flex gap-2">
             <button
               type="button"
@@ -897,7 +845,7 @@ export function FreelancerResumeRegistration() {
               type="submit"
               className="rounded-md bg-brand px-6 py-3 text-[12px] font-bold text-brand-contrast hover:bg-brand-hover"
             >
-              등록 내용 확인 →
+              변경사항 저장
             </button>
           </div>
         </div>
@@ -930,7 +878,6 @@ function ReviewScreen({
   certificateScore,
   certificateNote,
   onEdit,
-  onComplete,
 }: {
   name: string;
   phone: string;
@@ -955,7 +902,6 @@ function ReviewScreen({
   certificateScore: string;
   certificateNote: string;
   onEdit: () => void;
-  onComplete: () => void;
 }) {
   const profile = loadProfileReviewDraft();
   const skillText = profile.skills
@@ -965,12 +911,21 @@ function ReviewScreen({
   return (
     <ProfileRegistrationShell
       step={2}
-      title="등록할 프로필을 확인해 주세요."
-      description="이력서 등록 화면과 같은 구성으로 작성한 내용을 확인할 수 있습니다."
+      title="내 이력서"
+      description="등록된 이력서와 포트폴리오 정보를 확인할 수 있습니다."
     >
-      <p className="mt-7 rounded-lg border border-warning-border bg-warning-surface px-4 py-3 text-[11px] font-bold text-theme-warning">
-        수정한 프로필은 새로운 추천과 매칭부터 반영됩니다.
-      </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="rounded-lg border border-warning-border bg-warning-surface px-4 py-3 text-[11px] font-bold text-theme-warning">
+          수정한 프로필은 새로운 추천과 매칭부터 반영됩니다.
+        </p>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="shrink-0 self-end rounded-md bg-brand px-6 py-3 text-[12px] font-bold text-brand-contrast hover:bg-brand-hover sm:self-auto"
+        >
+          수정하기
+        </button>
+      </div>
       <div className="mt-4 space-y-3">
           <ReviewCard
             title="기본 정보"
@@ -1043,22 +998,6 @@ function ReviewScreen({
             ...links.map((link) => [link.type, link.url]),
           ]}
         />
-      </div>
-      <div className="mt-6 flex justify-between">
-        <button
-          type="button"
-          onClick={onEdit}
-          className="rounded-md border border-theme bg-surface px-5 py-3 text-[12px] font-bold"
-        >
-          ← 이전
-        </button>
-        <button
-          type="button"
-          onClick={onComplete}
-          className="rounded-md bg-brand px-6 py-3 text-[12px] font-bold text-brand-contrast"
-        >
-          프리랜서 프로필 등록
-        </button>
       </div>
     </ProfileRegistrationShell>
   );
@@ -1166,6 +1105,161 @@ function ReviewCard({
     </FormCard>
   );
 }
+
+function ResumeSaveStatus() {
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-theme bg-surface px-4 py-3 text-[10px] font-semibold text-theme-muted">
+        <span className="rounded-full bg-success-surface px-3 py-1.5 font-bold text-theme-success">
+          이력서 등록 완료
+        </span>
+        <span>마지막 수정일은 저장된 이력서 정보를 기준으로 표시됩니다.</span>
+      </div>
+      <p className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-[10px] font-semibold leading-5 text-blue-600">
+        수정한 이력서는 새로운 추천과 매칭부터 반영되며, 이미 진행 중인 요청과 협상에는 영향을 주지 않습니다.
+      </p>
+    </>
+  );
+}
+
+function ResumePreferenceCards() {
+  const [pay, setPay] = useState("5,000,000");
+  const [startDate, setStartDate] = useState("");
+  const [period, setPeriod] = useState("6");
+  const [periodUnit, setPeriodUnit] = useState("개월");
+  const [careerYears, setCareerYears] = useState("5");
+  const [skills, setSkills] = useState([
+    { name: "React", level: "고급" },
+    { name: "TypeScript", level: "고급" },
+    { name: "Next.js", level: "중급" },
+    { name: "Node.js", level: "중급" },
+  ]);
+
+  return (
+    <>
+      <FormCard>
+        <CardTitle>기본 희망 조건</CardTitle>
+        <div className="mt-4 grid gap-x-4 gap-y-4 sm:grid-cols-2">
+          <CompactField label="직군">
+            <select className={compactInputClassName} defaultValue="개발">
+              <option>개발</option>
+              <option>디자인</option>
+            </select>
+          </CompactField>
+          <CompactField label="직무">
+            <select className={compactInputClassName} defaultValue="프론트엔드 개발자">
+              <option>프론트엔드 개발자</option>
+              <option>백엔드 개발자</option>
+            </select>
+          </CompactField>
+          <CompactField label="소속">
+            <select className={compactInputClassName} defaultValue="개인">
+              <option>개인</option>
+            </select>
+          </CompactField>
+          <fieldset>
+            <legend className="text-[9px] font-semibold text-theme-muted">근무 방식</legend>
+            <div className="mt-2 flex flex-wrap gap-4 text-[10px] font-semibold">
+              {['재택', '상주', '모두 가능'].map((item, index) => (
+                <label key={item} className="flex items-center gap-1.5">
+                  <input type="radio" name="resume-work-style" defaultChecked={index === 2} className="accent-[var(--brand)]" />
+                  {item}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <CompactField label="급여 단위">
+            <select className={compactInputClassName} defaultValue="월급">
+              <option>월급</option>
+              <option>일급</option>
+              <option>시급</option>
+            </select>
+          </CompactField>
+          <CompactField label="희망 급여">
+            <div className="grid grid-cols-[minmax(0,1fr)_42px] items-center gap-2">
+              <input
+                className={compactInputClassName}
+                value={pay}
+                onChange={(event) => setPay(formatNumber(event.target.value))}
+                inputMode="numeric"
+                aria-label="희망 급여"
+              />
+              <span className="text-[10px] font-semibold text-theme-muted">원</span>
+            </div>
+          </CompactField>
+          <CompactField label="프로젝트 시작 가능일">
+            <input
+              className={compactInputClassName}
+              type="date"
+              min={getTodayDateString()}
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+            />
+          </CompactField>
+          <CompactField label="예상 기간">
+            <div className="grid grid-cols-[minmax(0,1fr)_72px] gap-2">
+              <input
+                className={compactInputClassName}
+                value={period}
+                onChange={(event) => setPeriod(digitsOnly(event.target.value).slice(0, 2))}
+                inputMode="numeric"
+                min="1"
+                max="24"
+                aria-label="예상 기간"
+              />
+              <select value={periodUnit} onChange={(event) => setPeriodUnit(event.target.value)} className={compactInputClassName} aria-label="예상 기간 단위">
+                <option>개월</option>
+                <option>주</option>
+              </select>
+            </div>
+          </CompactField>
+          <CompactField label="프리랜서 경험">
+            <select className={compactInputClassName} defaultValue="있음">
+              <option>있음</option>
+              <option>없음</option>
+            </select>
+          </CompactField>
+          <CompactField label="전체 경력 연수">
+            <div className="grid grid-cols-[minmax(0,1fr)_42px] items-center gap-2">
+              <input
+                className={compactInputClassName}
+                value={careerYears}
+                onChange={(event) => setCareerYears(digitsOnly(event.target.value).slice(0, 2))}
+                inputMode="numeric"
+                min="1"
+                aria-label="전체 경력 연수"
+              />
+              <span className="text-[10px] font-semibold text-theme-muted">년</span>
+            </div>
+          </CompactField>
+        </div>
+      </FormCard>
+
+      <FormCard>
+        <CardTitle>보유 스킬</CardTitle>
+        <input className={fieldClassName} placeholder="스킬 검색" />
+        <div className="mt-3 space-y-2">
+          {skills.map((skill) => (
+            <div key={skill.name} className="flex min-w-0 items-center gap-3 rounded-md bg-surface-subtle px-3 py-2.5">
+              <span className="min-w-0 flex-1 truncate text-[10px] font-semibold">{skill.name}</span>
+              <select
+                aria-label={`${skill.name} 숙련도`}
+                value={skill.level}
+                onChange={(event) => setSkills((current) => current.map((item) => item.name === skill.name ? { ...item, level: event.target.value } : item))}
+                className="h-8 rounded-md border border-theme bg-surface px-3 text-[10px] font-semibold"
+              >
+                <option>초급</option>
+                <option>중급</option>
+                <option>고급</option>
+              </select>
+              <button type="button" aria-label={`${skill.name} 삭제`} onClick={() => setSkills((current) => current.filter((item) => item.name !== skill.name))} className="shrink-0 text-[12px] text-theme-danger">×</button>
+            </div>
+          ))}
+        </div>
+      </FormCard>
+    </>
+  );
+}
 function CardTitle({
   children,
   optional = false,
@@ -1187,7 +1281,24 @@ function CardTitle({
   );
 }
 const compactInputClassName =
-  "h-9 min-w-0 rounded-md border border-theme bg-surface px-2.5 text-[10px] font-semibold text-theme-primary outline-none placeholder:text-theme-muted hover:border-brand hover:outline-2 hover:outline-brand focus:border-brand focus:outline-2 focus:outline-brand";
+  "h-9 min-w-0 rounded-md border border-theme bg-surface px-2.5 text-[10px] font-semibold text-theme-primary outline-none placeholder:text-theme-muted hover:border-brand hover:outline-2 hover:outline-brand focus:border-brand focus:outline-2 focus:outline-brand disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-theme-secondary disabled:hover:border-theme disabled:hover:outline-0";
+
+function getTodayDateString() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function formatNumber(value: string) {
+  const digits = digitsOnly(value);
+  return digits ? Number(digits).toLocaleString("ko-KR") : "";
+}
 function CompactField({
   label,
   children,
