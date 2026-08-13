@@ -27,9 +27,9 @@ describe("FreelancerProfile", () => {
     );
     expect(screen.getAllByText("김프리")).toHaveLength(2);
     expect(screen.getByText("freelancer@example.com")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "변경하기" })).toHaveAttribute(
-      "href",
-      "/freelancer/mypage/password",
+    expect(screen.getByRole("button", { name: "변경하기" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
     );
   });
 

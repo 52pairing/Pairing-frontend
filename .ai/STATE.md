@@ -1,5 +1,20 @@
 # STATE
 
+## 현재 작업 (2026-08-13 — FAQ 챗봇 테스트)
+
+- 작업명: 고객지원 FAQ 챗봇 단위·컴포넌트 테스트 작성
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 브랜치 사용 중
+- 진행 상황: 챗봇 관련 테스트 2 suites, 12 tests 통과
+- 검증: 변경 파일 ESLint, `git diff --check` 통과
+- 전체 테스트: 15 suites, 69 tests 전체 통과 — `FreelancerProfile` 테스트를 현재 인라인 버튼 UI에 맞게 갱신
+- TypeScript: 실패 — 사용자 측 프리랜서 마이페이지 코드의 미설치 `lucide-react` import 2건
+- 전체 ESLint: 오류 0건, 기존 warning 2건
+- 빌드: TypeScript 선행 오류로 미실행
+- 실제 API·브라우저: 미검증
+
+---
+
 ## 현재 작업 (2026-08-13)
 이 문서는 현재 AI와 함께 진행 중인 한 가지 작업만 기록합니다.
 
