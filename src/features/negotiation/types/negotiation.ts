@@ -213,6 +213,8 @@ export interface SubmitAnswersRequest {
     conditionId: number;
     accepted: boolean;
     proposedValue?: string | null;
+    /** accepted=true 일 때만 의미. true 면 내 마지노선을 넘겨서라도 이 제안을 직접 수락 */
+    acceptBelowFloor?: boolean;
   }>;
 }
 
