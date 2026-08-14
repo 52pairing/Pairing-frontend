@@ -161,8 +161,10 @@ export function ProjectConfirm() {
         </SummaryCard>
 
         <ProjectContentPrecheck
+          currentSituation={form.currentSituation}
           mainTask={form.mainTask}
           detailScope={form.detailScope}
+          extraNote={form.extraNote}
         />
 
         {/* 최종 확인 체크 */}

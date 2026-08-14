@@ -6,21 +6,27 @@ import type { ProjectContentPrecheckResult } from "@/features/client/projects/ty
 import { runProjectContentPrecheck } from "@/features/client/projects/utils/projectContentPrecheck";
 
 interface ProjectContentPrecheckProps {
+  currentSituation?: string;
   mainTask?: string;
   detailScope?: string;
+  extraNote?: string;
 }
 
 type CheckStatus = "idle" | "checking" | "done" | "error";
 
 const FIELD_LABEL = {
+  currentSituation: "현재 상황",
   mainTask: "주요 업무",
   detailScope: "상세 업무 범위",
+  extraNote: "기타 전달사항",
   both: "두 항목",
 } as const;
 
 export function ProjectContentPrecheck({
+  currentSituation,
   mainTask,
   detailScope,
+  extraNote,
 }: ProjectContentPrecheckProps) {
   const [status, setStatus] = useState<CheckStatus>("idle");
   const [result, setResult] = useState<ProjectContentPrecheckResult | null>(null);
@@ -39,7 +45,14 @@ export function ProjectContentPrecheck({
 
     timerRef.current = setTimeout(() => {
       try {
-        setResult(runProjectContentPrecheck({ mainTask, detailScope }));
+        setResult(
+          runProjectContentPrecheck({
+            currentSituation,
+            mainTask,
+            detailScope,
+            extraNote,
+          }),
+        );
         setStatus("done");
       } catch {
         setResult(null);
@@ -153,7 +166,7 @@ export function ProjectContentPrecheck({
                     </p>
                     {finding.maskedValue ? (
                       <p className="mt-1 font-mono text-[10px] font-bold text-theme-danger">
-                        감지 값: {finding.maskedValue}
+                        개인정보로 보이는 부분: {finding.maskedValue}
                       </p>
                     ) : null}
                     {finding.questions.map((question) => (
