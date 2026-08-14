@@ -20,6 +20,7 @@ import {
   submitAnswers,
   updateFloors,
 } from "@/features/negotiation/services/negotiation";
+import { onStompConnect } from "@/features/negotiation/stomp/client";
 import { useNegotiationEvents } from "@/features/negotiation/stomp/useNegotiationEvents";
 import type {
   ConditionType,
@@ -176,16 +177,30 @@ export function NegotiationRoom() {
 
   useNegotiationEvents(negotiationId, handleEvent);
 
-  // 폴링 폴백: agentState=RUNNING 동안 2.5초 간격 재조회. WS가 끊겨도(예: code 1006)
-  // 화면이 영구히 멈추지 않게 한다. RUNNING 이 끝나면 effect 재실행되며 자동 중단.
+  // 재연결 시(최초 연결 제외) 놓친 상태를 재조회한다.
+  // 인메모리 브로커는 끊긴 동안의 메시지를 재전송하지 않으므로 재연결 순간 다시 읽어야 한다.
   useEffect(() => {
-    if (!negotiationId || detail?.agentState !== "RUNNING") return;
+    let connectedOnce = false;
+    return onStompConnect(() => {
+      if (connectedOnce) {
+        void refreshDetail();
+        void refreshMessages();
+      }
+      connectedOnce = true;
+    });
+  }, [refreshDetail, refreshMessages]);
+
+  // 폴링 폴백(상시): 진행 중인 협상은 저빈도로 계속 재조회한다. 대리인 도는 중엔 빠르게(2.5초),
+  // 그 외 전이(거절/수락/재지시)에도 안전망이 있게 느리게(10초). WS가 놓쳐도 화면이 영구히 멈추지 않는다.
+  useEffect(() => {
+    if (!negotiationId || detail?.status !== "IN_PROGRESS") return;
+    const intervalMs = detail.agentState === "RUNNING" ? 2500 : 10000;
     const timer = setInterval(() => {
       void refreshDetail();
       void refreshMessages();
-    }, 2500);
+    }, intervalMs);
     return () => clearInterval(timer);
-  }, [negotiationId, detail?.agentState, refreshDetail, refreshMessages]);
+  }, [negotiationId, detail?.status, detail?.agentState, refreshDetail, refreshMessages]);
 
   // 협상 시작
   const handleStart = useCallback(
@@ -395,6 +410,7 @@ export function NegotiationRoom() {
 
       {isCancelOpen ? (
         <NegotiationCancelModal
+          viewerRole={detail?.viewerRole ?? "CLIENT"}
           onClose={() => setIsCancelOpen(false)}
           onConfirm={() => void handleGiveUp()}
         />
