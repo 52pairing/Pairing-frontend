@@ -47,8 +47,8 @@ export function FreelancerProjectDetail() {
     setProcessing(true);
     try {
       const result = await acceptMatchingRequest(requestId);
-      setProject(result);
-      if (result.negotiationId) router.push(`/freelancer/projects/${result.projectId}/negotiation/${result.negotiationId}`);
+      setProject((current) => current ? { ...result, mainTask: current.mainTask } : result);
+      if (result.status === "NEGOTIATING" && result.negotiationId) router.push(`/freelancer/projects/${result.projectId}/negotiation/${result.negotiationId}`);
     } catch (cause) { const message = cause instanceof Error ? cause.message : "수락하지 못했습니다."; if (cause instanceof ApiException && REFRESH_ON_ERROR_CODES.has(cause.errorCode)) await load(); setError(message); }
     finally { setProcessing(false); }
   };
@@ -64,7 +64,7 @@ export function FreelancerProjectDetail() {
         <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-4"><p className="text-[11px] text-theme-muted">현재 상태</p><p className="mt-1 text-[13px] font-bold text-theme-primary">{STATUS_LABEL[project.status] ?? project.status}</p>{project.rejectReason ? <p className="mt-2 text-[11px] font-semibold text-theme-danger">{project.rejectReason === "EXPIRED" ? "응답 기한이 만료되었습니다." : project.rejectReason === "DIRECT_REJECT" ? "거절한 제안입니다." : "협상이 결렬되었습니다."}</p> : null}{(project.status === "NEGOTIATING" || project.status === "CONTRACT_PENDING" || project.status === "ACCEPTED") && project.negotiationId ? <Link href={`/freelancer/projects/${project.projectId}/negotiation/${project.negotiationId}`} className="mt-3 inline-flex h-9 items-center rounded-lg bg-brand px-5 text-[11px] font-bold text-white">협상방 입장</Link> : null}</section>
         {project.status === "REQUEST_PENDING" ? <div className="mt-4 flex gap-2"><button type="button" disabled={processing} onClick={() => { setRejectError(""); setIsRejectOpen(true); }} className="h-9 rounded-lg border border-[#f04438] bg-surface px-5 text-[11px] font-bold text-theme-danger hover:bg-danger-surface disabled:opacity-40">거절</button><button type="button" disabled={processing} onClick={() => void accept()} className="h-9 rounded-lg bg-brand px-5 text-[11px] font-bold text-white hover:bg-brand disabled:opacity-40">{processing ? "처리 중" : "수락 및 협상 시작"}</button></div> : null}
       </div>
-      <ProjectRejectModals open={isRejectOpen} projectTitle={project.projectTitle} errorMessage={rejectError} onClose={() => setIsRejectOpen(false)} onConfirm={async (reason) => { try { setProject(await rejectMatchingRequest(requestId, reason)); } catch (cause) { setRejectError(cause instanceof Error ? cause.message : "거절하지 못했습니다."); if (cause instanceof ApiException && REFRESH_ON_ERROR_CODES.has(cause.errorCode)) await load(); throw cause; } }} />
+      <ProjectRejectModals open={isRejectOpen} projectTitle={project.projectTitle} errorMessage={rejectError} onClose={() => setIsRejectOpen(false)} onConfirm={async (reason) => { try { const result = await rejectMatchingRequest(requestId, reason); setProject((current) => current ? { ...result, mainTask: current.mainTask } : result); } catch (cause) { setRejectError(cause instanceof Error ? cause.message : "거절하지 못했습니다."); if (cause instanceof ApiException && REFRESH_ON_ERROR_CODES.has(cause.errorCode)) await load(); throw cause; } }} />
     </main>
   );
 }

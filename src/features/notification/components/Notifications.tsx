@@ -27,7 +27,9 @@ export function Notifications() {
   const user = useCurrentUser();
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [status, setStatus] = useState<"loading" | "error" | "ready">("loading");
+  const [status, setStatus] = useState<"loading" | "error" | "ready">(
+    "loading",
+  );
   const [errorMessage, setErrorMessage] = useState("");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -67,7 +69,10 @@ export function Notifications() {
     setIsLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const result = await getNotifications({ page: nextPage, size: PAGE_SIZE });
+      const result = await getNotifications({
+        page: nextPage,
+        size: PAGE_SIZE,
+      });
       setNotifications((current) => [...current, ...result.content]);
       setPage(result.page);
       setHasMore(result.page + 1 < result.totalPages);
@@ -117,7 +122,9 @@ export function Notifications() {
 
   const handleDelete = async (notificationId: number) => {
     const previous = notifications;
-    setNotifications((current) => current.filter((item) => item.notificationId !== notificationId));
+    setNotifications((current) =>
+      current.filter((item) => item.notificationId !== notificationId),
+    );
     try {
       await deleteNotification(notificationId);
       toast.success("알림을 삭제했습니다.");
@@ -130,7 +137,9 @@ export function Notifications() {
   const handleReadAll = async () => {
     if (unreadCount === 0) return;
     const previous = notifications;
-    setNotifications((current) => current.map((item) => ({ ...item, read: true })));
+    setNotifications((current) =>
+      current.map((item) => ({ ...item, read: true })),
+    );
     try {
       await markAllNotificationsAsRead();
       toast.success("모든 알림을 읽음 처리했습니다.");
@@ -157,10 +166,16 @@ export function Notifications() {
     <div className="flex min-h-screen flex-col bg-background">
       <Header role={user?.role === "FREELANCER" ? "freelancer" : "client"} />
       <main className="flex-1 px-5 pb-20 pt-10 sm:px-8 sm:pt-12">
-        <section className="mx-auto w-full max-w-[700px]" aria-labelledby="notifications-title">
+        <section
+          className="mx-auto w-full max-w-[700px]"
+          aria-labelledby="notifications-title"
+        >
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 id="notifications-title" className="text-[24px] font-extrabold tracking-[-0.04em] text-theme-primary">
+              <h1
+                id="notifications-title"
+                className="text-[24px] font-extrabold tracking-[-0.04em] text-theme-primary"
+              >
                 알림
               </h1>
               <p className="mt-2 text-[12px] text-theme-muted">
@@ -176,7 +191,9 @@ export function Notifications() {
               >
                 모두 읽음
               </button>
-              <span className="text-theme" aria-hidden="true">·</span>
+              <span className="text-theme" aria-hidden="true">
+                ·
+              </span>
               <button
                 type="button"
                 onClick={() => setIsDeleteAllModalOpen(true)}
@@ -189,9 +206,16 @@ export function Notifications() {
           </div>
 
           {status === "loading" ? (
-            <LoadingState className="mt-7" message="알림을 불러오는 중입니다." />
+            <LoadingState
+              className="mt-7"
+              message="알림을 불러오는 중입니다."
+            />
           ) : status === "error" ? (
-            <ErrorState className="mt-7" description={errorMessage} onRetry={() => void loadFirstPage()} />
+            <ErrorState
+              className="mt-7"
+              description={errorMessage}
+              onRetry={() => void loadFirstPage()}
+            />
           ) : notifications.length > 0 ? (
             <>
               <ul className="mt-7 space-y-2" aria-label="알림 목록">
@@ -244,7 +268,11 @@ interface NotificationCardProps {
   onDelete: (notificationId: number) => void;
 }
 
-function NotificationCard({ notification, onOpen, onDelete }: NotificationCardProps) {
+function NotificationCard({
+  notification,
+  onOpen,
+  onDelete,
+}: NotificationCardProps) {
   return (
     <li
       className={`group flex min-h-[86px] overflow-hidden rounded-[10px] border transition ${
@@ -264,13 +292,17 @@ function NotificationCard({ notification, onOpen, onDelete }: NotificationCardPr
           aria-hidden="true"
         />
         <span className="min-w-0 flex-1">
-          <span className={`block text-[13px] leading-5 text-theme-primary sm:text-[14px] ${notification.read ? "font-medium" : "font-bold"}`}>
+          <span
+            className={`block text-[13px] leading-5 text-theme-primary sm:text-[14px] ${notification.read ? "font-medium" : "font-bold"}`}
+          >
             {notification.title}
           </span>
           <span className="mt-1 block text-[11px] leading-5 text-theme-secondary sm:text-[12px]">
             {notification.content}
           </span>
-          <time className="mt-1 block text-[11px] text-theme-muted">{notification.createdAt}</time>
+          <time className="mt-1 block text-[11px] text-theme-muted">
+            {notification.createdAt}
+          </time>
         </span>
       </button>
       <button
@@ -279,8 +311,19 @@ function NotificationCard({ notification, onOpen, onDelete }: NotificationCardPr
         aria-label={`${notification.title} 알림 삭제`}
         className="m-2 flex h-10 w-10 shrink-0 items-center justify-center self-start rounded-lg text-theme-muted transition hover:bg-danger-surface hover:text-theme-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-danger"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12m-10 0 .6 12h6.8L16 7m-6-3h4l1 3H9l1-3Z" />
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className="h-[18px] w-[18px]"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 7h12m-10 0 .6 12h6.8L16 7m-6-3h4l1 3H9l1-3Z"
+          />
         </svg>
       </button>
     </li>
@@ -290,13 +333,30 @@ function NotificationCard({ notification, onOpen, onDelete }: NotificationCardPr
 function EmptyNotifications() {
   return (
     <div className="mt-7 flex min-h-[300px] flex-col items-center justify-center rounded-[12px] border border-theme bg-surface px-5 text-center">
-      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-muted text-theme-muted" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-7 w-7">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" />
+      <span
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-muted text-theme-muted"
+        aria-hidden="true"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          className="h-7 w-7"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"
+          />
         </svg>
       </span>
-      <h2 className="mt-4 text-[15px] font-bold text-theme-primary">새로운 알림이 없습니다</h2>
-      <p className="mt-2 text-[12px] leading-5 text-theme-muted">프로젝트와 계약 소식이 도착하면 알려드릴게요.</p>
+      <h2 className="mt-4 text-[15px] font-bold text-theme-primary">
+        새로운 알림이 없습니다
+      </h2>
+      <p className="mt-2 text-[12px] leading-5 text-theme-muted">
+        프로젝트와 계약 소식이 도착하면 알려드릴게요.
+      </p>
     </div>
   );
 }

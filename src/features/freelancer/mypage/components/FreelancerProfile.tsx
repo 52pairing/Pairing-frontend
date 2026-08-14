@@ -30,9 +30,10 @@ export function FreelancerProfile() {
     setIsMatchingSaving(true);
     setMatchingError("");
     try {
-      const nextSettings = matchingSettings.aiMatchingAgreed
-        ? { aiMatchingAgreed: true, matchingPaused: !matchingSettings.matchingPaused }
-        : { aiMatchingAgreed: true, matchingPaused: false };
+      const nextSettings = {
+        aiMatchingAgreed: matchingSettings.aiMatchingAgreed,
+        matchingPaused: !matchingSettings.matchingPaused,
+      };
       setMatchingSettings(await updateMatchingSettings(nextSettings));
     } catch (error) { setMatchingError(error instanceof Error ? error.message : "매칭 설정을 변경하지 못했습니다."); }
     finally { setIsMatchingSaving(false); }
@@ -138,7 +139,7 @@ export function FreelancerProfile() {
               role="switch"
               aria-checked={matchingSettings ? matchingSettings.aiMatchingAgreed && !matchingSettings.matchingPaused : false}
               aria-label="AI 매칭"
-              disabled={!matchingSettings || isMatchingSaving}
+              disabled={!matchingSettings || isMatchingSaving || !matchingSettings.aiMatchingAgreed}
               onClick={() => void toggleMatchingPaused()}
               className={`relative mt-0.5 h-6 w-11 shrink-0 overflow-hidden rounded-full transition-colors disabled:cursor-not-allowed ${matchingSettings?.aiMatchingAgreed && !matchingSettings.matchingPaused ? "bg-brand" : "bg-surface-muted"}`}
             >
