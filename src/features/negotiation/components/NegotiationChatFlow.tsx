@@ -133,7 +133,7 @@ export function NegotiationChatFlow({
         {/* 상태별 화면 */}
         {isFailed ? (
           <div className="mt-8">
-            <NegotiationResultCard result="failed" />
+            <NegotiationResultCard result="failed" summary={detail.endReason ?? undefined} />
           </div>
         ) : isComplete ? (
           <div className="mt-8">
