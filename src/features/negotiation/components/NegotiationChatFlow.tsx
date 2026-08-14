@@ -58,6 +58,8 @@ interface NegotiationChatFlowProps {
   ) => Promise<{ ok: boolean; message?: string }>;
   /** 대리인 호출 실패(AGENT_FAILED) 재시도 */
   onRetryAgent: () => void;
+  /** 최종 절충안 수락 */
+  onAcceptFinalOffer: () => void;
   onGiveUp: () => void;
   /** 요청 진행 중(버튼 잠금) */
   isSubmitting: boolean;
@@ -73,6 +75,7 @@ export function NegotiationChatFlow({
   onSubmitAnswers,
   onUpdateFloor,
   onRetryAgent,
+  onAcceptFinalOffer,
   onGiveUp,
   isSubmitting,
   chatActionSlot,
@@ -109,6 +112,7 @@ export function NegotiationChatFlow({
           status={detail.status}
           round={detail.totalRound}
           maxRound={detail.maxRound}
+          finalOffer={detail.finalOffer}
         />
       </div>
 
@@ -146,6 +150,14 @@ export function NegotiationChatFlow({
               actionSlot={chatActionSlot}
             />
           </div>
+        ) : detail.finalOffer ? (
+          <FinalOfferPanel
+            detail={detail}
+            labels={labels}
+            isSubmitting={isSubmitting}
+            onAccept={onAcceptFinalOffer}
+            onGiveUp={onGiveUp}
+          />
         ) : agentFailed ? (
           <AgentFailedNotice onRetry={onRetryAgent} isSubmitting={isSubmitting} />
         ) : agentRunning ? (
@@ -286,10 +298,12 @@ function NegotiationHeader({
   status,
   round,
   maxRound,
+  finalOffer,
 }: {
   status: NegotiationDetail["status"];
   round: number;
   maxRound: number;
+  finalOffer?: boolean;
 }) {
   const isFailed = status === "FAILED";
   const isComplete = status === "AGREED";
@@ -300,9 +314,10 @@ function NegotiationHeader({
         <p className="mt-1 text-[11px] text-[#9ba3b2]">AI 에이전트 간 협상 과정</p>
       </div>
       <div className="flex items-center gap-3 text-[11px] font-semibold text-theme-secondary">
-        <span>라운드 {round} / {maxRound}</span>
-        <span className={`rounded-full border px-3 py-1.5 ${isFailed ? "border-[#fecdca] bg-danger-surface text-theme-danger" : isComplete ? "border-[#abefc6] bg-success-surface text-theme-success" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}>
-          {isFailed ? "× 협상 결렬" : isComplete ? "✓ 협상 완료" : "♙ 협상 중"}
+        {/* 최종 절충 단계면 라운드 대신 "최종 절충" 표시 */}
+        <span>{finalOffer ? "최종 절충" : `라운드 ${round} / ${maxRound}`}</span>
+        <span className={`rounded-full border px-3 py-1.5 ${isFailed ? "border-[#fecdca] bg-danger-surface text-theme-danger" : isComplete ? "border-[#abefc6] bg-success-surface text-theme-success" : finalOffer ? "border-[#fdb022] bg-[#fffaeb] text-[#b54708]" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}>
+          {isFailed ? "× 협상 결렬" : isComplete ? "✓ 협상 완료" : finalOffer ? "⚑ 최종 절충안" : "♙ 협상 중"}
         </span>
       </div>
     </div>
@@ -1085,6 +1100,117 @@ const buildBelowFloorMessage = (
   const direction = isFreelancer ? "낮습니다" : "높습니다";
   return `이 제안(${proposed})은 회원님의 마지노선(${floorLabel})보다 ${direction}. 그래도 수락하시겠어요?`;
 };
+
+// 최종 절충안 패널 — 조건별 절충값을 보여주고 [이 절충안으로 합의]/[협상 포기]만 받는다.
+function FinalOfferPanel({
+  detail,
+  labels,
+  isSubmitting,
+  onAccept,
+  onGiveUp,
+}: {
+  detail: NegotiationDetail;
+  labels: WorkConditionLabels;
+  isSubmitting: boolean;
+  onAccept: () => void;
+  onGiveUp: () => void;
+}) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const conditions = detail.conditions ?? [];
+  const compromiseConds = conditions.filter((c) => c.compromiseValue != null);
+  const agreed = conditions.filter((c) => c.status === "AGREED");
+  const waitingOpponent = detail.myFinalAccepted === true;
+  const opponentAccepted =
+    detail.counterpartFinalAccepted === true && detail.myFinalAccepted !== true;
+
+  // 확인 모달 문구 (첫 절충 조건 기준)
+  const first = compromiseConds.find((c) => c.myFloor != null) ?? compromiseConds[0];
+  let confirmMessage = "양측이 함께 양보하는 최종 제안입니다. 수락하시겠어요?";
+  if (first) {
+    const value = formatConditionValue(first.type, first.compromiseValue, labels);
+    if (first.myFloor != null && value) {
+      const floor = formatConditionValue(first.type, first.myFloor, labels);
+      const floorLabel =
+        detail.viewerRole === "FREELANCER" ? `최소 ${floor}` : `최대 ${floor}`;
+      confirmMessage = `이 절충안(${value})은 회원님의 마지노선(${floorLabel})을 넘습니다. 양측이 함께 양보하는 최종 제안입니다. 수락하시겠어요?`;
+    }
+  }
+
+  return (
+    <div className="mt-6 flex justify-end">
+      <section className="w-[340px] rounded-[14px] border border-[#fdb022] bg-[#fffaeb] p-4 shadow-sm">
+        <p className="text-[12px] font-bold leading-5 text-[#b54708]">최종 절충안</p>
+        <p className="mt-1 text-[11px] leading-5 text-[#92400e]">
+          이 제안으로 합의하지 않으면 협상이 결렬됩니다.
+        </p>
+
+        <div className="mt-3 flex flex-col gap-2">
+          {compromiseConds.map((c) => (
+            <div
+              key={c.conditionId}
+              className="rounded-[8px] border border-[#f5d9a6] bg-surface px-3 py-2"
+            >
+              <p className="text-[10px] font-semibold text-theme-muted">
+                {conditionLabel(c.type)} · 양측 절충값
+              </p>
+              <p className="mt-0.5 text-[13px] font-bold text-theme-primary">
+                {formatConditionValue(c.type, c.compromiseValue, labels)}
+              </p>
+            </div>
+          ))}
+          {agreed.map((c) => (
+            <div key={c.conditionId} className="flex items-center justify-between px-1">
+              <span className="text-[11px] text-theme-muted">{conditionLabel(c.type)}</span>
+              <span className="text-[11px] font-bold text-theme-success">
+                🔒 {formatConditionValue(c.type, c.agreedValue, labels)}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {opponentAccepted ? (
+          <p className="mt-3 rounded-[8px] bg-[#ecfdf3] px-3 py-2 text-[11px] font-semibold text-theme-success">
+            상대는 이미 수락했습니다. 수락하면 바로 타결됩니다.
+          </p>
+        ) : null}
+
+        <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
+          <button
+            type="button"
+            disabled={waitingOpponent || isSubmitting}
+            onClick={() => setConfirmOpen(true)}
+            className="flex h-[40px] cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-[#8878e8] text-[12px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
+          >
+            {waitingOpponent ? "상대 수락 대기 중…" : "이 절충안으로 합의"}
+          </button>
+          <button
+            type="button"
+            onClick={onGiveUp}
+            className="h-[40px] cursor-pointer rounded-[8px] border border-[#f04438] bg-surface px-4 text-[12px] font-bold text-theme-danger hover:bg-danger-surface"
+          >
+            협상 포기
+          </button>
+        </div>
+      </section>
+
+      {confirmOpen ? (
+        <ConfirmModal
+          open
+          title="이 절충안으로 합의하시겠어요?"
+          description={confirmMessage}
+          confirmText="그래도 수락"
+          cancelText="취소"
+          confirmDisabled={isSubmitting}
+          onConfirm={() => {
+            setConfirmOpen(false);
+            onAccept();
+          }}
+          onClose={() => setConfirmOpen(false)}
+        />
+      ) : null}
+    </div>
+  );
+}
 
 function DecisionButton({
   label,

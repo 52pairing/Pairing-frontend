@@ -91,6 +91,15 @@ export const giveUpNegotiation = async (
   });
 };
 
+/**
+ * 최종 절충안 수락 (바디 없음). 응답은 갱신된 상세.
+ * 양측이 모두 수락하면 status=AGREED, 한쪽이면 IN_PROGRESS + myFinalAccepted=true.
+ */
+export const acceptFinalOffer = (negotiationId: NegotiationId) =>
+  apiCall<NegotiationDetail>(`${BASE}/${negotiationId}/final-offer/accept`, {
+    method: "POST",
+  });
+
 /** 안 읽은 새 제안 표시 해제 (협상방 진입 시 호출) */
 export const markNegotiationRead = async (
   negotiationId: NegotiationId,
