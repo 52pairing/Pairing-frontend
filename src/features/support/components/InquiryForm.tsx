@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 
+import type { CurrentUserResponse } from "@/features/auth/types";
 import { Header } from "@/features/common/components/header/Header";
 import { ConfirmModal } from "@/features/common/components/Modal";
 import { useToast } from "@/features/common/hooks/useToast";
@@ -51,7 +52,12 @@ function getSubmitErrorMessage(error: unknown) {
   return error.message || "문의를 접수하지 못했습니다. 잠시 후 다시 시도해 주세요.";
 }
 
-export function InquiryForm() {
+interface InquiryFormProps {
+  // 서버에서 미리 조회한 로그인 사용자 (헤더 깜빡임 방지용)
+  initialUser?: CurrentUserResponse | null;
+}
+
+export function InquiryForm({ initialUser = null }: InquiryFormProps) {
   const router = useRouter();
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -137,7 +143,7 @@ export function InquiryForm() {
 
   return (
     <>
-      <Header role="guest" />
+      <Header role="guest" initialUser={initialUser} />
       <main className="flex-1 bg-background px-5 pb-20 pt-8 text-theme-primary sm:px-8 sm:pt-10">
         <div className="mx-auto w-full max-w-[810px]">
           <Link

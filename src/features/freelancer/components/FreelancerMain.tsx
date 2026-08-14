@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { useCurrentUserState } from "@/features/auth/hooks/useCurrentUser";
+import type { CurrentUserResponse } from "@/features/auth/types";
 import {
   StepArrow,
   StepCheckIcon,
 } from "@/features/common/components/SharedUI";
 
-export function FreelancerMain() {
-  const user = useCurrentUser();
+interface FreelancerMainProps {
+  initialUser?: CurrentUserResponse | null;
+}
+
+export function FreelancerMain({ initialUser = null }: FreelancerMainProps) {
+  const { user, isLoading } = useCurrentUserState(initialUser);
 
   return (
     <main
@@ -27,7 +32,15 @@ export function FreelancerMain() {
 
           {/* 메인 문구 */}
           <h1 className="text-4xl font-extrabold leading-[1.28] tracking-[-0.04em] text-white sm:text-[44px]">
-            {user?.name ? `${user.name} 님,` : "회원님,"}
+            {isLoading ? (
+              <span aria-label="사용자 정보 불러오는 중" className="invisible inline-block w-[5.5em]" aria-hidden="true">
+                회원님,
+              </span>
+            ) : user?.name ? (
+              `${user.name} 님,`
+            ) : (
+              "회원님,"
+            )}
             <br />
             <span className="text-[#a8cbe8]">오늘도 좋은 프로젝트를</span>
             <br />

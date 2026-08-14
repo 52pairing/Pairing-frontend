@@ -11,7 +11,7 @@ import {
 
 import { Header } from "@/features/common/components/header/Header";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
-import type { LoginRole } from "@/features/auth/types";
+import type { CurrentUserResponse, LoginRole } from "@/features/auth/types";
 import { ApiException } from "@/lib/api";
 
 import {
@@ -81,8 +81,13 @@ function getActionUrl(code: string, role: LoginRole | undefined, serverUrl: stri
   }
 }
 
-export function SupportChatbot() {
-  const currentUser = useCurrentUser();
+interface SupportChatbotProps {
+  // 서버에서 미리 조회한 로그인 사용자 (헤더 깜빡임 방지용)
+  initialUser?: CurrentUserResponse | null;
+}
+
+export function SupportChatbot({ initialUser = null }: SupportChatbotProps) {
+  const currentUser = useCurrentUser(initialUser);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const hasCompletedInitialScrollRef = useRef(false);
   const [question, setQuestion] = useState("");
@@ -203,7 +208,7 @@ export function SupportChatbot() {
 
   return (
     <>
-      <Header role="guest" />
+      <Header role="guest" initialUser={initialUser} />
       <main className="flex h-[calc(100dvh-60px)] flex-none overflow-hidden bg-background px-5 py-7 text-theme-primary sm:px-8 sm:py-9">
         <div className="mx-auto flex min-h-0 w-full max-w-[900px] flex-1 flex-col">
           <Link

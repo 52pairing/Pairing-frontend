@@ -11,6 +11,7 @@ const clientNavItems = [
 
 interface ClientHeaderProps {
   name?: string;
+  isNameLoading?: boolean;
   chatCount?: number;
   noticeCount?: number;
 }
@@ -18,6 +19,7 @@ interface ClientHeaderProps {
 // 클라이언트 로그인 사용자에게 보여주는 Header
 export function ClientHeader({
   name = "클라이언트",
+  isNameLoading = false,
   chatCount = 0,
   noticeCount = 0,
 }: ClientHeaderProps) {
@@ -43,7 +45,7 @@ export function ClientHeader({
             label="알림"
             count={noticeCount}
           />
-          <ProfileMenu label={name} myPageHref="/client/mypage" />
+          <ProfileMenu label={name} isLoading={isNameLoading} myPageHref="/client/mypage" />
         </>
       }
     />

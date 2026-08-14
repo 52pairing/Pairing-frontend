@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { useCurrentUserState } from "@/features/auth/hooks/useCurrentUser";
+import type { CurrentUserResponse } from "@/features/auth/types";
 import { StepArrow, StepCheckIcon } from "@/features/common/components/SharedUI";
 
-export function ClientMain() {
-  const user = useCurrentUser();
+interface ClientMainProps {
+  initialUser?: CurrentUserResponse | null;
+}
+
+export function ClientMain({ initialUser = null }: ClientMainProps) {
+  const { user, isLoading } = useCurrentUserState(initialUser);
 
   return (
     <main
@@ -23,7 +28,15 @@ export function ClientMain() {
           </div>
 
           <h1 className="text-4xl font-extrabold leading-[1.3] tracking-[-0.04em] text-white sm:text-[44px]">
-            {user?.name ? `${user.name} 님,` : "회원님,"}
+            {isLoading ? (
+              <span aria-label="사용자 정보 불러오는 중" className="invisible inline-block w-[5.5em]" aria-hidden="true">
+                회원님,
+              </span>
+            ) : user?.name ? (
+              `${user.name} 님,`
+            ) : (
+              "회원님,"
+            )}
             <br />
             <span className="text-[#a8cbe8]">딱 맞는 프리랜서를</span>
             <br />

@@ -1,3 +1,4 @@
+import type { CurrentUserResponse } from "@/features/auth/types";
 import { Header } from "@/features/common/components/header/Header";
 
 import { SupportCard } from "./SupportCard";
@@ -5,7 +6,12 @@ import { BotIcon, ChatIcon, InfoIcon } from "./SupportIcons";
 
 const CHATBOT_DAILY_LIMIT_LABEL = "하루 최대 10회 무료 이용";
 
-export function Support() {
+interface SupportProps {
+  // 서버에서 미리 조회한 로그인 사용자 (헤더 깜빡임 방지용)
+  initialUser?: CurrentUserResponse | null;
+}
+
+export function Support({ initialUser = null }: SupportProps) {
   const supportOptions = [
     {
       title: "FAQ 챗봇",
@@ -39,7 +45,7 @@ export function Support() {
 
   return (
     <>
-      <Header role="guest" />
+      <Header role="guest" initialUser={initialUser} />
       <main className="flex-1 bg-background px-5 pb-24 pt-12 text-theme-primary sm:px-8 sm:pt-16">
         <div className="mx-auto w-full max-w-[750px]">
           <h1 className="text-[28px] font-extrabold tracking-[-0.04em]">

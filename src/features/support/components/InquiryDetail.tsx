@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import type { CurrentUserResponse } from "@/features/auth/types";
 import { Header } from "@/features/common/components/header/Header";
 import { ApiException } from "@/lib/api";
 
@@ -20,7 +21,12 @@ function formatDateTime(value: string | null) {
   return formattedTime ? `${formattedDate} ${formattedTime}` : formattedDate;
 }
 
-export function InquiryDetail() {
+interface InquiryDetailProps {
+  // 서버에서 미리 조회한 로그인 사용자 (헤더 깜빡임 방지용)
+  initialUser?: CurrentUserResponse | null;
+}
+
+export function InquiryDetail({ initialUser = null }: InquiryDetailProps) {
   const params = useParams<{ inquiryId: string }>();
   const inquiryId = Number(params.inquiryId);
   const [inquiry, setInquiry] = useState<InquiryResponse | null>(null);
@@ -71,7 +77,7 @@ export function InquiryDetail() {
 
   return (
     <>
-      <Header role="guest" />
+      <Header role="guest" initialUser={initialUser} />
       <main className="flex-1 bg-background px-5 pb-20 pt-10 text-theme-primary sm:px-8 sm:pt-12">
         <div className="mx-auto w-full max-w-[780px]">
           <div className="flex items-center justify-between gap-4">

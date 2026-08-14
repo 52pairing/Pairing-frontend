@@ -10,6 +10,7 @@ const freelancerNavItems = [
 
 interface FreelancerHeaderProps {
   name?: string;
+  isNameLoading?: boolean;
   chatCount?: number;
   noticeCount?: number;
 }
@@ -17,6 +18,7 @@ interface FreelancerHeaderProps {
 // 프리랜서 로그인 사용자에게 보여주는 Header
 export function FreelancerHeader({
   name = "프리랜서",
+  isNameLoading = false,
   chatCount = 0,
   noticeCount = 0,
 }: FreelancerHeaderProps) {
@@ -44,6 +46,7 @@ export function FreelancerHeader({
           />
           <ProfileMenu
             label={name}
+            isLoading={isNameLoading}
             myPageHref="/freelancer/mypage"
             profileManageHref="/freelancer/mypage/profile"
           />
