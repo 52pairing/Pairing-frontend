@@ -2173,3 +2173,23 @@
 - 실제 로그인 세션 기반 API·브라우저·파일 저장: 미검증
 
 ---
+## 2026-08-14 — 클라이언트 마이페이지 결제내역 API 연동
+
+- 목 결제내역을 `/api/v1/settlements/mine`의 `status=PAID` 탭별 페이지 조회로 교체
+- 상단 카드와 탭별 합계를 `/api/v1/settlements/mine/summary` 응답에 연결
+- 결제일, 프로젝트명, `ST-` 정산번호, 수수료 구분, 금액, 결제수단 표시 및 영수증 미제공 유지
+- 로딩·빈 상태·오류 재시도·서버 페이지 이동 추가
+- 검증: 관련 Jest 1 suite/2 tests, 변경 파일 ESLint, TypeScript, `git diff --check` 통과
+- 실제 API·브라우저 검증: 로그인 테스트 세션이 없어 미검증
+
+---
+## 2026-08-14 — 프리랜서 마이페이지 결제내역 API 연동
+
+- 기존 목데이터와 전체/결제완료/결제실패/환불 탭을 실제 summary·PAID 목록 API 및 전체/착수금/성공보수 탭으로 교체
+- 성공보수 납부액과 DISTINCT 완료 프로젝트 수를 summary 응답으로 고정 표시
+- 프로젝트명, 발주 기업명(`clientName`), 결제수단, 결제일, 금액, 상태 배지 연결
+- 로딩·빈 상태·오류 재시도·서버 페이지 이동 추가
+- 검증: 클라이언트·프리랜서 결제내역 Jest 2 suites/4 tests, 변경 파일 ESLint, TypeScript, `git diff --check` 통과
+- 실제 API: 배포 Swagger에 summary 경로가 없어 미검증
+
+---

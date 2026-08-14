@@ -976,3 +976,33 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - `GET /api/v1/chat-rooms`: PostgreSQL 파라미터 타입 추론 서버 오류 수정·배포 완료, 운영 응답 200 및 채팅방 9건 확인
 
 ---
+## 클라이언트 마이페이지 결제내역 (2026-08-14)
+
+- 화면: `/client/mypage/payments`
+- `GET /api/v1/settlements/mine/summary`
+  - 파라미터 없음, 화면 진입 시 1회 조회하며 탭 변경 시 재조회하지 않음
+  - 응답: `{ totalAmount, depositAmount, successFeeAmount, depositProjectCount, successFeeProjectCount }`
+  - 상단 카드와 탭별 조회 기간 합계는 summary 필드를 사용하며 페이지 목록의 `feeAmount`를 합산하지 않음
+- `GET /api/v1/settlements/mine?status=PAID&page=0&size=10`
+  - 전체 탭은 `phase`를 보내지 않음
+  - 착수금 탭은 `phase=DEPOSIT`, 성공보수 탭은 `phase=SUCCESS_FEE`
+  - `status=PAID` 고정
+  - 표시 필드: `paidAt`, `projectTitle`, `settlementNo`, `phase`, `feeAmount`, `paymentMethodLabel`
+  - `paidAt`은 서버 KST `LocalDateTime`의 앞 10자리를 날짜로 표시하며, `paymentMethodLabel`이 null이면 해당 칸만 비움
+  - `settlementNo`는 `ST-YYYY-NNNNNN` 형식이며 영수증 버튼은 제공하지 않음
+- enum: `SettlementPhase = DEPOSIT | SUCCESS_FEE`, `SettlementStatus = PENDING | PAID | OVERDUE | FAILED | CANCELED`
+- 실제 로그인 세션 기반 성공·오류 응답: 미검증
+
+---
+
+## 프리랜서 마이페이지 결제내역 (2026-08-14)
+
+- 화면: `/freelancer/mypage/payments`
+- 클라이언트와 동일한 `GET /api/v1/settlements/mine/summary`, `GET /api/v1/settlements/mine` 사용
+- summary는 진입 시 1회 조회하고 탭과 무관하게 `successFeeAmount`, `successFeeProjectCount`를 고정 표시
+- 목록은 전체(phase 없음), 착수금(`DEPOSIT`), 성공보수(`SUCCESS_FEE`) 탭과 `status=PAID&page={page}&size=10`으로 조회
+- 목록 표시: `projectTitle`, `clientName`, `paymentMethodLabel`, `paidAt`, `feeAmount`, `status`
+- 회사명은 `payerName`이 아닌 `clientName` 사용
+- 실제 API: 배포 Swagger에 summary 경로가 없어 미검증
+
+---
