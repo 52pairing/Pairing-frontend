@@ -16,12 +16,25 @@ export interface PaymentMethod {
 }
 
 export type SettlementPhase = "DEPOSIT" | "SUCCESS_FEE";
-export type SettlementStatus = "PENDING" | "PAID" | "FAILED" | "OVERDUE";
+export type SettlementStatus = "PENDING" | "PAID" | "OVERDUE" | "FAILED" | "CANCELED";
+
+export interface SettlementSummaryResponse {
+  totalAmount: number;
+  depositAmount: number;
+  successFeeAmount: number;
+  depositProjectCount: number;
+  successFeeProjectCount: number;
+}
 
 export interface SettlementResponse {
   settlementId: number;
+  settlementNo?: string;
   projectId: number;
   projectTitle: string;
+  contractId?: number;
+  payerRole?: "CLIENT" | "FREELANCER";
+  payerName?: string | null;
+  clientName?: string | null;
   phase: SettlementPhase;
   baseAmount: number;
   feeRate: number | string;
@@ -34,6 +47,7 @@ export interface SettlementResponse {
   paidAt?: string | null;
   paymentMethodLabel?: string | null;
   failReason?: string | null;
+  overdueReason?: string | null;
 }
 
 export interface AccountPaymentMethod {

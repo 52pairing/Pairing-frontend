@@ -1,5 +1,30 @@
 # STATE
 
+## 현재 작업 (2026-08-14 — 프리랜서 결제내역 API 연동)
+
+- 작업명: 프리랜서 마이페이지 결제내역 summary·PAID 목록 API 연동
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 진행 상황: 확정 탭 3개(전체/착수금/성공보수), 진입 시 summary 1회 조회, 탭별 `phase`와 `status=PAID` 목록 조회, 서버 페이지 이동, 로딩·빈 상태·실패 재시도 구현
+- 요약: 탭과 무관하게 `successFeeAmount`, `successFeeProjectCount` 고정 표시
+- 검증: 클라이언트·프리랜서 결제내역 Jest 2 suites/4 tests, 변경 파일 ESLint, TypeScript, `git diff --check` 통과
+- 실제 API·브라우저: 배포 Swagger에 summary 엔드포인트가 아직 없어 실제 응답 미검증
+
+---
+
+## 현재 작업 (2026-08-14 — 클라이언트 결제내역 API 연동)
+
+- 작업명: 클라이언트 마이페이지 결제내역 summary·PAID 목록 API 연동
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 진행 상황: 상단 summary 진입 1회 조회, 전체/착수금/성공보수 탭별 `phase` 및 `status=PAID` 목록 조회, 서버 페이지 이동, 로딩·빈 상태·실패 재시도 구현
+- 합계: 목록 `feeAmount`를 더하지 않고 탭별로 `summary.totalAmount`/`depositAmount`/`successFeeAmount` 사용
+- 2026-08-14 최종 가이드 대조: summary 프로젝트 수 필드 타입, KST 날짜 절삭, nullable 결제수단·프로젝트명, 서버 오류 메시지 토스트 반영
+- 검증: 관련 Jest 1 suite/2 tests, 변경 파일 ESLint, TypeScript, `git diff --check` 통과
+- 실제 API·브라우저: 로그인 테스트 세션 기반 확인 필요
+
+---
+
 ## 현재 작업 (2026-08-13 — 헤더·메인 사용자명 깜빡임 수정)
 
 - 작업명: 헤더·메인의 역할 기본값과 실제 사용자명이 번갈아 보이는 현상 수정
