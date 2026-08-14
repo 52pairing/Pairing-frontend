@@ -41,5 +41,6 @@ jobs:
       - name: Build
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://52pairing.kro.kr' }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
           NEXT_TELEMETRY_DISABLED: '1'
         run: npm run build

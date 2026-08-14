@@ -1,5 +1,16 @@
 # STATE
 
+## 현재 작업 (2026-08-14 — 검색 엔진 크롤링·사이트맵 설정)
+
+- 작업명: 사이트 공개 경로용 `robots.txt`와 `sitemap.xml` 메타데이터 라우트 추가
+- 관련 Issue: #187 — 브랜치명 기준
+- 관련 브랜치: `feature/common-seo#187`
+- 진행 상황: 공개 정적 페이지와 비공개·인증 경로를 분류해 `robots.txt`·`sitemap.xml` 구현 및 배포 빌드 환경변수 전달 완료
+- 검증: 변경 파일 ESLint, TypeScript, 프로덕션 빌드, 생성 결과 확인, `git diff --check` 통과
+- 배포 확인 필요: GitHub Repository Variable `NEXT_PUBLIC_SITE_URL`에 실제 프론트 운영 주소 등록 필요
+
+---
+
 ## 현재 작업 (2026-08-14 — 협상 조건 라벨 문구 변경)
 
 - 작업명: 협상 조건 카드의 `내 마지노선` 라벨을 `내 선택`으로 변경
