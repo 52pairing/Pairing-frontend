@@ -156,6 +156,12 @@ export interface NegotiationDetail {
    */
   agentState?: "RUNNING" | "FAILED" | "IDLE";
   conditions: NegotiationCondition[];
+  /**
+   * 결렬 사유 (가이드 3.12). status === "FAILED"일 때만 값이 있고, 타결(AGREED)은 null.
+   * 사용자가 직접 입력한 문장이 그대로 온다 — 화면에 그대로 텍스트로만 렌더링하고
+   * dangerouslySetInnerHTML 등으로 HTML 해석하지 말 것(XSS 경로).
+   */
+  endReason: string | null;
 }
 
 /**
