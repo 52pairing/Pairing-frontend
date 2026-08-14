@@ -73,4 +73,23 @@ describe("FreelancerProfile", () => {
     expect(agreementSwitch).toHaveAttribute("aria-checked", "false");
     expect(screen.getByText("AI 매칭에 동의해야 추천 대상에 포함됩니다.")).toBeInTheDocument();
   });
+
+  it("동의하지 않은 상태에서는 일시 중지 스위치를 비활성화한다", async () => {
+    mockedGetSettings.mockResolvedValue({ aiMatchingAgreed: false, matchingPaused: false, matchable: false, unmatchableReason: "AI 매칭에 동의해야 추천 대상에 포함됩니다." });
+
+    render(<FreelancerProfile />);
+
+    expect(await screen.findByText("AI 매칭에 동의해야 추천 대상에 포함됩니다.")).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "AI 매칭" })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: "AI 매칭 활용 동의" })).toBeEnabled();
+  });
+
+  it("일시 중지 변경 시 동의값을 포함한 두 필드를 모두 전송한다", async () => {
+    const user = userEvent.setup();
+    render(<FreelancerProfile />);
+
+    await user.click(await screen.findByRole("switch", { name: "AI 매칭" }));
+
+    await waitFor(() => expect(mockedUpdateSettings).toHaveBeenCalledWith({ aiMatchingAgreed: true, matchingPaused: true }));
+  });
 });
