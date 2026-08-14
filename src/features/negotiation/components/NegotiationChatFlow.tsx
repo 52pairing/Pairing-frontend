@@ -908,7 +908,7 @@ function ConditionActionPanel({
               {/* 내 마지노선 + 수정 */}
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-[10px] text-theme-muted">
-                  내 마지노선: {floorPrefix(condition.type)}
+                  내 선택: {floorPrefix(condition.type)}
                   {myFloorText || "미설정"}
                 </span>
                 {!isEditing ? (
