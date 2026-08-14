@@ -8,6 +8,7 @@ import { getChatRoomByNegotiation } from "@/features/chat/services/chatRooms";
 import { getClientProjectContracts } from "@/features/contract/services/clientContracts";
 import type { ProgressContract, ProjectProgressProps } from "@/features/client/myprojects/types/components";
 import { getContractDetail } from "@/features/contract/services/contracts";
+import { ProjectReviews } from "@/features/review/components/ProjectReviews";
 
 const STATUS_LABEL: Record<string, string> = {
   IN_PROGRESS: "진행중",
@@ -103,6 +104,7 @@ export function ProjectProgress({ project, jobRoleLabels, workStyleLabel }: Proj
         )}
       </div>
 
+      <div className="space-y-4">
       <aside className="rounded-[14px] border border-theme bg-surface px-7 py-6">
         <h2 className="text-[14px] font-bold text-theme-primary">프로젝트 정보</h2>
         <ProjectStatusStepper status={project.status} />
@@ -113,6 +115,8 @@ export function ProjectProgress({ project, jobRoleLabels, workStyleLabel }: Proj
           <InfoRow label="근무 방식" value={workStyleLabel} />
         </dl>
       </aside>
+      {project.status === "CLOSED" ? <ProjectReviews projectId={project.projectId} contractIds={contracts.map((contract) => contract.contractId)} /> : null}
+      </div>
     </section>
   );
 }

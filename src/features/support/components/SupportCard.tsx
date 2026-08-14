@@ -46,7 +46,7 @@ export function SupportCard({
         {description}
       </p>
 
-      <ul className="mt-4 space-y-2 text-[13px] font-medium text-theme-secondary">
+      <ul className="mt-4 space-y-2 pb-6 text-[13px] font-medium text-theme-secondary">
         {items.map((item) => (
           <li key={item} className="flex items-center gap-2">
             <CheckIcon className={`h-4 w-4 ${emphasis ? "text-theme-success" : "text-theme-muted"}`} />

@@ -2,6 +2,7 @@ import { apiCall } from "@/lib/api";
 import type {
   ClientProjectTab,
   ProjectPageResponse,
+  ProjectTabCount,
 } from "@/features/client/myprojects/types/projectList";
 
 interface GetMyProjectsParams {
@@ -28,3 +29,6 @@ export const completeProject = (projectId: number) =>
   apiCall<void>(`/api/v1/projects/${projectId}/completion`, {
     method: "POST",
   });
+
+export const getMyProjectTabCounts = () =>
+  apiCall<ProjectTabCount[]>("/api/v1/projects/mine/tab-counts");

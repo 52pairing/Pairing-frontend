@@ -8,6 +8,7 @@ import { logout } from "@/features/auth/services/logout";
 
 interface ProfileMenuProps {
   label: string;
+  isLoading?: boolean;
   myPageHref: string;
   profileManageHref?: string;
 }
@@ -15,6 +16,7 @@ interface ProfileMenuProps {
 // 클라이언트/프리랜서 Header에서 공통으로 사용하는 프로필 드롭다운
 export function ProfileMenu({
   label,
+  isLoading = false,
   myPageHref,
   profileManageHref,
 }: ProfileMenuProps) {
@@ -53,14 +55,20 @@ export function ProfileMenu({
     <div ref={menuRef} className="relative">
       <button
         type="button"
+        disabled={isLoading}
         onClick={() => setOpen((prev) => !prev)}
+        aria-label={isLoading ? "사용자 정보 불러오는 중" : undefined}
         aria-expanded={open}
-        className="flex h-10 items-center gap-2 rounded-md border border-theme bg-surface px-3 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle"
+        className="flex h-10 w-[140px] items-center gap-2 rounded-md border border-theme bg-surface px-3 text-sm font-semibold text-theme-secondary hover:bg-surface-subtle disabled:cursor-wait"
       >
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs text-white">
-          {initial}
+        <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs text-white ${isLoading ? "invisible" : "bg-brand"}`}>
+          {isLoading ? null : initial}
         </span>
-        <span>{label}</span>
+        {isLoading ? (
+          <span aria-hidden="true" className="min-w-0 flex-1" />
+        ) : (
+          <span className="min-w-0 flex-1 truncate text-left">{label}</span>
+        )}
         <span className="flex items-center">
           <Image
             src="/icons/ChevronDownIcon.svg"

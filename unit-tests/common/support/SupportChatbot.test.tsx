@@ -34,6 +34,7 @@ const mockGetMessages = jest.mocked(getChatbotMessages);
 const mockGetQuota = jest.mocked(getChatbotQuota);
 const mockGetSuggestions = jest.mocked(getSuggestedQuestions);
 const mockSendQuestion = jest.mocked(sendChatbotQuestion);
+const mockScrollIntoView = jest.fn();
 
 const setInitialSuccess = () => {
   mockGetSuggestions.mockResolvedValue([
@@ -54,11 +55,12 @@ describe("SupportChatbot", () => {
   beforeAll(() => {
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
       configurable: true,
-      value: jest.fn(),
+      value: mockScrollIntoView,
     });
   });
 
   beforeEach(() => {
+    mockScrollIntoView.mockClear();
     setInitialSuccess();
     mockUseCurrentUser.mockReturnValue({ role: "CLIENT" } as ReturnType<typeof useCurrentUser>);
   });
@@ -66,10 +68,16 @@ describe("SupportChatbot", () => {
   test("초기 데이터를 조회하고 추천 질문과 잔여 횟수를 표시한다", async () => {
     render(<SupportChatbot />);
 
+    expect(screen.getByRole("link", { name: "고객지원으로 돌아가기" })).toHaveAttribute("href", "/support");
     expect(screen.getByRole("status")).toHaveTextContent("오늘의 대화를 불러오고 있습니다.");
+    expect(screen.getByText("확인 중")).toBeInTheDocument();
+    expect(screen.getByText("/ 10회")).toBeInTheDocument();
+    expect(screen.queryByText("안녕하세요. 페어링 고객지원 챗봇입니다.")).not.toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "프로젝트 등록 방법을 알려주세요." })).toBeInTheDocument();
+    expect(screen.getByText("안녕하세요. 페어링 고객지원 챗봇입니다.")).toBeInTheDocument();
     expect(screen.getByText("4")).toBeInTheDocument();
     expect(screen.getByText("/ 10회")).toBeInTheDocument();
+    expect(mockScrollIntoView).toHaveBeenCalledWith({ behavior: "auto" });
     expect(mockGetSuggestions).toHaveBeenCalledTimes(1);
     expect(mockGetQuota).toHaveBeenCalledTimes(1);
     expect(mockGetMessages).toHaveBeenCalledTimes(1);

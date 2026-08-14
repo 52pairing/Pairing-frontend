@@ -1,4 +1,4 @@
-import { apiCall } from "@/lib/api";
+import { apiBlob, apiCall } from "@/lib/api";
 import type {
   ClientProjectDetailResponse,
   MatchingRequestPage,
@@ -7,6 +7,9 @@ import type {
 
 export const getClientProjectDetail = (projectId: number) =>
   apiCall<ClientProjectDetailResponse>(`/api/v1/projects/${projectId}`);
+
+export const downloadProjectFile = (projectId: number, fileId: number) =>
+  apiBlob(`/api/v1/projects/${projectId}/files/${fileId}/download`);
 
 export const updateClientProject = (
   projectId: number,
