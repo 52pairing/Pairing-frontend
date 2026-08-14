@@ -742,7 +742,7 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 #### 추가 클라리피케이션 (2차)
 
 - 협상 화면의 근무형태 토글(상주/혼합/재택)은 **`WORK_STYLE`** 이다. `WORK_FORM`(FULL_TIME/PART_TIME/ANY)은 **협상 화면에 안 나옴**. 혼합=`ANY`(`HYBRID` 보내면 거부).
-- 헤더 배지 3종은 소스가 다름: 말풍선=`GET /chat-rooms/unread-count`(미연동), 종=`GET /notifications/unread-count`, 카드 빨간점=매칭 `newProposalCount`.
+- 헤더 배지 3종은 소스가 다름: 말풍선=`GET /chat-rooms/unread-count`(2026-08-14 폴링 연동), 종=`GET /notifications/unread-count`, 카드 빨간점=매칭 `newProposalCount`.
 - (2026-08-13 갱신) 종 배지는 `frontend-notification-integration.md` 연동으로 실제 `unread-count`에 연결했습니다. **다만 협상 3종(`NEGOTIATION_STARTED/PROPOSED/FAILED`) 알림은 여전히 발행되지 않아** 협상이 시작·제안·결렬돼도 종 배지가 켜지지 않습니다. 협상 도메인에서 알림 발행 호출이 붙으면 프론트 수정 없이 반영됩니다. 상세는 아래 "알림" 절 참고.
 - 빨간점: 켜기=매칭 응답 `newProposalCount > 0`, 끄기=협상방 진입 시 `POST /negotiations/{id}/read`. (이미 반영)
 - 메시지에 `(stub)` 표기 = AI 서버 폴백 상태(상대 제시값 무조건 수락 → 1라운드 전조건 합의). 프론트 문제 아님, AWS 설정 후 자연어로 전환.
@@ -958,7 +958,10 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 읽음: `POST /api/v1/chat-rooms/{chatRoomId}/read` — 방 진입 및 열린 방에서 STOMP 메시지 수신 시 호출
 - 협상으로 방 조회: `GET /api/v1/chat-rooms/by-negotiation/{negotiationId}`
 - 나가기: `POST /api/v1/chat-rooms/{chatRoomId}/leave` (`leaveEnabled`가 true일 때만 후속 UI 노출)
-- 읽지 않은 전체 채팅 수: `GET /api/v1/chat-rooms/unread-count` (서비스만 추가, 헤더 연결은 후속)
+- 읽지 않은 전체 채팅 수: `GET /api/v1/chat-rooms/unread-count`, 응답 `{ unreadCount }` (2026-08-14 헤더 채팅 아이콘 배지에 연결)
+  - `useUnreadChatCount` 훅이 로그인 시 1회 조회 후 20초 폴링·창 포커스 복귀 시 재조회, 0이면 배지 숨김·99 초과 시 `99+`
+  - 채팅 STOMP는 방별 토픽이라 다른 화면의 전역 배지에는 쓸 수 없어 폴링 방식(백엔드 무변경) 선택
+  - 참고: 기준 문서(`frontend-chat-unread-badge.md`)는 `GET /api/v1/chats/unread-count` `{ unread }`로 안내하나 실제 코드는 `/chat-rooms/unread-count` `{ unreadCount }`라 실제 코드 기준으로 연동
 - 합의안: `GET /api/v1/contracts/by-negotiation/{negotiationId}`. `CT_001`이면 카드만 숨김
 - 실시간 구독: `/topic/chat-rooms/{chatRoomId}`. broadcast에는 `mine`이 없으므로 `/auth/me`의 `accountId`와 `senderId`를 비교하고 내 이벤트는 무시
 - 프로필 이미지가 null이면 이름 첫 글자 아바타 표시

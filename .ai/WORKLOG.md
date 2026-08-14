@@ -1,5 +1,18 @@
 # WORKLOG
 
+## 2026-08-14 — 헤더 채팅 아이콘 안읽음 배지
+
+- 상단 채팅 아이콘에 안 읽은 1:1 채팅 메시지 총합을 빨간 배지로 표시했습니다(알림 벨 배지와 동일 위치·스타일).
+- 안읽음 총합은 이미 구현·테스트되어 있던 `getChatUnreadCount`(`GET /api/v1/chat-rooms/unread-count`, `{ unreadCount }`)를 재사용했습니다. 기준 문서의 `GET /api/v1/chats/unread-count` `{ unread }`와는 경로·필드명이 달라 실제 코드 우선 원칙에 따라 코드 기준으로 연동했습니다.
+- 전역 갱신은 기준 문서 권장 A(폴링)로 구현: `useUnreadChatCount` 훅이 진입 시 1회 조회하고 20초 주기 폴링 및 창 포커스 복귀 시 재조회합니다. 채팅 STOMP는 방별 토픽이라 다른 화면에서는 전역 배지에 쓸 수 없어 폴링을 택했습니다(백엔드 무변경).
+- 배지 숫자는 0이면 숨기고 99 초과 시 `99+`로 표기합니다(채팅·알림 배지 공통).
+- 추가: `src/features/chat/hooks/useUnreadChatCount.ts`, `unit-tests/chat/useUnreadChatCount.test.tsx`
+- 변경: `Header.tsx`(훅 연결·`chatCount` 전달), `ClientHeader.tsx`·`FreelancerHeader.tsx`(배지 99+ 표기)
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과, 채팅 Jest 4 suites/18 tests(신규 훅 4 tests 포함) 통과
+- 한계·미검증: 채팅방을 읽어 안읽음이 0이 되어도 헤더 배지는 다음 폴링(≤20초) 또는 포커스 복귀 시 갱신됩니다(A안 트레이드오프). 즉시 실시간이 필요하면 기준 문서 B안(사용자별 채팅 브로드캐스트)의 백엔드 추가가 필요합니다. 실제 로그인·API·브라우저는 테스트 계정이 없어 미검증입니다.
+
+---
+
 ## 2026-08-14 — 검색 엔진 크롤링·사이트맵 설정
 
 - Next.js 메타데이터 라우트로 `/robots.txt`와 `/sitemap.xml`을 추가했습니다.

@@ -1,5 +1,22 @@
 # STATE
 
+## 현재 작업 (2026-08-14 — 헤더 채팅 아이콘 안읽음 배지)
+
+- 작업명: 상단 채팅 아이콘에 안 읽은 1:1 채팅 총합 배지 표시
+- 기준 문서: `C:/Users/user/Downloads/frontend-chat-unread-badge.md`
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 진행 상황: 폴링 기반 안읽음 총합 훅 추가, 헤더에 연결, 99+ 표기 적용
+- 기준 문서와 실제 코드 차이: 문서는 `GET /api/v1/chats/unread-count` `{ unread }`로 안내하나, 실제 코드에는 이미 `getChatUnreadCount`가 `GET /api/v1/chat-rooms/unread-count` `{ unreadCount }`로 구현·테스트되어 있어 실제 코드 기준으로 재사용
+- 실시간 전략: 문서 권장 A(폴링, 백엔드 무변경). 채팅 STOMP는 방별 토픽이라 전역 배지에 쓸 수 없어 20초 폴링 + 창 포커스 복귀 시 재조회
+- 추가 파일: `src/features/chat/hooks/useUnreadChatCount.ts`, `unit-tests/chat/useUnreadChatCount.test.tsx`
+- 변경 파일: `Header.tsx`(훅 연결), `ClientHeader.tsx`·`FreelancerHeader.tsx`(배지에 99+ 표기)
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과, 채팅 Jest 4 suites/18 tests(신규 훅 4 tests 포함) 통과
+- 한계: 채팅방을 읽어 안읽음이 0이 되어도 헤더 배지는 다음 폴링(≤20초) 또는 포커스 복귀 시 갱신됨(문서 A안 트레이드오프)
+- 실제 로그인·API·브라우저: 미검증(테스트 계정 없음)
+
+---
+
 ## 현재 작업 (2026-08-14 — 검색 엔진 크롤링·사이트맵 설정)
 
 - 작업명: 사이트 공개 경로용 `robots.txt`와 `sitemap.xml` 메타데이터 라우트 추가
