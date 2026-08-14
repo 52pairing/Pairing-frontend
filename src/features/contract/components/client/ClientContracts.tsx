@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ClientContractTabs, CLIENT_CONTRACT_TABS } from "@/features/contract/components/client/ClientContractTabs";
 import { ClientContractCard } from "@/features/contract/components/client/ClientContractCard";
 import { getAllClientContracts } from "@/features/contract/services/clientContracts";
+import { getContractTabCounts } from "@/features/contract/services/contracts";
 import type { ClientContractListItem, ClientContractTab } from "@/features/contract/types/clientContract";
 import { getProjectJobRoles } from "@/features/client/projects/services/projectPreReview";
 
@@ -13,9 +14,9 @@ const isContractTab = (value: string | null): value is ClientContractTab =>
   CLIENT_CONTRACT_TABS.some(({ tab }) => tab === value);
 
 const matchesTab = (contract: ClientContractListItem, tab: ClientContractTab) => {
-  if (tab === "CLIENT_PENDING") return !contract.clientSigned;
-  if (tab === "CLIENT_SIGNED") return contract.clientSigned && !contract.freelancerSigned;
-  if (tab === "ALL_SIGNED") return contract.clientSigned && contract.freelancerSigned;
+  if (tab === "AWAITING_ME") return contract.signatureRequired;
+  if (tab === "AWAITING_COUNTERPART") return contract.status === "SIGN_PENDING" && !contract.signatureRequired;
+  if (tab === "CONCLUDED") return ["SIGNED", "IN_PROGRESS", "COMPLETION_PENDING", "COMPLETED"].includes(contract.status);
   return true;
 };
 
@@ -28,17 +29,23 @@ export function ClientContracts() {
   const [jobRoleLabels, setJobRoleLabels] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [tabRows, setTabRows] = useState<Array<{ tab: ClientContractTab; label: string; count: number }>>([]);
 
   const loadContracts = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage("");
     try {
-      const [items, jobRoles] = await Promise.all([
+      const [items, jobRoles, countRows] = await Promise.all([
         getAllClientContracts(),
         getProjectJobRoles(),
+        getContractTabCounts().catch(() => []),
       ]);
       setContracts(items);
       setJobRoleLabels(Object.fromEntries(jobRoles.map((role) => [role.code, role.label])));
+      const clientTabs = new Set<ClientContractTab>(["ALL", "AWAITING_ME", "AWAITING_COUNTERPART", "CONCLUDED"]);
+      setTabRows(countRows.flatMap((row) => clientTabs.has(row.tab as ClientContractTab)
+        ? [{ tab: row.tab as ClientContractTab, label: row.label, count: row.count }]
+        : []));
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "계약 목록을 불러오지 못했습니다.");
     } finally {
@@ -68,7 +75,7 @@ export function ClientContracts() {
         <h1 className="text-[23px] font-bold tracking-[-0.6px] text-theme-primary">계약 관리</h1>
         <p className="mt-2 text-[12px] font-medium text-theme-secondary">프로젝트별 계약과 서명 진행 상태를 확인할 수 있습니다.</p>
 
-        <ClientContractTabs activeTab={activeTab} onTabChange={changeTab} />
+        <ClientContractTabs activeTab={activeTab} onTabChange={changeTab} rows={tabRows} />
 
         {errorMessage ? (
           <div role="alert" className="mt-6 flex h-[180px] flex-col items-center justify-center gap-3 rounded-[14px] border border-[#fda29b] bg-surface text-[12px] text-theme-danger"><p>{errorMessage}</p><button type="button" onClick={() => void loadContracts()} className="rounded-[8px] border border-[#b42318] px-4 py-2 font-bold">다시 시도</button></div>

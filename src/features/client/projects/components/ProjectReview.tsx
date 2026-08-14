@@ -119,7 +119,7 @@ export function ProjectReview() {
       {phase === "intro" ? (
         <>
           <ReviewHeader title="사전 검수">
-            등록 전 현재 프리랜서 풀을 기준으로 직무별 예상 후보 수와 매칭 가능성을 확인합니다.
+            등록 전 현재 프리랜서 풀을 기준으로 직무별 매칭 가능 인원과 매칭 가능성을 확인합니다.
           </ReviewHeader>
           <div className="mx-auto mt-6 max-w-[720px] rounded-[12px] border border-theme bg-[#fbfcfd] px-5 py-4">
             <p className="text-[11px] font-extrabold text-theme-primary">검수 항목</p>
@@ -141,7 +141,7 @@ export function ProjectReview() {
         <LoadingState
           size="lg"
           className="mt-8 py-12"
-          message={"사전 검수 진행 중\n현재 프리랜서 풀을 기준으로 예상 후보 수와 매칭 가능성을 분석하고 있습니다."}
+          message={"사전 검수 진행 중\n현재 프리랜서 풀을 기준으로 매칭 가능 인원과 매칭 가능성을 분석하고 있습니다."}
         />
       ) : null}
 
@@ -224,7 +224,7 @@ function ReviewHeader({ title, children }: { title: string; children: ReactNode 
 function ResultCard({ item, label }: { item: ProjectPreReviewResponse["items"][number]; label: string }) {
   const summary = (
     <p className="mt-1 text-[11px] text-theme-secondary">
-      모집 인원 {item.headcount}명 · 예상 후보 {item.expectedCandidateCount}명
+      모집 인원 {item.headcount}명 · 매칭 가능 인원 {item.expectedCandidateCount}명
       <span className={`ml-1 font-bold ${item.matchable ? "text-[#12b76a]" : "text-theme-danger"}`}>
         · {item.matchable ? "매칭 가능" : "후보 부족"}
       </span>

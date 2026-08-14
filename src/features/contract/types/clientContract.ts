@@ -3,7 +3,7 @@ import type { ContractListItem, ContractListPage } from "@/features/contract/typ
 export type ClientContractListItem = ContractListItem;
 export type ClientContractPage = ContractListPage;
 
-export type ClientContractTab = "ALL" | "CLIENT_PENDING" | "CLIENT_SIGNED" | "ALL_SIGNED";
+export type ClientContractTab = "ALL" | "AWAITING_ME" | "AWAITING_COUNTERPART" | "CONCLUDED";
 
 export interface ClientContractCardProps {
   contract: ClientContractListItem;
@@ -14,4 +14,5 @@ export interface ClientContractCardProps {
 export interface ClientContractTabsProps {
   activeTab: ClientContractTab;
   onTabChange: (tab: ClientContractTab) => void;
+  rows?: Array<{ tab: ClientContractTab; label: string; count: number }>;
 }

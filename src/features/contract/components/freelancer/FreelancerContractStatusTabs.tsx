@@ -12,11 +12,13 @@ export type FreelancerContractStatus =
 interface FreelancerContractStatusTabsProps {
   activeStatus: FreelancerContractStatus;
   onStatusChange: (status: FreelancerContractStatus) => void;
+  rows?: Partial<Record<FreelancerContractStatus, { label: string; count: number }>>;
 }
 
 export function FreelancerContractStatusTabs({
   activeStatus,
   onStatusChange,
+  rows = {},
 }: FreelancerContractStatusTabsProps) {
   return (
     <div className="mt-4 border-b border-theme">
@@ -36,7 +38,8 @@ export function FreelancerContractStatusTabs({
                   : "text-[#7d8899] hover:text-theme-secondary"
               }`}
             >
-              {status}
+              {rows[status]?.label ?? status}
+              {(rows[status]?.count ?? 0) > 0 ? <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[9px] font-bold text-white">{rows[status]?.count}</span> : null}
               {isActive ? (
                 <span className="absolute bottom-[-1px] left-0 h-[2px] w-full bg-[#15365d]" />
               ) : null}

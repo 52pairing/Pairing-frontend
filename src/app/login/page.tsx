@@ -7,6 +7,7 @@ import { UnlockAccountModal } from "@/features/auth/components/UnlockAccountModa
 import { useSocialLoginStart } from "@/features/auth/hooks/useSocialLoginStart";
 import { login } from "@/features/auth/services/login";
 import { LoginRole } from "@/features/auth/types";
+import { reactivateStomp } from "@/features/negotiation/stomp/client";
 import { useToast } from "@/features/common/hooks/useToast";
 import { ApiException } from "@/lib/api";
 import Image from "next/image";
@@ -69,6 +70,9 @@ function LoginPageContent() {
 
     try {
       const result = await login({ email, password, role });
+
+      // 로그인 전(쿠키 없음) 핸드셰이크가 거절돼 죽은 STOMP 소켓을 새 쿠키로 되살린다.
+      await reactivateStomp();
 
       if (result.tempPassword) {
         router.push("/login/findpassword/reset");

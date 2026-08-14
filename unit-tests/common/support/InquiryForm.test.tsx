@@ -41,6 +41,7 @@ describe("InquiryForm", () => {
   test("필수값을 입력해야 문의 접수 버튼을 활성화한다", async () => {
     const user = userEvent.setup();
     render(<InquiryForm />);
+    expect(screen.getByRole("link", { name: "1대1 문의로 돌아가기" })).toHaveAttribute("href", "/support/inquiries");
     const submit = screen.getByRole("button", { name: "문의 접수" });
     expect(submit).toBeDisabled();
 

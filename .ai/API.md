@@ -1,5 +1,26 @@
 # API
 
+## 프로젝트·계약 후속 연동 (2026-08-13)
+
+- 프로젝트 첨부 다운로드: `GET /api/v1/projects/{projectId}/files/{fileId}/download`
+  - `apiBlob`으로 요청하며 상세 응답의 `files[].originalName`을 저장 파일명으로 사용
+  - `fileUrl`은 미리보기 전용이며 다운로드에는 사용하지 않음
+  - `PJ_003`, `ACCESS_DENIED`(403), `FI_001`(404)는 공통 `ApiException` 메시지를 화면에 표시
+- 작성 리뷰: `GET /api/v1/reviews/written?page={page}&size=10`
+  - 전체 페이지를 조회한 뒤 프로젝트 계약 목록의 `contractId` 집합으로 필터링
+- 작성 대기 리뷰: `GET /api/v1/reviews/pending`
+  - 프로젝트 계약의 `contractId`와 일치하는 항목에 리뷰 작성 링크 표시
+  - 리뷰 작성 가능 여부를 프로젝트 상태로 계산하지 않음
+- 내 프로젝트 탭 건수: `GET /api/v1/projects/mine/tab-counts`
+  - 서버의 `tab`, `label`, `count` 사용, 0건 배지 숨김
+- 내 계약 탭 건수: `GET /api/v1/contracts/mine/tab-counts`
+  - 클라이언트는 `ALL`, `AWAITING_ME`, `AWAITING_COUNTERPART`, `CONCLUDED` 사용
+  - 프리랜서는 `ALL`, `AWAITING_ME`, `IN_PROGRESS`, `SETTLEMENT_PENDING`, `COMPLETED` 사용
+  - 신규 API 미배포 시 기존 목록을 유지하고 배지만 숨김
+- 실제 로그인 쿠키 기반 성공·오류 응답 및 파일 저장: 미검증
+
+---
+
 프론트에서 실제 사용하는 API와 검증 상태를 기록합니다.
 
 ## 프로젝트 도메인 기준 문서
@@ -954,5 +975,35 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - STOMP broadcast도 내 메시지를 제외하지 않고 `senderId === /auth/me.accountId`로 `mine`을 계산한 뒤 `messageId`로 REST 응답과 중복 제거
 - 실제 채팅 오류: `CH_001` 방 없음, `CH_002` 비당사자, `CH_003` 입력 비활성, `CH_004` 나가기 불가, `CH_005` 이미 나간 방
 - `GET /api/v1/chat-rooms`: PostgreSQL 파라미터 타입 추론 서버 오류 수정·배포 완료, 운영 응답 200 및 채팅방 9건 확인
+
+---
+## 클라이언트 마이페이지 결제내역 (2026-08-14)
+
+- 화면: `/client/mypage/payments`
+- `GET /api/v1/settlements/mine/summary`
+  - 파라미터 없음, 화면 진입 시 1회 조회하며 탭 변경 시 재조회하지 않음
+  - 응답: `{ totalAmount, depositAmount, successFeeAmount, depositProjectCount, successFeeProjectCount }`
+  - 상단 카드와 탭별 조회 기간 합계는 summary 필드를 사용하며 페이지 목록의 `feeAmount`를 합산하지 않음
+- `GET /api/v1/settlements/mine?status=PAID&page=0&size=10`
+  - 전체 탭은 `phase`를 보내지 않음
+  - 착수금 탭은 `phase=DEPOSIT`, 성공보수 탭은 `phase=SUCCESS_FEE`
+  - `status=PAID` 고정
+  - 표시 필드: `paidAt`, `projectTitle`, `settlementNo`, `phase`, `feeAmount`, `paymentMethodLabel`
+  - `paidAt`은 서버 KST `LocalDateTime`의 앞 10자리를 날짜로 표시하며, `paymentMethodLabel`이 null이면 해당 칸만 비움
+  - `settlementNo`는 `ST-YYYY-NNNNNN` 형식이며 영수증 버튼은 제공하지 않음
+- enum: `SettlementPhase = DEPOSIT | SUCCESS_FEE`, `SettlementStatus = PENDING | PAID | OVERDUE | FAILED | CANCELED`
+- 실제 로그인 세션 기반 성공·오류 응답: 미검증
+
+---
+
+## 프리랜서 마이페이지 결제내역 (2026-08-14)
+
+- 화면: `/freelancer/mypage/payments`
+- 클라이언트와 동일한 `GET /api/v1/settlements/mine/summary`, `GET /api/v1/settlements/mine` 사용
+- summary는 진입 시 1회 조회하고 탭과 무관하게 `successFeeAmount`, `successFeeProjectCount`를 고정 표시
+- 목록은 전체(phase 없음), 착수금(`DEPOSIT`), 성공보수(`SUCCESS_FEE`) 탭과 `status=PAID&page={page}&size=10`으로 조회
+- 목록 표시: `projectTitle`, `clientName`, `paymentMethodLabel`, `paidAt`, `feeAmount`, `status`
+- 회사명은 `payerName`이 아닌 `clientName` 사용
+- 실제 API: 배포 Swagger에 summary 경로가 없어 미검증
 
 ---

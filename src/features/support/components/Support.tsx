@@ -1,48 +1,28 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
+import type { CurrentUserResponse } from "@/features/auth/types";
 import { Header } from "@/features/common/components/header/Header";
 
-import { getChatbotQuota } from "../services/support";
 import { SupportCard } from "./SupportCard";
 import { BotIcon, ChatIcon, InfoIcon } from "./SupportIcons";
 
-function getQuotaLabel(dailyLimit: number | null, loadFailed: boolean) {
-  if (loadFailed) return "무료 이용 한도 확인 필요";
-  if (dailyLimit === null) return "무료 이용 한도 확인 중";
-  return `하루 최대 ${dailyLimit}회 무료 이용`;
+const CHATBOT_DAILY_LIMIT_LABEL = "하루 최대 10회 무료 이용";
+
+interface SupportProps {
+  // 서버에서 미리 조회한 로그인 사용자 (헤더 깜빡임 방지용)
+  initialUser?: CurrentUserResponse | null;
 }
 
-export function Support() {
-  const [dailyLimit, setDailyLimit] = useState<number | null>(null);
-  const [quotaLoadFailed, setQuotaLoadFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getChatbotQuota()
-      .then((quota) => {
-        if (!cancelled) setDailyLimit(quota.dailyLimit);
-      })
-      .catch(() => {
-        if (!cancelled) setQuotaLoadFailed(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const quotaLabel = getQuotaLabel(dailyLimit, quotaLoadFailed);
-
+export function Support({ initialUser = null }: SupportProps) {
   const supportOptions = [
     {
       title: "FAQ 챗봇",
       caption: "AI 자동 응답 · 즉시 이용 가능",
       description:
         "페어링 이용 방법과 정책에 대해 AI 챗봇에게 질문할 수 있습니다.",
-      items: ["이용 방법 및 절차 안내", "수수료·정책 관련 문의", quotaLabel],
+      items: [
+        "이용 방법 및 절차 안내",
+        "수수료·정책 관련 문의",
+        CHATBOT_DAILY_LIMIT_LABEL,
+      ],
       actionLabel: "챗봇 시작하기",
       actionHref: "/support/chatbot",
       emphasis: true,
@@ -65,7 +45,7 @@ export function Support() {
 
   return (
     <>
-      <Header role="guest" />
+      <Header role="guest" initialUser={initialUser} />
       <main className="flex-1 bg-background px-5 pb-24 pt-12 text-theme-primary sm:px-8 sm:pt-16">
         <div className="mx-auto w-full max-w-[750px]">
           <h1 className="text-[28px] font-extrabold tracking-[-0.04em]">

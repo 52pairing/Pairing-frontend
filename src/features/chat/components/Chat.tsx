@@ -119,7 +119,7 @@ export function Chat() {
 
   return (
     <div className="h-[calc(100vh-60px)] overflow-hidden bg-background p-4 text-theme-primary sm:px-6">
-      <section className="mx-auto flex h-full max-w-[1440px] overflow-hidden rounded-xl border border-theme bg-surface shadow-sm">
+      <section className="mx-auto flex h-full max-w-[1200px] overflow-hidden rounded-xl border border-theme bg-surface shadow-sm">
         <ConversationList rooms={rooms} selectedId={selectedId} isLoading={isLoading} onSelect={setSelectedId} onRetry={() => void loadRooms()} />
         <div className="flex min-w-0 flex-1 flex-col">
           {errorMessage ? <p role="alert" className="border-b border-theme bg-danger-surface px-5 py-2 text-xs text-theme-danger">{errorMessage}</p> : null}
@@ -161,7 +161,7 @@ function NegotiationSummary({ contract, negotiation }: { contract: ContractDetai
     ["근무 방식", WORK_STYLE_LABEL[contract.workStyle] ?? contract.workStyle],
     ["근무 형태", WORK_FORM_LABEL[contract.workForm] ?? contract.workForm],
   ];
-  return <section className="shrink-0 border-b border-theme bg-surface-subtle px-5 py-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-xs font-bold text-brand">최종 합의안</h3><div className="flex items-center gap-2 text-[10px] text-theme-muted">{negotiation?.aiOutAt ? <span>AI 협상 종료 {formatTime(negotiation.aiOutAt)}</span> : null}<span className="rounded-full bg-success-surface px-2 py-1 font-bold text-theme-success">타결</span></div></div><dl className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">{items.map(([label, value]) => <div key={label}><dt className="text-[10px] text-theme-muted">{label}</dt><dd className="mt-1 text-xs font-bold">{value}</dd></div>)}</dl>{contract.specialTerms ? <div className="mt-3"><p className="text-[10px] font-bold text-brand">특약사항</p><p className="mt-1 whitespace-pre-line text-[11px] leading-5 text-theme-secondary">{contract.specialTerms}</p></div> : null}</section>;
+  return <section className="mx-4 mt-4 shrink-0 rounded-xl border border-theme bg-surface-subtle px-5 py-4"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-xs font-bold text-brand">최종 합의안</h3><div className="flex items-center gap-2 text-[10px] text-theme-muted">{negotiation?.aiOutAt ? <span>AI 협상 종료 {formatTime(negotiation.aiOutAt)}</span> : null}<span className="rounded-full bg-success-surface px-2 py-1 font-bold text-theme-success">타결</span></div></div><dl className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">{items.map(([label, value]) => <div key={label}><dt className="text-[10px] text-theme-muted">{label}</dt><dd className="mt-1 text-xs font-bold">{value}</dd></div>)}</dl>{contract.specialTerms ? <div className="mt-3"><p className="text-[10px] font-bold text-brand">특약사항</p><p className="mt-1 whitespace-pre-line text-[11px] leading-5 text-theme-secondary">{contract.specialTerms}</p></div> : null}</section>;
 }
 
 const WORK_STYLE_LABEL: Record<string, string> = { REMOTE: "재택", ONSITE: "상주", ANY: "혼합" };

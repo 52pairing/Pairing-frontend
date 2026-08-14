@@ -17,14 +17,20 @@ import {
 } from "@/features/notification/services/notification";
 import { useNotificationStream } from "@/features/notification/stomp/useNotificationStream";
 import type { NotificationItem } from "@/features/notification/types/notification";
+import type { CurrentUserResponse } from "@/features/auth/types";
 import { ApiException } from "@/lib/api";
 
 const PAGE_SIZE = 20;
 
-export function Notifications() {
+interface NotificationsProps {
+  // 서버에서 미리 조회한 로그인 사용자 (헤더 깜빡임 방지용)
+  initialUser?: CurrentUserResponse | null;
+}
+
+export function Notifications({ initialUser = null }: NotificationsProps) {
   const router = useRouter();
   const toast = useToast();
-  const user = useCurrentUser();
+  const user = useCurrentUser(initialUser);
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [status, setStatus] = useState<"loading" | "error" | "ready">(
@@ -164,7 +170,10 @@ export function Notifications() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header role={user?.role === "FREELANCER" ? "freelancer" : "client"} />
+      <Header
+        role={user?.role === "FREELANCER" ? "freelancer" : "client"}
+        initialUser={initialUser}
+      />
       <main className="flex-1 px-5 pb-20 pt-10 sm:px-8 sm:pt-12">
         <section
           className="mx-auto w-full max-w-[700px]"

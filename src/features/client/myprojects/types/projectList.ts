@@ -42,3 +42,10 @@ export interface ProjectPageResponse {
   first: boolean;
   last: boolean;
 }
+
+export interface ProjectTabCount {
+  tab: ClientProjectTab;
+  status: null;
+  label: string;
+  count: number;
+}
