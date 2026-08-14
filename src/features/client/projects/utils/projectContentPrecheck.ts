@@ -16,6 +16,7 @@ const PRIVACY_LABEL: Record<PrivacyCandidate["type"], string> = {
   email: "이메일 주소",
   phone: "전화번호",
   account: "계좌번호로 보이는 숫자",
+  rrn: "주민등록번호로 보이는 숫자",
 };
 
 const ELABORATION_PATTERNS = [
@@ -92,9 +93,8 @@ export function runProjectContentPrecheck(input: {
         description: "짧아도 구체적일 수 있으므로 참고용으로만 안내합니다.",
         questions: ["담당 범위와 제외 범위 또는 완료 기준을 덧붙일 수 있나요?"],
       });
-    }
-
-    if (!hasElaborationDetail(detailScope)) {
+    } else if (!hasElaborationDetail(detailScope)) {
+      // 이미 '짧음' 안내가 나갔다면 구체화 안내를 중복으로 표시하지 않는다.
       findings.push({
         id: "elaboration-detailScope",
         kind: "elaboration",

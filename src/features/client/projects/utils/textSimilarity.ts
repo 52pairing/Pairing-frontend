@@ -18,8 +18,9 @@ export function calculateTextOverlap(left: string, right: string) {
   if (normalizedLeft === normalizedRight) return 1;
 
   const leftBigrams = bigrams(normalizedLeft);
+  const rightBigrams = bigrams(normalizedRight);
   const rightCounts = new Map<string, number>();
-  for (const value of bigrams(normalizedRight)) {
+  for (const value of rightBigrams) {
     rightCounts.set(value, (rightCounts.get(value) ?? 0) + 1);
   }
 
@@ -31,7 +32,7 @@ export function calculateTextOverlap(left: string, right: string) {
     rightCounts.set(value, count - 1);
   }
 
-  return (2 * intersection) / (leftBigrams.length + bigrams(normalizedRight).length);
+  return (2 * intersection) / (leftBigrams.length + rightBigrams.length);
 }
 
 export function isLikelyRepeatedText(left: string, right: string) {

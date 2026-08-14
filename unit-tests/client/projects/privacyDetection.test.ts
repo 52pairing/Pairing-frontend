@@ -36,4 +36,19 @@ describe("detectPrivacyCandidates", () => {
 
     expect(result).toEqual([]);
   });
+
+  test("주민등록번호 후보를 탐지하고 원문 없이 전부 마스킹한다", () => {
+    const result = detectPrivacyCandidates(
+      "detailScope",
+      "본인 확인용 주민번호 900101-1234567 첨부 바랍니다.",
+    );
+
+    expect(result).toContainEqual({
+      type: "rrn",
+      field: "detailScope",
+      maskedValue: "******-*******",
+    });
+    expect(JSON.stringify(result)).not.toContain("900101");
+    expect(JSON.stringify(result)).not.toContain("1234567");
+  });
 });

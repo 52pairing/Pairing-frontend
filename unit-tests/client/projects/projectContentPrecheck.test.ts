@@ -51,6 +51,21 @@ describe("runProjectContentPrecheck", () => {
     expect(JSON.stringify(result)).not.toContain("dev@example.com");
   });
 
+  test("짧은 상세 범위는 짧음 안내만 표시하고 구체화 안내를 중복하지 않는다", () => {
+    const result = runProjectContentPrecheck({
+      mainTask: "주문과 결제 API를 설계하고 구현합니다.",
+      detailScope: "소셜 로그인",
+    });
+
+    const detailFindings = result.findings.filter(
+      (finding) => finding.field === "detailScope",
+    );
+    expect(detailFindings.some((finding) => finding.kind === "short")).toBe(true);
+    expect(detailFindings.some((finding) => finding.kind === "elaboration")).toBe(
+      false,
+    );
+  });
+
   test("상세 범위에 테스트·제외 범위·역할 분담이 있으면 구체화 안내를 생략한다", () => {
     const result = runProjectContentPrecheck({
       mainTask: "주문과 결제 API를 개발하고 안정적인 오류 처리를 구현합니다.",

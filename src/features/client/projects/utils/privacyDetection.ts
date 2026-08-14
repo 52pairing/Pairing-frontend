@@ -5,6 +5,7 @@ import type {
 
 const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const PHONE_PATTERN = /(?<!\d)01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}(?!\d)/g;
+const RRN_PATTERN = /(?<!\d)\d{6}[-\s]?[1-4]\d{6}(?!\d)/g;
 const ACCOUNT_CONTEXT_PATTERN =
   /(?:계좌(?:번호)?|입금|은행)[^\d\n]{0,12}(\d(?:[\d -]{8,18}\d))/g;
 const GROUPED_NUMBER_PATTERN = /(?<!\d)\d{2,6}(?:-\d{2,6}){2,4}(?!\d)/g;
@@ -23,6 +24,9 @@ const maskPhone = (value: string) => {
 };
 
 const maskAccount = (value: string) => `****-****-${digitsOnly(value).slice(-4)}`;
+
+// 주민등록번호는 생년월일·성별·일련번호가 모두 민감하므로 존재만 알리고 전부 마스킹한다.
+const maskRRN = () => "******-*******";
 
 const isLikelyAccount = (value: string) => {
   const digits = digitsOnly(value);
@@ -48,6 +52,12 @@ export function detectPrivacyCandidates(
   for (const match of text.matchAll(PHONE_PATTERN)) {
     const value = match[0];
     candidates.push({ type: "phone", field, maskedValue: maskPhone(value) });
+    occupied.add(value);
+  }
+
+  for (const match of text.matchAll(RRN_PATTERN)) {
+    const value = match[0];
+    candidates.push({ type: "rrn", field, maskedValue: maskRRN() });
     occupied.add(value);
   }
 
