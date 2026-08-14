@@ -6,7 +6,8 @@ export interface FreelancerProjectCardProps {
   id: string;
   title: string;
   state: FreelancerProjectState;
-  result?: "응답 기한 마감" | "거절함";
+  result?: string;
+  resultNote?: string;
   notice?: string;
   deadline?: string;
   aiMatch?: number;
@@ -26,6 +27,7 @@ export interface FreelancerProjectCardProps {
     duration: string;
     workType: string;
     headcount: string;
+    note: string;
   };
   onReject?: () => void;
   onAccept?: () => void;
@@ -55,9 +57,11 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
               <Badge tone={props.result === "거절함" ? "danger" : "neutral"}>
                 {props.result}
               </Badge>
-              <span className="text-[11px] font-medium text-[#b2bac5]">
-                이 프로젝트에는 다시 지원할 수 없습니다
-              </span>
+              {props.resultNote ? (
+                <span className="text-[11px] font-medium text-[#b2bac5]">
+                  {props.resultNote}
+                </span>
+              ) : null}
             </>
           ) : null}
         </div>
@@ -135,7 +139,7 @@ export function FreelancerProjectCard(props: FreelancerProjectCardProps) {
             <ProjectInfo label="모집 인원" value={props.proposedTerms.headcount} />
           </dl>
           <p className="mt-2.5 border-t border-theme pt-2.5 text-[10px] font-semibold text-[#12a150]">
-            ✅ 수락 완료 · 상대방이 확인했습니다
+            {props.proposedTerms.note}
           </p>
         </section>
       ) : null}
