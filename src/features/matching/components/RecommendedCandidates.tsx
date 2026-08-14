@@ -79,6 +79,7 @@ export function RecommendedCandidates({
       if (sequence !== requestSequence.current) return;
       setCandidateList(response);
       setSelectedIds([]);
+      setIsRerecommending(response.preparing);
     } catch (error) {
       if (sequence !== requestSequence.current) return;
       setCandidateList(null);
@@ -195,10 +196,14 @@ export function RecommendedCandidates({
         <div className="flex min-h-48 items-center justify-center text-[12px] font-semibold text-theme-secondary">추천 후보를 불러오고 있습니다.</div>
       ) : candidateList ? (
         <>
+          {candidateList.preparing && candidateList.candidates.length === 0 ? (
+            <div className="mt-5 flex min-h-48 flex-col items-center justify-center rounded-xl border border-theme bg-surface px-5 text-center"><span className="h-5 w-5 animate-spin rounded-full border-2 border-brand border-t-transparent" aria-hidden="true" /><p className="mt-3 text-[12px] font-semibold text-theme-secondary">새 추천 후보를 만들고 있습니다. 잠시만 기다려 주세요.</p></div>
+          ) : <>
+          {candidateList.preparing ? <p role="status" className="mt-4 rounded-[10px] border border-[#c9dcfa] bg-[#eef6ff] px-4 py-3 text-[11px] font-semibold text-theme-secondary">새 추천 후보를 만들고 있습니다. 잠시만 기다려 주세요.</p> : null}
           <CandidateWarnings candidateList={candidateList} />
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <p className="text-[11px] font-semibold text-theme-secondary">선택: <strong className="text-theme-primary">{selectedIds.length}/{candidateList.headcount}명</strong><span className="ml-4 text-theme-muted">현재 {candidateList.roundNo}회차 추천</span></p>
-            <div className="flex gap-2"><button type="button" disabled={!candidateList.freeRerecommendAvailable || isRerecommending} onClick={() => void requestFreeRerecommendation()} className="h-10 rounded-[8px] border border-theme px-4 text-[11px] font-bold disabled:opacity-40">{isRerecommending ? "추천 중" : "무료 재추천"}</button><Link href={`/client/projects/${projectId}/candidatereroll?positionId=${candidateList.positionId}`} className="flex h-10 items-center rounded-[8px] border border-brand px-4 text-[11px] font-bold text-brand">유료 재추천 ({candidateList.paidRerecommendRemaining}회)</Link><button type="button" disabled={selectedIds.length === 0 || isProcessing} onClick={() => void sendRequests()} className="h-10 rounded-[8px] bg-brand px-5 text-[11px] font-bold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-[#aeb9c7]">{isProcessing ? "처리 중..." : `선택한 후보에게 요청 (${selectedIds.length})`}</button></div>
+            <div className="flex gap-2"><button type="button" disabled={!candidateList.freeRerecommendAvailable || isRerecommending} onClick={() => void requestFreeRerecommendation()} className="h-10 rounded-[8px] border border-theme px-4 text-[11px] font-bold disabled:opacity-40">{isRerecommending ? "추천 후보를 찾고 있어요" : "무료 재추천"}</button>{isRerecommending ? <span className="flex h-10 items-center rounded-[8px] border border-theme px-4 text-[11px] font-bold text-theme-muted">재추천 진행 중</span> : <Link href={`/client/projects/${projectId}/candidatereroll?positionId=${candidateList.positionId}`} className="flex h-10 items-center rounded-[8px] border border-brand px-4 text-[11px] font-bold text-brand">유료 재추천 ({candidateList.paidRerecommendRemaining}회)</Link>}<button type="button" disabled={selectedIds.length === 0 || isProcessing} onClick={() => void sendRequests()} className="h-10 rounded-[8px] bg-brand px-5 text-[11px] font-bold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-[#aeb9c7]">{isProcessing ? "처리 중..." : `선택한 후보에게 요청 (${selectedIds.length})`}</button></div>
           </div>
 
           {candidateList.candidates.length === 0 ? (
@@ -210,6 +215,7 @@ export function RecommendedCandidates({
               ))}
             </div>
           )}
+          </>}
         </>
       ) : (
         <div className="mt-5 flex min-h-40 flex-col items-center justify-center gap-3 rounded-xl border border-theme bg-surface">

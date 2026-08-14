@@ -31,6 +31,7 @@ export interface CandidateListResponse {
   paidRerecommendRemaining: number;
   lowScoreWarned: boolean;
   budgetWarned: boolean;
+  preparing: boolean;
   candidates: CandidateResponse[];
 }
 

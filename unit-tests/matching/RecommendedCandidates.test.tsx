@@ -29,6 +29,7 @@ const candidateList: CandidateListResponse = {
   paidRerecommendRemaining: 5,
   lowScoreWarned: true,
   budgetWarned: true,
+  preparing: false,
   candidates: [
     {
       candidateId: 101,
@@ -132,5 +133,26 @@ describe("RecommendedCandidates", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/프리랜서를 모두 추천해/)).not.toBeInTheDocument();
+  });
+
+  it("preparing 중 후보가 없을 때만 전체 로딩 화면을 표시한다", async () => {
+    mockedGetCandidates.mockResolvedValue({ ...candidateList, preparing: true, candidates: [] });
+
+    render(<RecommendedCandidates {...defaultProps} />);
+
+    expect(await screen.findByText("새 추천 후보를 만들고 있습니다. 잠시만 기다려 주세요.")).toBeInTheDocument();
+    expect(screen.queryByText("선택:")).not.toBeInTheDocument();
+    expect(screen.queryByText("현재 추천할 수 있는 프리랜서가 없습니다. 잠시 후 다시 확인하거나 프로젝트 조건을 조정해 주세요.")).not.toBeInTheDocument();
+  });
+
+  it("preparing 중 기존 후보가 있으면 목록을 유지하고 배너만 표시한다", async () => {
+    mockedGetCandidates.mockResolvedValue({ ...candidateList, preparing: true });
+
+    render(<RecommendedCandidates {...defaultProps} />);
+
+    expect(await screen.findByText("김개발")).toBeInTheDocument();
+    expect(screen.getByText("새 추천 후보를 만들고 있습니다. 잠시만 기다려 주세요.")).toBeInTheDocument();
+    expect(screen.getByText("재추천 진행 중")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "추천 후보를 찾고 있어요" })).toBeDisabled();
   });
 });
