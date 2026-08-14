@@ -63,7 +63,8 @@ export type NegotiationEventType =
   | "FAILED"
   // 비동기 A2A 전환으로 추가된 이벤트
   | "AGENT_RUNNING" // 대리인이 돌기 시작(제출 즉시)
-  | "AGENT_FAILED"; // 대리인 호출 실패, 라운드 안 오름
+  | "AGENT_FAILED" // 대리인 호출 실패, 라운드 안 오름
+  | "FINAL_OFFER"; // 최종 절충 단계 진입 / 한쪽 수락으로 상태 변경
 
 /**
  * `/topic/negotiations/{negotiationId}` 로 수신하는 실시간 이벤트 payload.
@@ -105,6 +106,8 @@ export interface NegotiationCondition {
    * 응답에 없을 수 있어(배포 시점차) optional. 없으면 type 으로 추정한다.
    */
   floorComparison?: "RANGE" | "CHOICE" | "NONE";
+  /** 최종 절충값 (finalOffer=true 인 미합의 조건에만 채워짐). 그 외 null */
+  compromiseValue?: string | null;
 }
 
 /**
@@ -155,6 +158,12 @@ export interface NegotiationDetail {
    * 배포되면 RUNNING 동안 GET 폴링(2~3s) + 라벨 우선순위에 반영 필요.
    */
   agentState?: "RUNNING" | "FAILED" | "IDLE";
+  /** 최종 절충(Final Compromise) 단계 여부. true 면 status 는 IN_PROGRESS 유지 */
+  finalOffer?: boolean;
+  /** 최종 절충안을 내가 수락했는가 (true 면 내 수락 버튼 비활성 + 상대 대기) */
+  myFinalAccepted?: boolean;
+  /** 최종 절충안을 상대가 수락했는가 */
+  counterpartFinalAccepted?: boolean;
   conditions: NegotiationCondition[];
   /**
    * 결렬 사유 (가이드 3.12). status === "FAILED"일 때만 값이 있고, 타결(AGREED)은 null.
@@ -184,6 +193,8 @@ export interface NegotiationListItem {
   lastProposalAt: string | null;
   startedAt: string | null;
   endedAt: string | null;
+  /** 최종 절충 단계면 true — 카드에 라운드 배지 대신 "최종 절충" 표시 */
+  finalOffer?: boolean;
 }
 
 /** 공통 페이지 응답 형태 (GET /negotiations/mine) */

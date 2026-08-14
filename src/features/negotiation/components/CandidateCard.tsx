@@ -45,9 +45,13 @@ export function CandidateCard({ item, projectId }: CandidateCardProps) {
           </div>
 
           <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-theme-muted">
-            <span>
-              라운드 {item.totalRound}/{DEFAULT_MAX_ROUND}
-            </span>
+            {item.finalOffer ? (
+              <span className="font-bold text-[#b54708]">최종 절충</span>
+            ) : (
+              <span>
+                라운드 {item.totalRound}/{DEFAULT_MAX_ROUND}
+              </span>
+            )}
             {item.lastProposalAt ? (
               <span>
                 마지막 제안: {proposalByLabel(item.lastProposalBy)} ·{" "}

@@ -14,6 +14,7 @@ import {
   getNegotiation,
   getNegotiationMessages,
   getWorkConditionsMeta,
+  acceptFinalOffer,
   giveUpNegotiation,
   markNegotiationRead,
   startNegotiation,
@@ -167,6 +168,7 @@ export function NegotiationRoom() {
         case "AGREED":
         case "FAILED":
         case "AGENT_FAILED": // 실패 안내가 SYSTEM 메시지로 저장됨 → 메시지도 재조회
+        case "FINAL_OFFER": // 최종 절충 진입/한쪽 수락 → 상세 재조회로 화면 전환
           void refreshDetail();
           void refreshMessages();
           break;
@@ -297,6 +299,23 @@ export function NegotiationRoom() {
     }
   }, [negotiationId, isSubmitting, refreshDetail]);
 
+  // 최종 절충안 수락(바디 없음). 응답 data 로 상태 교체 → status 로 타결/상대대기 분기.
+  const handleAcceptFinalOffer = useCallback(async () => {
+    if (!negotiationId || isSubmitting) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      setDetail(await acceptFinalOffer(negotiationId));
+    } catch (error) {
+      setActionError(
+        error instanceof ApiException ? error.message : "수락에 실패했습니다.",
+      );
+      await refreshDetail();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [negotiationId, isSubmitting, refreshDetail]);
+
   // 대리인 실패(AGENT_FAILED) 재시도: 라운드가 안 올랐으므로 내 마지노선(myFloor)으로 start 재호출 = 재시도.
   const handleRetryAgent = useCallback(async () => {
     if (!negotiationId || !detail) return;
@@ -386,6 +405,7 @@ export function NegotiationRoom() {
           onSubmitAnswers={handleSubmitAnswers}
           onUpdateFloor={handleUpdateFloor}
           onRetryAgent={() => void handleRetryAgent()}
+          onAcceptFinalOffer={() => void handleAcceptFinalOffer()}
           onGiveUp={() => setIsCancelOpen(true)}
           isSubmitting={isSubmitting}
           chatActionSlot={
