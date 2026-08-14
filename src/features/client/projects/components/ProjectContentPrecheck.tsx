@@ -80,6 +80,7 @@ export function ProjectContentPrecheck({
           type="button"
           onClick={startCheck}
           disabled={status === "checking"}
+          aria-busy={status === "checking"}
           className={`h-9 shrink-0 rounded-[7px] px-4 text-[11px] font-bold text-white transition ${
             status === "checking"
               ? "cursor-not-allowed bg-[#8fa3bf]"

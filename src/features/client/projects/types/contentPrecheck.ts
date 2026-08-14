@@ -23,7 +23,7 @@ export interface ProjectContentPrecheckResult {
 }
 
 export interface PrivacyCandidate {
-  type: "email" | "phone" | "account";
+  type: "email" | "phone" | "account" | "rrn";
   field: ProjectContentField;
   maskedValue: string;
 }
