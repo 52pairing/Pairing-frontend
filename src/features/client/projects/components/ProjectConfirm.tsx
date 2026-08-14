@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { ChevronLeftIcon } from "@/features/common/components/SharedUI";
+import { ProjectContentPrecheck } from "@/features/client/projects/components/ProjectContentPrecheck";
 import { ProjectRegisterShell } from "@/features/client/projects/components/ProjectRegisterShell";
 import {
   PROJECT_REGISTER_BASE,
@@ -158,6 +159,11 @@ export function ProjectConfirm() {
             ) : null}
           </div>
         </SummaryCard>
+
+        <ProjectContentPrecheck
+          mainTask={form.mainTask}
+          detailScope={form.detailScope}
+        />
 
         {/* 최종 확인 체크 */}
         <label className="mt-4 flex cursor-pointer items-start gap-3">
