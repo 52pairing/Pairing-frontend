@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Spinner } from "@/features/common/components/Loading";
+import { ConfirmModal } from "@/features/common/components/Modal";
 import { NegotiationResultCard } from "@/features/negotiation/components/NegotiationResultCard";
 import type {
   ConditionType,
@@ -37,6 +38,8 @@ export interface AnswerInput {
   conditionId: number;
   accepted: boolean;
   proposedValue?: string | null;
+  /** accepted=true 일 때만. 내 마지노선을 넘겨서라도 직접 수락 */
+  acceptBelowFloor?: boolean;
 }
 
 interface NegotiationChatFlowProps {
@@ -133,7 +136,7 @@ export function NegotiationChatFlow({
         {/* 상태별 화면 */}
         {isFailed ? (
           <div className="mt-8">
-            <NegotiationResultCard result="failed" />
+            <NegotiationResultCard result="failed" summary={detail.endReason ?? undefined} />
           </div>
         ) : isComplete ? (
           <div className="mt-8">
@@ -761,8 +764,12 @@ function ConditionActionPanel({
   const [editOpen, setEditOpen] = useState<Record<number, boolean>>({});
   const [editValues, setEditValues] = useState<Record<number, string>>({});
   const [editErrors, setEditErrors] = useState<Record<number, string>>({});
-  const [warnIds, setWarnIds] = useState<Record<number, boolean>>({});
   const [savingId, setSavingId] = useState<number | null>(null);
+  // 마지노선 밖 수락(NG_011) 확인 모달: 재제출할 답변과 안내 문구 보관
+  const [belowFloorConfirm, setBelowFloorConfirm] = useState<{
+    answers: AnswerInput[];
+    message: string;
+  } | null>(null);
 
   const pending = conditions.filter((condition) => condition.status === "PENDING");
   const rejected = conditions.filter((condition) => condition.status === "REJECTED");
@@ -781,7 +788,6 @@ function ConditionActionPanel({
   const closeEdit = (conditionId: number) => {
     setEditOpen((prev) => ({ ...prev, [conditionId]: false }));
     setEditErrors((prev) => ({ ...prev, [conditionId]: "" }));
-    setWarnIds((prev) => ({ ...prev, [conditionId]: false }));
   };
   const saveEdit = async (condition: NegotiationCondition) => {
     const value = (editValues[condition.conditionId] ?? "").trim();
@@ -799,28 +805,40 @@ function ConditionActionPanel({
     }
   };
 
+  const buildAnswers = (): AnswerInput[] => [
+    ...pending.map((condition) => ({
+      conditionId: condition.conditionId,
+      accepted: decisions[condition.conditionId] === "accept",
+    })),
+    ...rejected.map((condition) => ({
+      conditionId: condition.conditionId,
+      accepted: false,
+      proposedValue: floors[condition.conditionId] ?? "",
+    })),
+  ];
+
   const handleSubmit = async () => {
-    const answers: AnswerInput[] = [
-      ...pending.map((condition) => ({
-        conditionId: condition.conditionId,
-        accepted: decisions[condition.conditionId] === "accept",
-      })),
-      ...rejected.map((condition) => ({
-        conditionId: condition.conditionId,
-        accepted: false,
-        proposedValue: floors[condition.conditionId] ?? "",
-      })),
-    ];
+    const answers = buildAnswers();
     const result = await onSubmit(answers);
-    // 마지노선 밖 수락(NG_011) → 수락한 조건의 수정 영역을 펴고 경고 표시
+    // 마지노선 밖 수락(NG_011) → 편집칸 대신 확인 모달을 띄운다.
+    // (사람이 눈으로 보고 내리는 명시적 수락은 존중 — 확인 후 그대로 수락)
     if (result.floorViolation) {
-      pending
-        .filter((condition) => decisions[condition.conditionId] === "accept")
-        .forEach((condition) => {
-          openEdit(condition);
-          setWarnIds((prev) => ({ ...prev, [condition.conditionId]: true }));
-        });
+      const violation = findFloorViolation(pending, decisions, viewerRole);
+      setBelowFloorConfirm({
+        answers,
+        message: buildBelowFloorMessage(violation, viewerRole, labels),
+      });
     }
+  };
+
+  // [그래도 수락] — 수락 답변에 acceptBelowFloor=true 를 붙여 그대로 재제출
+  const confirmAcceptBelowFloor = async () => {
+    if (!belowFloorConfirm) return;
+    const answers = belowFloorConfirm.answers.map((answer) =>
+      answer.accepted ? { ...answer, acceptBelowFloor: true } : answer,
+    );
+    setBelowFloorConfirm(null);
+    await onSubmit(answers);
   };
 
   const hasRejected = rejected.length > 0;
@@ -847,22 +865,6 @@ function ConditionActionPanel({
             condition.proposedValue ?? opponentValue(condition, viewerRole),
             labels,
           );
-          const boundText = viewerRole === "CLIENT" ? "이상이어야" : "이하여야";
-          // 마지노선 비교 방식: 서버 floorComparison 우선, 없으면(배포 시점차) type 으로 추정
-          // (SCOPE/OTHER = NONE: 비교 기준 없어 안내 문구를 아예 띄우지 않음)
-          const comparison =
-            condition.floorComparison ??
-            (condition.type === "WORK_STYLE" || condition.type === "WORK_FORM"
-              ? "CHOICE"
-              : condition.type === "SCOPE" || condition.type === "OTHER"
-                ? "NONE"
-                : "RANGE");
-          const warningText =
-            comparison === "NONE"
-              ? ""
-              : comparison === "CHOICE"
-                ? `지금 제안(${proposedText})을 수락하려면 이 값을 허용해야 합니다`
-                : `지금 제안(${proposedText})을 수락하려면 ${proposedText} ${boundText} 합니다`;
           const myFloorText = formatConditionValue(condition.type, condition.myFloor, labels);
           const isEditing = editOpen[condition.conditionId] === true;
           return (
@@ -916,11 +918,6 @@ function ConditionActionPanel({
                       setEditValues((prev) => ({ ...prev, [condition.conditionId]: value }))
                     }
                   />
-                  {warnIds[condition.conditionId] && warningText ? (
-                    <p className="mt-2 text-[10px] font-semibold text-[#b54708]">
-                      ⚠️ {warningText}
-                    </p>
-                  ) : null}
                   <p className="mt-1 text-[10px] text-theme-muted">라운드는 진행되지 않습니다.</p>
                   {editErrors[condition.conditionId] ? (
                     <p className="mt-1 text-[10px] font-semibold text-theme-danger">
@@ -1019,9 +1016,75 @@ function ConditionActionPanel({
           ) : null}
         </div>
       </section>
+
+      {belowFloorConfirm ? (
+        <ConfirmModal
+          open
+          title="그래도 수락하시겠어요?"
+          description={belowFloorConfirm.message}
+          confirmText="그래도 수락"
+          cancelText="취소"
+          confirmDisabled={isSubmitting}
+          onConfirm={() => void confirmAcceptBelowFloor()}
+          onClose={() => setBelowFloorConfirm(null)}
+        />
+      ) : null}
     </div>
   );
 }
+
+// ── 마지노선 밖 수락 판정·문구 ────────────────────────────────────────────
+
+// 숫자로 비교 가능한 조건 값만 뽑는다(AMOUNT=원, PERIOD="N …"의 앞 숫자).
+const numericValue = (
+  type: NegotiationCondition["type"],
+  value: string | null,
+): number | null => {
+  if (value == null || value === "") return null;
+  if (type === "AMOUNT") {
+    const won = Number(value);
+    return Number.isFinite(won) ? won : null;
+  }
+  if (type === "PERIOD") {
+    const amount = Number.parseInt(value, 10);
+    return Number.isFinite(amount) ? amount : null;
+  }
+  return null;
+};
+
+// 수락한 조건 중 "내 마지노선을 넘는" 첫 조건을 찾는다(표시용).
+// 프리랜서 하한: 제안 < 내 마지노선 / 클라 상한: 제안 > 내 마지노선.
+const findFloorViolation = (
+  pending: NegotiationCondition[],
+  decisions: Record<number, Decision>,
+  viewerRole: "CLIENT" | "FREELANCER",
+): NegotiationCondition | null => {
+  for (const condition of pending) {
+    if (decisions[condition.conditionId] !== "accept") continue;
+    const proposed = numericValue(condition.type, condition.proposedValue);
+    const floor = numericValue(condition.type, condition.myFloor);
+    if (proposed == null || floor == null) continue;
+    const breaks = viewerRole === "FREELANCER" ? proposed < floor : proposed > floor;
+    if (breaks) return condition;
+  }
+  return null;
+};
+
+const buildBelowFloorMessage = (
+  violation: NegotiationCondition | null,
+  viewerRole: "CLIENT" | "FREELANCER",
+  labels: WorkConditionLabels,
+): string => {
+  if (!violation) {
+    return "이 제안은 회원님의 마지노선을 넘습니다. 그래도 수락하시겠어요?";
+  }
+  const proposed = formatConditionValue(violation.type, violation.proposedValue, labels);
+  const floor = formatConditionValue(violation.type, violation.myFloor, labels);
+  const isFreelancer = viewerRole === "FREELANCER";
+  const floorLabel = isFreelancer ? `최소 ${floor}` : `최대 ${floor}`;
+  const direction = isFreelancer ? "낮습니다" : "높습니다";
+  return `이 제안(${proposed})은 회원님의 마지노선(${floorLabel})보다 ${direction}. 그래도 수락하시겠어요?`;
+};
 
 function DecisionButton({
   label,

@@ -13,6 +13,12 @@ export const getSettlement = (settlementId: number) =>
 export const getMyPaymentMethods = () =>
   apiCall<AccountPaymentMethod[]>("/api/v1/accounts/me/payment-methods");
 
+export const updateMyCard = (request: { cardBrand: string; cardNumber: string; cardHolder: string }) =>
+  apiCall<AccountPaymentMethod>("/api/v1/accounts/me/payment-methods/card", { method: "PUT", body: JSON.stringify(request) });
+
+export const updateMyBankAccount = (request: { bankCode: string; accountNo: string; accountHolder: string }) =>
+  apiCall<AccountPaymentMethod>("/api/v1/accounts/me/payment-methods/bank-account", { method: "PUT", body: JSON.stringify(request) });
+
 export const getMySettlementSummary = () =>
   apiCall<SettlementSummaryResponse>("/api/v1/settlements/mine/summary");
 

@@ -2,6 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  CreditCard,
+  FileCheck2,
+  FileText,
+  HelpCircle,
+  MessageCircle,
+  UserCheck,
+  Users,
+  UserX,
+  type LucideIcon,
+} from "lucide-react";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { ConfirmModal, WarningIcon } from "@/features/common/components/Modal";
 import { ErrorState } from "@/features/common/components/ErrorState";
@@ -16,9 +27,24 @@ import {
   markNotificationAsRead,
 } from "@/features/notification/services/notification";
 import { useNotificationStream } from "@/features/notification/stomp/useNotificationStream";
-import type { NotificationItem } from "@/features/notification/types/notification";
+import type { NotificationItem, NotificationType } from "@/features/notification/types/notification";
 import type { CurrentUserResponse } from "@/features/auth/types";
 import { ApiException } from "@/lib/api";
+
+const NOTIFICATION_ICON: Record<NotificationType, { icon: LucideIcon; className: string }> = {
+  MATCHING_RECOMMENDED: { icon: Users, className: "bg-surface-muted text-brand" },
+  MATCHING_REQUESTED: { icon: Users, className: "bg-surface-muted text-brand" },
+  MATCHING_ACCEPTED: { icon: UserCheck, className: "bg-success-surface text-theme-success" },
+  MATCHING_REJECTED: { icon: UserX, className: "bg-danger-surface text-theme-danger" },
+  NEGOTIATION_STARTED: { icon: MessageCircle, className: "bg-surface-muted text-brand" },
+  NEGOTIATION_PROPOSED: { icon: MessageCircle, className: "bg-surface-muted text-brand" },
+  NEGOTIATION_FAILED: { icon: UserX, className: "bg-danger-surface text-theme-danger" },
+  CONTRACT_CREATED: { icon: FileText, className: "bg-surface-muted text-brand" },
+  CONTRACT_SIGNED: { icon: FileCheck2, className: "bg-success-surface text-theme-success" },
+  CONTRACT_REJECTED: { icon: FileText, className: "bg-danger-surface text-theme-danger" },
+  SETTLEMENT_DUE: { icon: CreditCard, className: "bg-warning-surface text-theme-warning" },
+  INQUIRY_ANSWERED: { icon: HelpCircle, className: "bg-surface-muted text-brand" },
+};
 
 const PAGE_SIZE = 20;
 
@@ -254,6 +280,10 @@ interface NotificationCardProps {
 }
 
 function NotificationCard({ notification, onOpen, onDelete }: NotificationCardProps) {
+  const { icon: Icon, className: iconClassName } = NOTIFICATION_ICON[notification.type] ?? {
+    icon: HelpCircle,
+    className: "bg-surface-muted text-brand",
+  };
   return (
     <li
       className={`group flex min-h-[86px] overflow-hidden rounded-[10px] border transition ${
@@ -268,6 +298,12 @@ function NotificationCard({ notification, onOpen, onDelete }: NotificationCardPr
         className="flex min-w-0 flex-1 items-start gap-3 px-4 py-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#3478f6] sm:px-5"
         aria-label={`${notification.title} 상세 페이지로 이동`}
       >
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconClassName}`}
+          aria-hidden="true"
+        >
+          <Icon size={17} strokeWidth={2} />
+        </span>
         <span
           className={`mt-[7px] h-2 w-2 shrink-0 rounded-full ${notification.read ? "bg-transparent" : "bg-[#3478f6]"}`}
           aria-hidden="true"

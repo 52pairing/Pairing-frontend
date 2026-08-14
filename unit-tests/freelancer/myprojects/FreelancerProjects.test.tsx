@@ -18,6 +18,10 @@ jest.mock("@/features/matching/services/matching", () => ({
   getReceivedMatchingRequests: jest.fn(),
   rejectMatchingRequest: jest.fn(),
 }));
+jest.mock("@/features/negotiation/services/negotiation", () => ({
+  getNegotiation: jest.fn(),
+  getWorkConditionsMeta: jest.fn().mockResolvedValue({ workStyles: [], workForms: [], periodUnits: [] }),
+}));
 
 const mockedGetReceived = jest.mocked(getReceivedMatchingRequests);
 const mockedAccept = jest.mocked(acceptMatchingRequest);
@@ -52,6 +56,30 @@ describe("FreelancerProjects", () => {
 
     expect(await screen.findByText("두 번째 프로젝트")).toBeInTheDocument();
     expect(mockedGetReceived).toHaveBeenCalledWith({ tab: "ALL", page: 1, size: 10 });
+  });
+
+  it.each([
+    ["전체", "ALL"],
+    ["검토 중", "REVIEWING"],
+    ["협상 중", "NEGOTIATING"],
+    ["종료됨", "CLOSED"],
+  ] as const)("%s 탭을 %s 값으로 조회한다", async (label, tab) => {
+    const user = userEvent.setup();
+    render(<FreelancerProjects />);
+    await screen.findByText("쇼핑몰 개편");
+
+    if (label !== "전체") await user.click(screen.getByRole("button", { name: label }));
+
+    await waitFor(() => expect(mockedGetReceived).toHaveBeenCalledWith({ tab, page: 0, size: 10 }));
+  });
+
+  it("CONTRACTED 상태를 종료된 제안으로 표시한다", async () => {
+    mockedGetReceived.mockResolvedValue({ ...pageResponse(0), content: [{ ...request, status: "CONTRACTED" }] });
+
+    render(<FreelancerProjects />);
+
+    expect(await screen.findByText("계약 완료")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "수락 및 협상 시작" })).not.toBeInTheDocument();
   });
 
   it("선택 입력한 거절 사유를 API로 전송한다", async () => {

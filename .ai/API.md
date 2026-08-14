@@ -737,6 +737,7 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
   - 조건 종류 필드명은 **`type`** (요청 바디의 `conditionType` 과 다름). 값 필드는 **전부 문자열**.
 - `conditionType` 코드: `AMOUNT`(월 단가·원), `PERIOD`("4 MONTH"), `START_DATE`("2026-09-01"), `WORK_STYLE`(REMOTE/ONSITE/ANY), `WORK_FORM`(FULL_TIME/PART_TIME/ANY), `SCOPE`, `OTHER`.
 - **값 라벨은 하드코딩 금지 → meta API 사용**: `GET /api/v1/meta/work-conditions`(비로그인 가능) 의 `workStyles/workForms/periodUnits`({code,label}) 로 해결. 서비스 `getWorkConditionsMeta`, 유틸 `formatConditionValue(type, value, labels)`. (조건 "종류" 라벨 AMOUNT="단가(월)" 등은 협상 고유 개념이라 `CONDITION_LABEL` 로 관리)
+- (2026-08-13 추가) `endReason: string | null` — `frontend-matching-negotiation-guide.md` 3.12 기준으로 타입에 추가. `status === "FAILED"`일 때만 값이 있고 타결(`AGREED`)이면 `null`. 사용자가 직접 쓴 문장이 그대로 오므로 화면엔 텍스트 자식으로만 렌더링(`NegotiationResultCard`의 `summary`), `dangerouslySetInnerHTML` 금지. **실제 응답에 이 필드가 내려오는지는 미검증** — 안 내려오면 `undefined`로 와서 카드가 기존 고정 문구로 자연스럽게 폴백한다.
 
 #### 추가 클라리피케이션 (2차)
 
