@@ -75,21 +75,7 @@ export function CandidateProfile({
               </div>
             </ProfileSection>
             <ProfileSection title="AI 매칭 분석">
-              <div className="flex items-end gap-3">
-                <strong className="text-[28px] leading-none text-[#3478f6]">
-                  {candidate.matchScore}%
-                </strong>
-                <span className="text-[12px] font-bold text-theme-secondary">
-                  AI 적합도
-                </span>
-              </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-muted">
-                <div
-                  className="h-full rounded-full bg-[#3478f6]"
-                  style={{ width: `${candidate.matchScore}%` }}
-                />
-              </div>
-              <h3 className="mt-5 text-[13px] font-extrabold">추천 이유</h3>
+              <h3 className="text-[13px] font-extrabold">추천 이유</h3>
               <ul className="mt-2 space-y-1.5">
                 {candidate.recommendationReasons.slice(0, 4).map((reason) => (
                   <li
@@ -272,13 +258,10 @@ function ProfileHeader({ candidate }: { candidate: RecommendedCandidate }) {
             개발 · 프론트엔드 개발자 · {candidate.careerYears}년
           </p>
           <p className="mt-2 text-[12px] leading-5 text-theme-secondary">
-            프리랜서 경력 {candidate.careerYears}년　
+            프리랜서 경력 {candidate.careerYears}년
             <span className="text-[#e7a317]">★★★★★</span> 평점{" "}
             {candidate.rating} · 리뷰 {candidate.reviewCount}건　Professional
-            등급　
-            <span className="font-bold text-[#3478f6]">
-              AI 적합도 {candidate.matchScore}%
-            </span>
+            등급
           </p>
           <p className="mt-2 text-[11px] text-theme-muted">
             최근 업데이트 2026.07.30 · 연락처 정보는 매칭 및 계약이 완료된 후
