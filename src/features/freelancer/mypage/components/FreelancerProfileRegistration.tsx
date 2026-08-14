@@ -3,6 +3,19 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ApiException } from "@/lib/api";
+import {
+  getFreelancerCondition,
+  getFreelancerJobCategories,
+  getFreelancerJobRoles,
+  getFreelancerSkills,
+  getFreelancerWorkConditions,
+  updateFreelancerCondition,
+} from "@/features/freelancer/mypage/services/freelancerResume";
+import type {
+  MetaOption,
+  WorkConditionsMeta,
+} from "@/features/freelancer/mypage/types/resume";
 import {
   FormCard,
   ProfileRegistrationShell,
@@ -11,131 +24,39 @@ import {
 } from "./ProfileRegistrationShell";
 
 const STORAGE_KEY = "pairing.freelancer.profile.step1";
-const JOB_CATEGORIES = ["개발", "디자인"] as const;
-const JOB_ROLES = [
-  "프론트엔드 개발자",
-  "백엔드 개발자",
-  "풀스택 개발자",
-  "웹 퍼블리셔",
-  "iOS 개발자",
-  "Android 개발자",
-  "크로스플랫폼 개발자 (Flutter · React Native)",
-  "데이터 엔지니어",
-  "데이터 분석가",
-  "AI · ML 엔지니어",
-  "DevOps 엔지니어",
-  "클라우드 · 인프라 엔지니어",
-  "DBA (DB 관리자)",
-  "보안 엔지니어",
-  "게임 개발자 (Unity · Unreal)",
-  "블록체인 개발자",
-  "임베디드 · 하드웨어 개발자",
-  "QA 엔지니어",
-  "UX · UI 디자이너",
-  "제품 디자이너 (Product Designer)",
-  "웹 디자이너",
-  "그래픽 디자이너",
-  "BX · 브랜드 디자이너",
-  "일러스트레이터",
-  "모션 · 영상 디자이너",
-  "3D 디자이너",
-] as const;
-const SKILLS = [
-  "React",
-  "Next.js",
-  "Vue",
-  "TypeScript",
-  "JavaScript",
-  "Angular",
-  "Svelte",
-  "Redux",
-  "Tailwind",
-  "Java",
-  "Spring Boot",
-  "Node.js",
-  "NestJS",
-  "Python",
-  "Django",
-  "FastAPI",
-  "Go",
-  "PHP",
-  "Laravel",
-  "C#/.NET",
-  "Kotlin",
-  "Swift",
-  "Flutter",
-  "React Native",
-  "SQL",
-  "Pandas",
-  "TensorFlow",
-  "PyTorch",
-  "scikit-learn",
-  "Spark",
-  "LangChain",
-  "MySQL",
-  "PostgreSQL",
-  "MongoDB",
-  "Redis",
-  "Oracle",
-  "Elasticsearch",
-  "AWS",
-  "GCP",
-  "Docker",
-  "Kubernetes",
-  "Jenkins",
-  "GitHub Actions",
-  "Terraform",
-  "Nginx",
-  "Linux",
-  "Unity",
-  "Unreal",
-  "C++",
-  "Solidity",
-  "Figma",
-  "Sketch",
-  "Adobe XD",
-  "Photoshop",
-  "Illustrator",
-  "After Effects",
-  "Zeplin",
-  "Git",
-  "Jira",
-  "Notion",
-  "REST API",
-  "GraphQL",
-  "Swagger",
-] as const;
-type SkillLevel = "초급" | "중급" | "고급";
-type SelectedSkill = { name: string; level: SkillLevel };
+
+type SelectedSkill = { code: string; levelCode: string };
 type StepOneState = {
-  category: string;
-  role: string;
+  categoryCode: string;
+  roleCode: string;
   affiliation: string;
-  workStyle: string;
-  payUnit: string;
+  workStyleCode: string;
+  payUnitCode: string;
   pay: string;
-  workForm: string;
+  minPay: string;
+  workFormCode: string;
   startDate: string;
   startNegotiable: boolean;
   period: string;
-  periodUnit: string;
+  periodUnitCode: string;
   freelanceExperience: string;
   careerYears: string;
   skills: SelectedSkill[];
 };
 
 const initialState: StepOneState = {
-  category: "",
-  role: "",
+  categoryCode: "",
+  roleCode: "",
   affiliation: "",
-  workStyle: "",
-  payUnit: "월급",
+  workStyleCode: "",
+  payUnitCode: "",
   pay: "",
-  workForm: "",
+  minPay: "",
+  workFormCode: "",
   startDate: getTodayString(),
   startNegotiable: false,
   period: "",
-  periodUnit: "개월",
+  periodUnitCode: "",
   freelanceExperience: "",
   careerYears: "",
   skills: [],
@@ -149,26 +70,116 @@ export function FreelancerProfileRegistration() {
   const [showErrors, setShowErrors] = useState(false);
   const today = getTodayString();
 
+  const [jobCategories, setJobCategories] = useState<MetaOption[]>([]);
+  const [jobRoles, setJobRoles] = useState<MetaOption[]>([]);
+  const [skillOptions, setSkillOptions] = useState<MetaOption[]>([]);
+  const [workConditions, setWorkConditions] = useState<WorkConditionsMeta | null>(null);
+  const [metaLoading, setMetaLoading] = useState(true);
+  const [metaError, setMetaError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // 실제 fetch는 여기서만 수행하고, effect 안에서는 setState를 동기적으로 호출하지 않습니다.
+  const fetchMeta = () =>
+    Promise.all([
+      getFreelancerJobCategories(),
+      getFreelancerJobRoles(),
+      getFreelancerSkills(),
+      getFreelancerWorkConditions(),
+    ])
+      .then(([categories, roles, skills, conditions]) => {
+        setJobCategories(categories);
+        setJobRoles(roles);
+        setSkillOptions(skills);
+        setWorkConditions(conditions);
+      })
+      .catch(() => {
+        setMetaError("직군·직무·스킬 정보를 불러오지 못했습니다. 다시 시도해 주세요.");
+      })
+      .finally(() => setMetaLoading(false));
+
+  const retryMeta = () => {
+    setMetaLoading(true);
+    setMetaError("");
+    void fetchMeta();
+  };
+
   useEffect(() => {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(form));
-  }, [form]);
+    void fetchMeta();
+  }, []);
+
+  // 이미 저장된 조건이 있으면 불러와 채워줍니다. 아직 없으면(FR_001) 임시저장 내용을 그대로 둡니다.
+  useEffect(() => {
+    getFreelancerCondition()
+      .then((condition) => {
+        setForm((current) => ({
+          ...current,
+          categoryCode: condition.jobCategory,
+          roleCode: condition.jobRole,
+          affiliation: condition.affiliation,
+          workStyleCode: condition.workStyle,
+          workFormCode: condition.workForm,
+          payUnitCode: condition.payUnit,
+          pay: String(Math.round(condition.payAmount / 10_000)),
+          minPay: String(Math.round(condition.minAcceptAmount / 10_000)),
+          startNegotiable: condition.startNegotiable,
+          startDate: condition.availableFrom ?? current.startDate,
+          period: String(condition.periodValue),
+          periodUnitCode: condition.periodUnit,
+          freelanceExperience: condition.hasFreelanceExperience ? "있음" : "없음",
+          careerYears: String(condition.careerYears),
+          skills: condition.skills.map((skill) => ({
+            code: skill.skillCode,
+            levelCode: skill.skillLevel,
+          })),
+        }));
+      })
+      .catch((error) => {
+        if (error instanceof ApiException && error.errorCode === "FR_001") return;
+      });
+  }, []);
+
+  // meta 라벨은 저장 시점에만 계산해서 sessionStorage에 함께 기록합니다(별도 setState 없음).
+  useEffect(() => {
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...form,
+        category: labelOf(jobCategories, form.categoryCode),
+        role: labelOf(jobRoles, form.roleCode),
+        workStyle: labelOf(workConditions?.workStyles ?? [], form.workStyleCode),
+        workForm: labelOf(workConditions?.workForms ?? [], form.workFormCode),
+        payUnit: labelOf(workConditions?.payUnits ?? [], form.payUnitCode),
+        periodUnit: labelOf(workConditions?.periodUnits ?? [], form.periodUnitCode),
+        skills: form.skills.map((skill) => ({
+          name: labelOf(skillOptions, skill.code),
+          level: labelOf(workConditions?.skillLevels ?? [], skill.levelCode),
+        })),
+      }),
+    );
+  }, [form, jobCategories, jobRoles, skillOptions, workConditions]);
+
   const update = <K extends keyof StepOneState>(
     key: K,
     value: StepOneState[K],
   ) => setForm((current) => ({ ...current, [key]: value }));
+
   const filteredSkills = useMemo(
     () =>
-      SKILLS.filter((skill) =>
-        skill.toLowerCase().includes(search.toLowerCase()),
-      ).slice(0, search ? SKILLS.length : 12),
-    [search],
+      skillOptions
+        .filter((skill) => skill.label.toLowerCase().includes(search.toLowerCase()))
+        .slice(0, search ? skillOptions.length : 12),
+    [search, skillOptions],
   );
+
   const isValid = Boolean(
-    form.category &&
-    form.role &&
-    form.workStyle &&
+    form.categoryCode &&
+    form.roleCode &&
+    form.workStyleCode &&
     Number(form.pay.replaceAll(",", "")) >= 1 &&
-    form.workForm &&
+    form.workFormCode &&
+    Number(form.minPay.replaceAll(",", "")) >= 1 &&
+    Number(form.minPay.replaceAll(",", "")) <= Number(form.pay.replaceAll(",", "")) &&
     (form.startNegotiable || form.startDate >= today) &&
     Number(form.period) >= 1 &&
     Number(form.period) <= 24 &&
@@ -176,13 +187,60 @@ export function FreelancerProfileRegistration() {
     Number(form.careerYears) >= 1 &&
     form.skills.length >= 1,
   );
-  const toggleSkill = (name: string) =>
+
+  const toggleSkill = (option: MetaOption) =>
     update(
       "skills",
-      form.skills.some((skill) => skill.name === name)
-        ? form.skills.filter((skill) => skill.name !== name)
-        : [...form.skills, { name, level: "초급" }],
+      form.skills.some((skill) => skill.code === option.code)
+        ? form.skills.filter((skill) => skill.code !== option.code)
+        : [
+          ...form.skills,
+          { code: option.code, levelCode: workConditions?.skillLevels[0]?.code ?? "BEGINNER" },
+        ],
     );
+
+  const submit = async () => {
+    setShowErrors(true);
+    if (!isValid) {
+      scrollToFirstError(formRef.current);
+      return;
+    }
+    setSubmitError("");
+    setSubmitting(true);
+    const payAmount = Number(form.pay.replaceAll(",", "")) * 10_000;
+    const minAcceptAmount = Number(form.minPay.replaceAll(",", "")) * 10_000;
+    try {
+      await updateFreelancerCondition({
+        jobCategory: form.categoryCode,
+        jobRole: form.roleCode,
+        affiliation: form.affiliation,
+        workStyle: form.workStyleCode as never,
+        workForm: form.workFormCode as never,
+        payUnit: form.payUnitCode as never,
+        payAmount,
+        minAcceptAmount,
+        availableFrom: form.startNegotiable ? null : form.startDate,
+        startNegotiable: form.startNegotiable,
+        periodValue: Number(form.period),
+        periodUnit: form.periodUnitCode as never,
+        hasFreelanceExperience: form.freelanceExperience === "있음",
+        careerYears: Number(form.careerYears),
+        skills: form.skills.map((skill) => ({
+          skillCode: skill.code,
+          skillLevel: skill.levelCode as never,
+        })),
+      });
+      router.push("/freelancer/mypage/resume");
+    } catch (error) {
+      setSubmitError(
+        error instanceof ApiException
+          ? error.message
+          : "조건 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <ProfileRegistrationShell
@@ -195,41 +253,49 @@ export function FreelancerProfileRegistration() {
         className="space-y-4"
         onSubmit={(event) => {
           event.preventDefault();
-          setShowErrors(true);
-          if (isValid) router.push("/freelancer/mypage/resume");
-          else scrollToFirstError(formRef.current);
+          void submit();
         }}
       >
         <BenefitBanner />
+        {metaError ? (
+          <p className="rounded-md bg-danger-surface p-3 text-[11px] font-bold text-theme-danger">
+            {metaError}{" "}
+            <button type="button" onClick={retryMeta} className="underline">
+              다시 시도
+            </button>
+          </p>
+        ) : null}
         <FormCard>
           <RequiredLabel>직군 및 직무</RequiredLabel>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <FieldGroup label="직군">
               <select
-                value={form.category}
-                onChange={(event) => update("category", event.target.value)}
+                value={form.categoryCode}
+                onChange={(event) => update("categoryCode", event.target.value)}
+                disabled={metaLoading}
                 className={fieldClassName}
               >
                 <option value="">직군 선택</option>
-                {JOB_CATEGORIES.map((item) => (
-                  <option key={item}>{item}</option>
+                {jobCategories.map((item) => (
+                  <option key={item.code} value={item.code}>{item.label}</option>
                 ))}
               </select>
             </FieldGroup>
             <FieldGroup label="직무">
               <select
-                value={form.role}
-                onChange={(event) => update("role", event.target.value)}
+                value={form.roleCode}
+                onChange={(event) => update("roleCode", event.target.value)}
+                disabled={metaLoading}
                 className={fieldClassName}
               >
                 <option value="">직무 선택</option>
-                {JOB_ROLES.map((item) => (
-                  <option key={item}>{item}</option>
+                {jobRoles.map((item) => (
+                  <option key={item.code} value={item.code}>{item.label}</option>
                 ))}
               </select>
             </FieldGroup>
           </div>
-          {showErrors && !(form.category && form.role) ? (
+          {showErrors && !(form.categoryCode && form.roleCode) ? (
             <ErrorText>직군과 직무를 선택해 주세요.</ErrorText>
           ) : null}
         </FormCard>
@@ -248,15 +314,15 @@ export function FreelancerProfileRegistration() {
         <div className="grid gap-4 sm:grid-cols-2">
           <ChoiceCard
             title="근무 방식"
-            value={form.workStyle}
-            choices={["재택", "상주", "모두가능"]}
-            onChange={(value) => update("workStyle", value)}
+            valueCode={form.workStyleCode}
+            options={workConditions?.workStyles ?? []}
+            onChange={(option) => update("workStyleCode", option.code)}
           />
           <ChoiceCard
             title="근무 형태"
-            value={form.workForm}
-            choices={["풀타임", "파트타임", "모두가능"]}
-            onChange={(value) => update("workForm", value)}
+            valueCode={form.workFormCode}
+            options={workConditions?.workForms ?? []}
+            onChange={(option) => update("workFormCode", option.code)}
           />
         </div>
         <FormCard>
@@ -266,12 +332,14 @@ export function FreelancerProfileRegistration() {
           </p>
           <div className="mt-2 grid grid-cols-[1fr_4fr] gap-2">
             <select
-              value={form.payUnit}
-              onChange={(event) => update("payUnit", event.target.value)}
+              value={form.payUnitCode}
+              onChange={(event) => update("payUnitCode", event.target.value)}
+              disabled={metaLoading}
               className={fieldClassName}
             >
-              {["시급", "일급", "월급"].map((item) => (
-                <option key={item}>{item}</option>
+              <option value="">단위 선택</option>
+              {(workConditions?.payUnits ?? []).map((item) => (
+                <option key={item.code} value={item.code}>{item.label}</option>
               ))}
             </select>
             <div className="grid grid-cols-[minmax(0,1fr)_72px] gap-2">
@@ -297,6 +365,38 @@ export function FreelancerProfileRegistration() {
           {showErrors && Number(form.pay.replaceAll(",", "")) < 1 ? (
             <ErrorText>희망 급여를 1만원 이상 입력해 주세요.</ErrorText>
           ) : null}
+
+          <div className="mt-4 border-t border-theme pt-4">
+            <RequiredLabel>최저 수용 금액</RequiredLabel>
+            <p className="mt-1 text-[10px] text-theme-muted">
+              협상 시 수용 가능한 최소 금액입니다. 희망 급여 이하로, 만원 단위로 입력해 주세요.
+            </p>
+            <div className="mt-2 grid grid-cols-[minmax(0,1fr)_72px] gap-2">
+              <input
+                value={form.minPay}
+                onChange={(event) =>
+                  update("minPay", formatNumber(event.target.value))
+                }
+                inputMode="numeric"
+                className={`${fieldClassName} pr-12`}
+                placeholder="1만원 이상 입력"
+              />
+              <span className="absolute right-3 mt-2 text-[10px] text-theme-muted">
+                만원
+              </span>
+            </div>
+            {Number(form.minPay.replaceAll(",", "")) >= 1 ? (
+              <p className="mt-2 text-[10px] font-semibold text-brand">
+                입력 금액: {formatKoreanWon(Number(form.minPay.replaceAll(",", "")) * 10_000)}
+              </p>
+            ) : null}
+            {showErrors && Number(form.minPay.replaceAll(",", "")) < 1 ? (
+              <ErrorText>최저 수용 금액을 1만원 이상 입력해 주세요.</ErrorText>
+            ) : showErrors &&
+              Number(form.minPay.replaceAll(",", "")) > Number(form.pay.replaceAll(",", "")) ? (
+              <ErrorText>최저 수용 금액은 희망 급여보다 클 수 없습니다.</ErrorText>
+            ) : null}
+          </div>
         </FormCard>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormCard>
@@ -335,12 +435,14 @@ export function FreelancerProfileRegistration() {
                 className={`${fieldClassName} mt-0`}
               />
               <select
-                value={form.periodUnit}
-                onChange={(event) => update("periodUnit", event.target.value)}
+                value={form.periodUnitCode}
+                onChange={(event) => update("periodUnitCode", event.target.value)}
+                disabled={metaLoading}
                 className={`${fieldClassName} mt-0 px-2`}
               >
-                <option>개월</option>
-                <option>주</option>
+                {(workConditions?.periodUnits ?? []).map((item) => (
+                  <option key={item.code} value={item.code}>{item.label}</option>
+                ))}
               </select>
             </div>
             {showErrors &&
@@ -350,9 +452,9 @@ export function FreelancerProfileRegistration() {
           </FormCard>
           <ChoiceCard
             title="프리랜서 경험"
-            value={form.freelanceExperience}
-            choices={["있음", "없음"]}
-            onChange={(value) => update("freelanceExperience", value)}
+            valueCode={form.freelanceExperience}
+            options={[{ code: "있음", label: "있음" }, { code: "없음", label: "없음" }]}
+            onChange={(option) => update("freelanceExperience", option.code)}
           />
           <FormCard>
             <RequiredLabel>전체 경력 연수</RequiredLabel>
@@ -389,16 +491,16 @@ export function FreelancerProfileRegistration() {
           />
           <div className="mt-3 flex max-h-40 flex-wrap gap-2 overflow-y-auto">
             {filteredSkills.map((skill) => {
-              const selected = form.skills.some((item) => item.name === skill);
+              const selected = form.skills.some((item) => item.code === skill.code);
               return (
                 <button
-                  key={skill}
+                  key={skill.code}
                   type="button"
                   onClick={() => toggleSkill(skill)}
                   aria-pressed={selected}
                   className={`rounded-full border px-3 py-1.5 text-[10px] font-bold ${selected ? "border-brand bg-brand text-brand-contrast" : "border-theme-strong"}`}
                 >
-                  {skill}
+                  {skill.label}
                 </button>
               );
             })}
@@ -406,29 +508,28 @@ export function FreelancerProfileRegistration() {
           <div className="mt-4 space-y-2">
             {form.skills.map((skill) => (
               <div
-                key={skill.name}
+                key={skill.code}
                 className="flex items-center gap-2 rounded-md border border-theme bg-surface-subtle p-2"
               >
                 <span className="min-w-0 flex-1 text-[11px] font-bold">
-                  {skill.name}
+                  {labelOf(skillOptions, skill.code)}
                 </span>
                 <select
-                  value={skill.level}
-                  onChange={(event) =>
+                  value={skill.levelCode}
+                  onChange={(event) => {
+                    const levelCode = event.target.value;
                     update(
                       "skills",
                       form.skills.map((item) =>
-                        item.name === skill.name
-                          ? { ...item, level: event.target.value as SkillLevel }
-                          : item,
+                        item.code === skill.code ? { ...item, levelCode } : item,
                       ),
-                    )
-                  }
+                    );
+                  }}
                   className="h-8 rounded-md border border-theme bg-surface px-2 text-[10px] outline-none hover:border-brand hover:outline-2 hover:outline-brand focus:border-brand focus:outline-2 focus:outline-brand"
                 >
-                  <option>초급</option>
-                  <option>중급</option>
-                  <option>고급</option>
+                  {(workConditions?.skillLevels ?? []).map((level) => (
+                    <option key={level.code} value={level.code}>{level.label}</option>
+                  ))}
                 </select>
               </div>
             ))}
@@ -437,6 +538,11 @@ export function FreelancerProfileRegistration() {
             <ErrorText>보유 스킬을 1개 이상 선택해 주세요.</ErrorText>
           ) : null}
         </FormCard>
+        {submitError ? (
+          <p className="rounded-md bg-danger-surface p-3 text-[11px] font-bold text-theme-danger">
+            {submitError}
+          </p>
+        ) : null}
         {showErrors && !isValid ? (
           <p className="rounded-md bg-danger-surface p-3 text-[11px] font-bold text-theme-danger">
             필수 항목을 확인해 주세요.
@@ -461,15 +567,20 @@ export function FreelancerProfileRegistration() {
             </button>
             <button
               type="submit"
-              className="rounded-md bg-brand px-6 py-3 text-[12px] font-bold text-brand-contrast"
+              disabled={submitting || metaLoading}
+              className="rounded-md bg-brand px-6 py-3 text-[12px] font-bold text-brand-contrast disabled:opacity-60"
             >
-              다음 →
+              {submitting ? "저장 중..." : "다음 →"}
             </button>
           </div>
         </div>
       </form>
     </ProfileRegistrationShell>
   );
+}
+
+function labelOf(options: MetaOption[], code: string) {
+  return options.find((option) => option.code === code)?.label ?? "";
 }
 
 function BenefitBanner() {
@@ -489,27 +600,27 @@ function BenefitBanner() {
 }
 function ChoiceCard({
   title,
-  value,
-  choices,
+  valueCode,
+  options,
   onChange,
 }: {
   title: string;
-  value: string;
-  choices: string[];
-  onChange: (value: string) => void;
+  valueCode: string;
+  options: MetaOption[];
+  onChange: (option: MetaOption) => void;
 }) {
   return (
     <FormCard>
       <RequiredLabel>{title}</RequiredLabel>
       <div className="mt-3 flex gap-2">
-        {choices.map((choice) => (
+        {options.map((option) => (
           <button
-            key={choice}
+            key={option.code}
             type="button"
-            onClick={() => onChange(choice)}
-            className={`flex-1 rounded-md border px-2 py-2 text-[10px] font-bold ${value === choice ? "border-brand bg-surface-muted text-brand" : "border-theme"}`}
+            onClick={() => onChange(option)}
+            className={`flex-1 rounded-md border px-2 py-2 text-[10px] font-bold ${valueCode === option.code ? "border-brand bg-surface-muted text-brand" : "border-theme"}`}
           >
-            {choice}
+            {option.label}
           </button>
         ))}
       </div>
