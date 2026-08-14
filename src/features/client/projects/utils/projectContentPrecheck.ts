@@ -9,8 +9,10 @@ import { isLikelyRepeatedText } from "@/features/client/projects/utils/textSimil
 
 const MIN_RECOMMENDED_LENGTH = 20;
 const FIELD_LABEL: Record<ProjectContentField, string> = {
+  currentSituation: "현재 상황",
   mainTask: "주요 업무",
   detailScope: "상세 업무 범위",
+  extraNote: "기타 전달사항",
 };
 const PRIVACY_LABEL: Record<PrivacyCandidate["type"], string> = {
   email: "이메일 주소",
@@ -39,7 +41,7 @@ const privacyFinding = (
   id: `privacy-${candidate.field}-${candidate.type}-${index}`,
   kind: "privacy",
   field: candidate.field,
-  title: `${FIELD_LABEL[candidate.field]}에서 ${PRIVACY_LABEL[candidate.type]} 후보를 발견했습니다.`,
+  title: `${FIELD_LABEL[candidate.field]}에서 ${PRIVACY_LABEL[candidate.type]}를 발견했습니다.`,
   description:
     "프로젝트 설명에 연락처나 정산 정보를 직접 작성하지 않았는지 확인해 주세요.",
   maskedValue: candidate.maskedValue,
@@ -47,11 +49,15 @@ const privacyFinding = (
 });
 
 export function runProjectContentPrecheck(input: {
+  currentSituation?: string;
   mainTask?: string;
   detailScope?: string;
+  extraNote?: string;
 }): ProjectContentPrecheckResult {
+  const currentSituation = input.currentSituation?.trim() ?? "";
   const mainTask = input.mainTask?.trim() ?? "";
   const detailScope = input.detailScope?.trim() ?? "";
+  const extraNote = input.extraNote?.trim() ?? "";
   const findings: ProjectContentFinding[] = [];
 
   if (!mainTask) {
@@ -121,8 +127,10 @@ export function runProjectContentPrecheck(input: {
 
   const privacyCandidates = (
     [
+      ["currentSituation", currentSituation],
       ["mainTask", mainTask],
       ["detailScope", detailScope],
+      ["extraNote", extraNote],
     ] as const
   ).flatMap(([field, value]) => detectPrivacyCandidates(field, value));
   findings.push(...privacyCandidates.map(privacyFinding));

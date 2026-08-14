@@ -28,6 +28,16 @@ const maskAccount = (value: string) => `****-****-${digitsOnly(value).slice(-4)}
 // 주민등록번호는 생년월일·성별·일련번호가 모두 민감하므로 존재만 알리고 전부 마스킹한다.
 const maskRRN = () => "******-*******";
 
+// 실제 주민번호는 앞 6자리가 유효한 생년월일(YYMMDD)이다.
+// 이 검증으로 13자리 계좌번호가 주민번호로 오분류되는 것을 막는다.
+const isLikelyRRN = (value: string) => {
+  const digits = digitsOnly(value);
+  if (digits.length !== 13) return false;
+  const month = Number(digits.slice(2, 4));
+  const day = Number(digits.slice(4, 6));
+  return month >= 1 && month <= 12 && day >= 1 && day <= 31;
+};
+
 const isLikelyAccount = (value: string) => {
   const digits = digitsOnly(value);
   if (digits.length < 10 || digits.length > 16) return false;
@@ -57,6 +67,7 @@ export function detectPrivacyCandidates(
 
   for (const match of text.matchAll(RRN_PATTERN)) {
     const value = match[0];
+    if (!isLikelyRRN(value)) continue;
     candidates.push({ type: "rrn", field, maskedValue: maskRRN() });
     occupied.add(value);
   }

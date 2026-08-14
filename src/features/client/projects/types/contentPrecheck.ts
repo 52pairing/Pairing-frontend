@@ -1,4 +1,8 @@
-export type ProjectContentField = "mainTask" | "detailScope";
+export type ProjectContentField =
+  | "currentSituation"
+  | "mainTask"
+  | "detailScope"
+  | "extraNote";
 
 export type ProjectContentFindingKind =
   | "privacy"

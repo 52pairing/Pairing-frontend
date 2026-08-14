@@ -52,7 +52,7 @@ describe("ProjectContentPrecheck", () => {
           id: "privacy-mainTask-email-0",
           kind: "privacy",
           field: "mainTask",
-          title: "주요 업무에서 이메일 주소 후보를 발견했습니다.",
+          title: "주요 업무에서 이메일 주소를 발견했습니다.",
           description: "개인정보를 확인해 주세요.",
           maskedValue: "de***@example.com",
           questions: ["별도 안전한 경로로 전달할 수 있나요?"],

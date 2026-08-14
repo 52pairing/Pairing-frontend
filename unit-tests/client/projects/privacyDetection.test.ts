@@ -51,4 +51,14 @@ describe("detectPrivacyCandidates", () => {
     expect(JSON.stringify(result)).not.toContain("900101");
     expect(JSON.stringify(result)).not.toContain("1234567");
   });
+
+  test("생년월일이 유효하지 않은 13자리 숫자는 주민등록번호로 오분류하지 않는다", () => {
+    // 3521234567890 → 앞 6자리 352123(월 52)이 날짜가 아니므로 주민번호 아님
+    const result = detectPrivacyCandidates(
+      "mainTask",
+      "정산 번호 3521234567890 송금 바랍니다.",
+    );
+
+    expect(result.some((candidate) => candidate.type === "rrn")).toBe(false);
+  });
 });

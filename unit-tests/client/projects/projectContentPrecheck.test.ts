@@ -51,6 +51,20 @@ describe("runProjectContentPrecheck", () => {
     expect(JSON.stringify(result)).not.toContain("dev@example.com");
   });
 
+  test("현재 상황과 기타 전달사항 칸의 개인정보도 탐지한다", () => {
+    const result = runProjectContentPrecheck({
+      currentSituation: "자세한 문의는 010-1234-5678 로 연락 주세요.",
+      mainTask: "관리자 페이지와 결제 연동을 개발합니다.",
+      detailScope: "",
+      extraNote: "정산 계좌 국민 123-456-789012 참고 바랍니다.",
+    });
+
+    const privacy = result.findings.filter((finding) => finding.kind === "privacy");
+    expect(privacy.some((finding) => finding.field === "currentSituation")).toBe(true);
+    expect(privacy.some((finding) => finding.field === "extraNote")).toBe(true);
+    expect(JSON.stringify(result)).not.toContain("010-1234-5678");
+  });
+
   test("짧은 상세 범위는 짧음 안내만 표시하고 구체화 안내를 중복하지 않는다", () => {
     const result = runProjectContentPrecheck({
       mainTask: "주문과 결제 API를 설계하고 구현합니다.",
