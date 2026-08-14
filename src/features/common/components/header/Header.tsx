@@ -2,6 +2,7 @@
 
 import { useCurrentUserState } from "@/features/auth/hooks/useCurrentUser";
 import type { CurrentUserResponse } from "@/features/auth/types";
+import { useUnreadChatCount } from "@/features/chat/hooks/useUnreadChatCount";
 import { useUnreadNotificationCount } from "@/features/notification/hooks/useUnreadNotificationCount";
 import { ClientHeader } from "./ClientHeader";
 import { FreelancerHeader } from "./FreelancerHeader";
@@ -20,13 +21,28 @@ export function Header({ role = "guest", initialUser = null }: HeaderProps) {
   const { user, isLoading } = useCurrentUserState(initialUser);
   const currentRole = user?.role.toLowerCase() ?? role;
   const noticeCount = useUnreadNotificationCount(user?.accountId);
+  const chatCount = useUnreadChatCount(user?.accountId);
 
   if (currentRole === "client") {
-    return <ClientHeader name={user?.name} isNameLoading={isLoading} noticeCount={noticeCount} />;
+    return (
+      <ClientHeader
+        name={user?.name}
+        isNameLoading={isLoading}
+        chatCount={chatCount}
+        noticeCount={noticeCount}
+      />
+    );
   }
 
   if (currentRole === "freelancer") {
-    return <FreelancerHeader name={user?.name} isNameLoading={isLoading} noticeCount={noticeCount} />;
+    return (
+      <FreelancerHeader
+        name={user?.name}
+        isNameLoading={isLoading}
+        chatCount={chatCount}
+        noticeCount={noticeCount}
+      />
+    );
   }
 
   return <GuestHeader />;
