@@ -1,5 +1,16 @@
 # WORKLOG
 
+## 2026-08-14 — 검색 엔진 크롤링·사이트맵 설정
+
+- Next.js 메타데이터 라우트로 `/robots.txt`와 `/sitemap.xml`을 추가했습니다.
+- sitemap에는 홈, 고객지원, 등급 안내, 이용약관, 개인정보 처리방침 등 공개 정적 페이지만 포함했습니다.
+- 로그인·회원가입·역할별 화면·계약·채팅·알림·동적 상세·문의 내역 경로는 robots 크롤링 대상에서 제외했습니다.
+- Docker와 GitHub Actions 빌드에 `NEXT_PUBLIC_SITE_URL` 전달을 연결했습니다.
+- 검증: 변경 파일 ESLint, TypeScript, 프로덕션 빌드, 생성된 robots·sitemap 내용, `git diff --check` 통과
+- 실제 운영 배포는 미검증이며 GitHub Repository Variable `NEXT_PUBLIC_SITE_URL` 등록이 필요합니다.
+
+---
+
 ## 2026-08-14 — 협상 조건 라벨 문구 변경
 
 - 협상 조건 카드에 표시되는 `내 마지노선` 문구를 `내 선택`으로 변경했습니다.
