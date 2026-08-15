@@ -109,6 +109,24 @@ export interface ResumeUpdateRequest extends ResumeBody {
   condition?: FreelancerCondition;
 }
 
+// GET /api/v1/freelancers/me/resume의 resume 필드. 저장(PUT)은 profileFileId/portfolioFileId(숫자)를
+// 받지만, 조회(GET)는 같은 사진·포트폴리오를 profileImageUrl/portfolioUrl(CDN 절대 URL)로 내려준다.
+export interface ResumeDetailBody {
+  profileImageUrl: string | null;
+  contactPhone: string;
+  contactEmail: string;
+  zipCode: string;
+  address: string;
+  addressDetail: string;
+  educations: ResumeEducation[];
+  careers: ResumeCareer[];
+  certificates: ResumeCertificate[];
+  selfIntroduction: string;
+  portfolioUrl: string | null;
+  links: ResumeLink[];
+  agreements: ResumeAgreements;
+}
+
 export type ResumeStatus = "COMPLETED" | "INCOMPLETE";
 
 // GET /api/v1/freelancers/me/resume
@@ -116,7 +134,7 @@ export interface ResumeDetailResponse {
   status: ResumeStatus;
   lastModifiedAt: string | null;
   condition: FreelancerCondition | null;
-  resume: ResumeBody | null;
+  resume: ResumeDetailBody | null;
   notice: string | null;
 }
 

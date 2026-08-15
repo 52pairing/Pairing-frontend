@@ -1,23 +1,35 @@
 "use client";
 
 import { FileText, Trash2, Upload } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { formatPhoneNumber } from "@/features/auth/utils/formatPhoneNumber";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { ApiException } from "@/lib/api";
 import {
+  getFreelancerJobCategories,
+  getFreelancerJobRoles,
   getFreelancerResume,
   getFreelancerResumeDraft,
+  getFreelancerSkills,
+  getFreelancerWorkConditions,
   updateFreelancerResume,
   updateFreelancerResumeDraft,
 } from "@/features/freelancer/mypage/services/freelancerResume";
+import { getFreelancerProfile } from "@/features/freelancer/mypage/services/freelancerProfile";
 import { uploadFreelancerFile } from "@/features/freelancer/mypage/services/freelancerFiles";
 import type {
   CampusType,
   FreelancerCondition,
   GraduationStatus,
-  ResumeBody,
+  MetaOption,
+  PayUnit,
+  PeriodUnit,
+  ResumeDetailBody,
   ResumeUpdateRequest,
+  SkillLevel,
+  WorkConditionsMeta,
+  WorkForm,
+  WorkStyle,
 } from "@/features/freelancer/mypage/types/resume";
 import {
   FormCard,
@@ -29,16 +41,6 @@ import {
 type Screen = "form" | "review" | "complete";
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_PORTFOLIO_SIZE = 100 * 1024 * 1024;
-const CONDITION_STORAGE_KEY = "pairing.freelancer.resume.condition";
-
-function readStoredCondition(): FreelancerCondition | null {
-  try {
-    const value = sessionStorage.getItem(CONDITION_STORAGE_KEY);
-    return value ? JSON.parse(value) as FreelancerCondition : null;
-  } catch {
-    return null;
-  }
-}
 
 const GRADUATION_STATUS_OPTIONS: { code: GraduationStatus; label: string }[] = [
   { code: "GRADUATED", label: "졸업" },
@@ -90,6 +92,23 @@ type Agreements = {
   aiAnalysisAgreed: boolean;
   careerPortfolioUsageAgreed: boolean;
 };
+type ConditionSkillForm = { code: string; levelCode: string };
+type ConditionForm = {
+  categoryCode: string;
+  roleCode: string;
+  workStyleCode: string;
+  workFormCode: string;
+  payUnitCode: string;
+  pay: string;
+  minPay: string;
+  startDate: string;
+  startNegotiable: boolean;
+  period: string;
+  periodUnitCode: string;
+  freelanceExperience: string;
+  careerYears: string;
+  skills: ConditionSkillForm[];
+};
 
 function makeId() {
   return Math.random().toString(36).slice(2, 10);
@@ -124,6 +143,70 @@ function blankCareer(): CareerForm {
 function blankCertificate(): CertificateForm {
   return { id: makeId(), acquiredDate: "", name: "", issuer: "", score: "", note: "" };
 }
+function blankConditionForm(): ConditionForm {
+  return {
+    categoryCode: "",
+    roleCode: "",
+    workStyleCode: "",
+    workFormCode: "",
+    payUnitCode: "",
+    pay: "",
+    minPay: "",
+    startDate: "",
+    startNegotiable: false,
+    period: "",
+    periodUnitCode: "",
+    freelanceExperience: "",
+    careerYears: "",
+    skills: [],
+  };
+}
+function mapConditionToForm(condition: FreelancerCondition): ConditionForm {
+  return {
+    categoryCode: condition.jobCategory,
+    roleCode: condition.jobRole,
+    workStyleCode: condition.workStyle,
+    workFormCode: condition.workForm,
+    payUnitCode: condition.payUnit,
+    pay: condition.payAmount ? String(Math.round(condition.payAmount / 10_000)) : "",
+    minPay: condition.minAcceptAmount ? String(Math.round(condition.minAcceptAmount / 10_000)) : "",
+    startDate: condition.availableFrom ?? "",
+    startNegotiable: condition.startNegotiable,
+    period: condition.periodValue ? String(condition.periodValue) : "",
+    periodUnitCode: condition.periodUnit,
+    freelanceExperience: condition.hasFreelanceExperience ? "있음" : "없음",
+    careerYears: condition.careerYears ? String(condition.careerYears) : "",
+    skills: condition.skills.map((skill) => ({ code: skill.skillCode, levelCode: skill.skillLevel })),
+  };
+}
+function buildConditionPayload(form: ConditionForm): FreelancerCondition {
+  return {
+    jobCategory: form.categoryCode,
+    jobRole: form.roleCode,
+    workStyle: form.workStyleCode as WorkStyle,
+    workForm: form.workFormCode as WorkForm,
+    payUnit: form.payUnitCode as PayUnit,
+    payAmount: Number(form.pay.replaceAll(",", "")) * 10_000 || 0,
+    minAcceptAmount: Number(form.minPay.replaceAll(",", "")) * 10_000 || 0,
+    availableFrom: form.startNegotiable ? null : form.startDate || null,
+    startNegotiable: form.startNegotiable,
+    periodValue: Number(form.period) || 0,
+    periodUnit: form.periodUnitCode as PeriodUnit,
+    hasFreelanceExperience: form.freelanceExperience === "있음",
+    careerYears: Number(form.careerYears) || 0,
+    skills: form.skills.map((skill) => ({ skillCode: skill.code, skillLevel: skill.levelCode as SkillLevel })),
+  };
+}
+function labelOf(options: MetaOption[], code: string) {
+  return options.find((option) => option.code === code)?.label ?? code;
+}
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, "");
+}
+function formatNumber(value: string) {
+  const digits = digitsOnly(value);
+  return digits ? Number(digits).toLocaleString("ko-KR") : "";
+}
 
 type ResumeDraft = {
   phone: string;
@@ -134,9 +217,11 @@ type ResumeDraft = {
   summary: string;
   portfolioName: string;
   portfolioFileId?: number;
+  portfolioUrl: string | null;
   profileImageName: string;
   profileImagePreview: string;
   profileImageFileId?: number;
+  profileImageUrl: string | null;
   educations: EducationForm[];
   careers: CareerForm[];
   certificates: CertificateForm[];
@@ -161,9 +246,11 @@ function emptyDraft(): ResumeDraft {
     summary: "",
     portfolioName: "",
     portfolioFileId: undefined,
+    portfolioUrl: null,
     profileImageName: "",
     profileImagePreview: "",
     profileImageFileId: undefined,
+    profileImageUrl: null,
     educations: [blankEducation()],
     careers: [blankCareer()],
     certificates: [],
@@ -179,19 +266,23 @@ function parseDate(date?: string | null) {
 }
 
 // 서버에 저장된 이력서를 화면 상태로 되돌립니다.
-function mapApiToDraft(resume: ResumeBody): ResumeDraft {
+// 조회 응답은 저장(profileFileId/portfolioFileId 숫자)과 달리 profileImageUrl/portfolioUrl(URL 문자열)만 내려주므로
+// 파일 ID는 비워두고 새로 업로드했을 때만 채웁니다.
+function mapApiToDraft(resume: ResumeDetailBody): ResumeDraft {
   return {
-    phone: resume.contactPhone,
+    phone: formatPhoneNumber(resume.contactPhone),
     email: resume.contactEmail,
     zipCode: resume.zipCode,
     address: resume.address,
     addressDetail: resume.addressDetail,
     summary: resume.selfIntroduction,
-    portfolioName: resume.portfolioFileId ? "등록된 포트폴리오" : "",
-    portfolioFileId: resume.portfolioFileId,
-    profileImageName: resume.profileFileId ? "등록된 프로필 사진" : "",
+    portfolioName: resume.portfolioUrl ? "등록된 포트폴리오" : "",
+    portfolioFileId: undefined,
+    portfolioUrl: resume.portfolioUrl,
+    profileImageName: resume.profileImageUrl ? "등록된 프로필 사진" : "",
     profileImagePreview: "",
-    profileImageFileId: resume.profileFileId,
+    profileImageFileId: undefined,
+    profileImageUrl: resume.profileImageUrl,
     educations: resume.educations.length
       ? resume.educations.map((education) => {
         const start = parseDate(education.startDate);
@@ -276,7 +367,7 @@ export function FreelancerResumeRegistration() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [draft, setDraft] = useState<ResumeDraft>(emptyDraft);
-  const [condition, setCondition] = useState<FreelancerCondition | null>(null);
+  const [conditionForm, setConditionForm] = useState<ConditionForm>(blankConditionForm);
   const [notice, setNotice] = useState("");
   const [showErrors, setShowErrors] = useState(false);
   const [profileImageError, setProfileImageError] = useState("");
@@ -290,19 +381,59 @@ export function FreelancerResumeRegistration() {
   const [submitting, setSubmitting] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
   const [draftMessage, setDraftMessage] = useState("");
+  const [hasSavedResume, setHasSavedResume] = useState(false);
+  const [accountBirthDate, setAccountBirthDate] = useState<string | null>(null);
+
+  const [jobCategories, setJobCategories] = useState<MetaOption[]>([]);
+  const [jobRoles, setJobRoles] = useState<MetaOption[]>([]);
+  const [skillOptions, setSkillOptions] = useState<MetaOption[]>([]);
+  const [workConditionsMeta, setWorkConditionsMeta] = useState<WorkConditionsMeta | null>(null);
+  const [metaLoading, setMetaLoading] = useState(true);
+  const [metaError, setMetaError] = useState("");
+  const [skillSearch, setSkillSearch] = useState("");
 
   const name = currentUser?.name ?? "회원정보 확인 중";
   const effectiveEmail = draft.email || currentUser?.email || "";
+  const photoUrl = draft.profileImagePreview || draft.profileImageUrl || "";
+  const hasProfileImage = Boolean(draft.profileImageFileId || draft.profileImageUrl);
+  const hasPortfolio = Boolean(draft.portfolioFileId || draft.portfolioUrl);
+
+  const fetchConditionMeta = () =>
+    Promise.all([
+      getFreelancerJobCategories(),
+      getFreelancerJobRoles(),
+      getFreelancerSkills(),
+      getFreelancerWorkConditions(),
+    ])
+      .then(([categories, roles, skills, meta]) => {
+        setJobCategories(categories);
+        setJobRoles(roles);
+        setSkillOptions(skills);
+        setWorkConditionsMeta(meta);
+      })
+      .catch(() => setMetaError("직군·직무·스킬 정보를 불러오지 못했습니다. 다시 시도해 주세요."))
+      .finally(() => setMetaLoading(false));
+
+  useEffect(() => {
+    void fetchConditionMeta();
+  }, []);
+
+  useEffect(() => {
+    getFreelancerProfile()
+      .then((profile) => setAccountBirthDate(profile.birthDate))
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     let active = true;
     getFreelancerResume()
       .then(async (detail) => {
         if (!active) return;
-        setCondition(detail.condition ?? readStoredCondition());
+        if (detail.condition) setConditionForm(mapConditionToForm(detail.condition));
         setNotice(detail.notice ?? "");
         if (detail.resume) {
           setDraft(mapApiToDraft(detail.resume));
+          setHasSavedResume(true);
           setScreen("review");
           return;
         }
@@ -352,31 +483,67 @@ export function FreelancerResumeRegistration() {
     clear();
   };
 
+  const filteredJobRoles = useMemo(
+    () => jobRoles.filter((role) => role.parentCode === conditionForm.categoryCode),
+    [conditionForm.categoryCode, jobRoles],
+  );
+  const filteredSkills = useMemo(
+    () =>
+      skillOptions
+        .filter((skill) => !conditionForm.skills.some((selected) => selected.code === skill.code))
+        .filter((skill) => skill.label.toLowerCase().includes(skillSearch.toLowerCase()))
+        .slice(0, skillSearch ? skillOptions.length : 12),
+    [conditionForm.skills, skillSearch, skillOptions],
+  );
+  const toggleSkill = (option: MetaOption) =>
+    setConditionForm((current) => ({
+      ...current,
+      skills: current.skills.some((skill) => skill.code === option.code)
+        ? current.skills.filter((skill) => skill.code !== option.code)
+        : [...current.skills, { code: option.code, levelCode: workConditionsMeta?.skillLevels[0]?.code ?? "" }],
+    }));
+
   const educationsValid = draft.educations.every(
     (item) => item.schoolName.trim() && item.startYear && item.startMonth,
   );
   const careersValid = draft.careers.every(
     (item) => item.companyName.trim() && item.startYear && item.startMonth,
   );
+  const certificatesValid = draft.certificates.every(
+    (item) => item.acquiredDate.trim() && item.name.trim(),
+  );
+  const conditionValid = Boolean(
+    conditionForm.categoryCode &&
+    conditionForm.roleCode &&
+    conditionForm.workStyleCode &&
+    conditionForm.workFormCode &&
+    conditionForm.payUnitCode &&
+    Number(conditionForm.pay.replaceAll(",", "")) >= 1 &&
+    conditionForm.periodUnitCode &&
+    conditionForm.freelanceExperience &&
+    conditionForm.skills.length >= 1 &&
+    conditionForm.skills.every((skill) => skill.levelCode),
+  );
   const agreementsValid = Object.values(draft.agreements).every(Boolean);
+  const agreementsGate = hasSavedResume || agreementsValid;
   const isValid = Boolean(
     name.trim() &&
-    draft.profileImageFileId &&
+    hasProfileImage &&
     draft.phone.trim() &&
     effectiveEmail.trim() &&
-    draft.zipCode.trim() &&
     draft.address.trim() &&
     educationsValid &&
     careersValid &&
+    certificatesValid &&
     draft.summary.trim() &&
-    draft.portfolioFileId &&
-    agreementsValid &&
-    condition,
+    hasPortfolio &&
+    agreementsGate &&
+    conditionValid,
   );
 
   const buildPayload = (): ResumeUpdateRequest => ({
-    condition: condition as FreelancerCondition,
-    profileFileId: draft.profileImageFileId,
+    condition: buildConditionPayload(conditionForm),
+    ...(draft.profileImageFileId == null ? {} : { profileFileId: draft.profileImageFileId }),
     contactPhone: draft.phone,
     contactEmail: effectiveEmail,
     zipCode: draft.zipCode,
@@ -409,7 +576,7 @@ export function FreelancerResumeRegistration() {
       note: certificate.note.trim() || undefined,
     })),
     selfIntroduction: draft.summary,
-    portfolioFileId: draft.portfolioFileId,
+    ...(draft.portfolioFileId == null ? {} : { portfolioFileId: draft.portfolioFileId }),
     links: draft.links.map((link) => ({ url: link.url })),
     agreements: draft.agreements,
   });
@@ -424,6 +591,7 @@ export function FreelancerResumeRegistration() {
     setSubmitting(true);
     try {
       await updateFreelancerResume(buildPayload());
+      setHasSavedResume(true);
       setScreen("review");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
@@ -451,7 +619,7 @@ export function FreelancerResumeRegistration() {
   if (loading) {
     return (
       <ProfileRegistrationShell step={2} title="내 이력서" description="이력서 정보를 불러오는 중입니다.">
-        <p className="rounded-lg border border-theme bg-surface px-4 py-6 text-center text-[12px] text-theme-secondary">
+        <p className="rounded-lg border border-theme bg-surface p-8 text-center text-[12px] text-theme-secondary">
           불러오는 중...
         </p>
       </ProfileRegistrationShell>
@@ -461,13 +629,32 @@ export function FreelancerResumeRegistration() {
   if (screen === "complete")
     return <CompleteScreen name={name} onView={() => setScreen("review")} />;
   if (screen === "review")
-    return <ReviewScreen name={name} phone={draft.phone} email={effectiveEmail} draft={draft} notice={notice} onEdit={() => setScreen("form")} />;
+    return (
+      <ReviewScreen
+        name={name}
+        birthDate={accountBirthDate}
+        phone={draft.phone}
+        email={effectiveEmail}
+        draft={draft}
+        photoUrl={photoUrl}
+        condition={conditionValid ? buildConditionPayload(conditionForm) : null}
+        jobCategories={jobCategories}
+        jobRoles={jobRoles}
+        skillOptions={skillOptions}
+        workConditionsMeta={workConditionsMeta}
+        notice={notice}
+        onEdit={() => {
+          setScreen("form");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
+    );
 
   return (
     <ProfileRegistrationShell
       step={2}
-      title="내 이력서"
-      description="이력서와 포트폴리오 정보를 관리합니다."
+      title={hasSavedResume ? "내 이력서 수정" : "이력서 등록"}
+      description={hasSavedResume ? "이력서와 포트폴리오 정보를 수정합니다." : "희망 조건과 이력서, 포트폴리오를 등록해 주세요."}
     >
       <form
         ref={formRef}
@@ -478,24 +665,34 @@ export function FreelancerResumeRegistration() {
           if (!isValid) scrollToFirstError(formRef.current);
         }}
       >
-        <ResumeSaveStatus notice={notice} />
+        {hasSavedResume ? (
+          <ResumeSaveStatus notice={notice} />
+        ) : (
+          <p className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-[11px] font-semibold leading-5 text-blue-700">
+            아직 등록된 이력서가 없어 처음 작성하는 화면입니다. 아래 정보를 입력하고 저장하면 이력서가 등록됩니다.
+          </p>
+        )}
         {loadError ? <ErrorText>{loadError}</ErrorText> : null}
         <FormCard>
           <CardTitle>기본 정보</CardTitle>
+          <p className="mt-1 text-[11px] text-theme-muted">
+            연락처와 이메일을 비우면 회원정보의 값을 사용합니다.
+            로그인 정보를 바꾸려면 기본 정보 탭에서 수정하세요.
+          </p>
           <div className="mt-5 grid items-start gap-6 sm:grid-cols-[132px_1fr]">
             <label className="group flex w-[126px] flex-col items-start text-left text-[10px] font-semibold text-theme-muted">
               <span className="w-full text-left">프로필 사진</span>
               <span
                 className="relative mt-2 flex h-[162px] w-[126px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-md border border-theme bg-surface-subtle bg-cover bg-center text-theme-secondary group-hover:border-brand group-hover:outline-2 group-hover:outline-brand"
-                style={draft.profileImagePreview ? { backgroundImage: `url(${draft.profileImagePreview})` } : undefined}
+                style={photoUrl ? { backgroundImage: `url(${photoUrl})` } : undefined}
               >
-                {!draft.profileImagePreview ? (
+                {!photoUrl ? (
                   <>
                     <Upload size={24} strokeWidth={1.7} aria-hidden="true" />
                     <span className="mt-2 text-[9px]">3.5 × 4.5 비율</span>
                   </>
                 ) : null}
-                {draft.profileImagePreview ? (
+                {photoUrl ? (
                   <span className="absolute inset-x-0 bottom-0 bg-slate-950/70 py-2 text-center text-[10px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100">
                     사진 변경
                   </span>
@@ -527,9 +724,7 @@ export function FreelancerResumeRegistration() {
                     update("profileImageName", uploaded.originalName);
                     update("profileImageFileId", uploaded.fileId);
                   } catch {
-                    update("profileImageName", "");
                     update("profileImagePreview", "");
-                    update("profileImageFileId", undefined);
                     setProfileImageError("사진을 업로드하지 못했습니다. 다시 시도해 주세요.");
                   } finally {
                     setProfileImageUploading(false);
@@ -549,9 +744,9 @@ export function FreelancerResumeRegistration() {
             </label>
             <div className="grid gap-x-3 gap-y-2 sm:grid-cols-2">
               <Field label="성명" value={name} readOnly />
-              <Field label="생년월일" value="회원정보에서 가져온 값" readOnly />
+              <Field label="생년월일" value={accountBirthDate ?? "회원정보 확인 중"} readOnly />
               <Field
-                label="전화번호"
+                label="연락처"
                 value={draft.phone}
                 onChange={(value) => update("phone", formatPhoneNumber(value))}
                 error={showErrors && !draft.phone.trim()}
@@ -572,12 +767,11 @@ export function FreelancerResumeRegistration() {
                 label="우편번호"
                 value={draft.zipCode}
                 onChange={(value) => update("zipCode", value)}
-                error={showErrors && !draft.zipCode.trim()}
                 maxLength={10}
                 placeholder="우편번호"
               />
               <Field
-                label="주소"
+                label="기본 주소"
                 value={draft.address}
                 onChange={(value) => update("address", value)}
                 error={showErrors && !draft.address.trim()}
@@ -597,9 +791,266 @@ export function FreelancerResumeRegistration() {
             </div>
           </div>
           {profileImageError ? <ErrorText>{profileImageError}</ErrorText> : null}
-          {showErrors && !draft.profileImageFileId ? (
-            <ErrorText>확인 페이지에 표시할 프로필 사진을 다시 선택해 주세요.</ErrorText>
+          {showErrors && !hasProfileImage ? (
+            <ErrorText>확인 페이지에 표시할 프로필 사진을 등록해 주세요.</ErrorText>
           ) : null}
+        </FormCard>
+
+        <FormCard>
+          <CardTitle>희망 조건</CardTitle>
+          <p className="mt-1 text-[11px] text-theme-muted">
+            이력서와 같은 화면에서 함께 저장됩니다.
+          </p>
+          {metaError ? (
+            <p className="mt-3 rounded-md bg-danger-surface p-3 text-[11px] font-bold text-theme-danger">
+              {metaError}{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setMetaLoading(true);
+                  setMetaError("");
+                  void fetchConditionMeta();
+                }}
+                className="underline"
+              >
+                다시 시도
+              </button>
+            </p>
+          ) : null}
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <CompactField label="직군 *">
+              <select
+                value={conditionForm.categoryCode}
+                onChange={(event) => {
+                  const categoryCode = event.target.value;
+                  setConditionForm((current) => ({ ...current, categoryCode, roleCode: "" }));
+                }}
+                disabled={metaLoading}
+                className={fieldClassName}
+              >
+                <option value="">직군 선택</option>
+                {jobCategories.map((item) => (
+                  <option key={item.code} value={item.code}>{item.label}</option>
+                ))}
+              </select>
+            </CompactField>
+            <CompactField label="직무 *">
+              <select
+                value={conditionForm.roleCode}
+                onChange={(event) => setConditionForm((current) => ({ ...current, roleCode: event.target.value }))}
+                disabled={metaLoading || !conditionForm.categoryCode}
+                className={fieldClassName}
+              >
+                <option value="">직무 선택</option>
+                {filteredJobRoles.map((item) => (
+                  <option key={item.code} value={item.code}>{item.label}</option>
+                ))}
+              </select>
+            </CompactField>
+          </div>
+          {showErrors && !(conditionForm.categoryCode && conditionForm.roleCode) ? (
+            <ErrorText>직군과 직무를 선택해 주세요.</ErrorText>
+          ) : null}
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ConditionChoice
+              title="근무 방식"
+              valueCode={conditionForm.workStyleCode}
+              options={workConditionsMeta?.workStyles ?? []}
+              onChange={(code) => setConditionForm((current) => ({ ...current, workStyleCode: code }))}
+            />
+            <ConditionChoice
+              title="근무 형태"
+              valueCode={conditionForm.workFormCode}
+              options={workConditionsMeta?.workForms ?? []}
+              onChange={(code) => setConditionForm((current) => ({ ...current, workFormCode: code }))}
+            />
+          </div>
+          {showErrors && !(conditionForm.workStyleCode && conditionForm.workFormCode) ? (
+            <ErrorText>근무 방식과 근무 형태를 선택해 주세요.</ErrorText>
+          ) : null}
+
+          <div className="mt-4">
+            <p className="text-[11px] font-semibold text-theme-secondary">
+              희망 급여<span className="ml-1 text-theme-danger">*</span>
+            </p>
+            <p className="mt-1 text-[10px] text-theme-muted">만원 단위로 입력해 주세요. 최소 1만원입니다.</p>
+            <div className="mt-2 grid grid-cols-[1fr_3fr] gap-2">
+              <select
+                value={conditionForm.payUnitCode}
+                onChange={(event) => setConditionForm((current) => ({ ...current, payUnitCode: event.target.value }))}
+                disabled={metaLoading}
+                className={fieldClassName}
+              >
+                <option value="">단위 선택</option>
+                {(workConditionsMeta?.payUnits ?? []).map((item) => (
+                  <option key={item.code} value={item.code}>{item.label}</option>
+                ))}
+              </select>
+              <input
+                value={conditionForm.pay}
+                onChange={(event) => setConditionForm((current) => ({ ...current, pay: formatNumber(event.target.value) }))}
+                inputMode="numeric"
+                className={fieldClassName}
+                placeholder="1만원 이상 입력"
+              />
+            </div>
+            {showErrors && Number(conditionForm.pay.replaceAll(",", "")) < 1 ? (
+              <ErrorText>희망 급여를 1만원 이상 입력해 주세요.</ErrorText>
+            ) : null}
+          </div>
+
+          <div className="mt-4">
+            <p className="text-[11px] font-semibold text-theme-secondary">최저 수용 금액</p>
+            <p className="mt-1 text-[10px] text-theme-muted">
+              협상 시 수용 가능한 최소 금액입니다. 선택 입력이며 비우면 희망 급여를 기준으로 협상합니다.
+            </p>
+            <input
+              value={conditionForm.minPay}
+              onChange={(event) => setConditionForm((current) => ({ ...current, minPay: formatNumber(event.target.value) }))}
+              inputMode="numeric"
+              className={`${fieldClassName} mt-2`}
+              placeholder="선택 입력"
+            />
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div>
+              <p className="text-[11px] font-semibold text-theme-secondary">프로젝트 시작 가능일</p>
+              <input
+                type="date"
+                value={conditionForm.startDate}
+                onChange={(event) => setConditionForm((current) => ({ ...current, startDate: event.target.value }))}
+                disabled={conditionForm.startNegotiable}
+                className={`${fieldClassName} mt-2`}
+              />
+              <label className="mt-2 flex cursor-pointer items-center gap-2 text-[10px] text-theme-secondary">
+                <input
+                  type="checkbox"
+                  checked={conditionForm.startNegotiable}
+                  onChange={(event) => setConditionForm((current) => ({ ...current, startNegotiable: event.target.checked }))}
+                  className="accent-[var(--brand)]"
+                />
+                협의 가능
+              </label>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold text-theme-secondary">
+                희망 기간 · 기간 단위<span className="ml-1 text-theme-danger">*</span>
+              </p>
+              <div className="grid grid-cols-[7fr_3fr] gap-2">
+                <input
+                  value={conditionForm.period}
+                  onChange={(event) => setConditionForm((current) => ({ ...current, period: digitsOnly(event.target.value).slice(0, 2) }))}
+                  inputMode="numeric"
+                  className={fieldClassName}
+                  placeholder="1~24"
+                />
+                <select
+                  value={conditionForm.periodUnitCode}
+                  onChange={(event) => setConditionForm((current) => ({ ...current, periodUnitCode: event.target.value }))}
+                  disabled={metaLoading}
+                  className={fieldClassName}
+                >
+                  <option value="">단위</option>
+                  {(workConditionsMeta?.periodUnits ?? []).map((item) => (
+                    <option key={item.code} value={item.code}>{item.label}</option>
+                  ))}
+                </select>
+              </div>
+              <p className="mt-2 text-[10px] text-theme-muted">기간 값은 1~24까지 입력할 수 있습니다.</p>
+            </div>
+          </div>
+          {showErrors && !conditionForm.periodUnitCode ? (
+            <ErrorText>기간 단위를 선택해 주세요.</ErrorText>
+          ) : null}
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ConditionChoice
+              title="프리랜서 경험"
+              valueCode={conditionForm.freelanceExperience}
+              options={[{ code: "있음", label: "있음" }, { code: "없음", label: "없음" }]}
+              onChange={(code) => setConditionForm((current) => ({ ...current, freelanceExperience: code }))}
+            />
+            <div>
+              <p className="text-[11px] font-semibold text-theme-secondary">전체 경력</p>
+              <div className="relative mt-2">
+                <input
+                  value={conditionForm.careerYears}
+                  onChange={(event) => setConditionForm((current) => ({ ...current, careerYears: digitsOnly(event.target.value) }))}
+                  inputMode="numeric"
+                  className={`${fieldClassName} pr-10`}
+                  placeholder="선택 입력"
+                />
+                <span className="pointer-events-none absolute right-3 top-[13px] text-[11px] font-semibold text-theme-secondary">년</span>
+              </div>
+            </div>
+          </div>
+          {showErrors && !conditionForm.freelanceExperience ? (
+            <ErrorText>프리랜서 경험 여부를 선택해 주세요.</ErrorText>
+          ) : null}
+
+          <div className="mt-4">
+            <p className="text-[11px] font-semibold text-theme-secondary">
+              보유 스킬<span className="ml-1 text-theme-danger">*</span>
+            </p>
+            <p className="mt-1 text-[10px] text-theme-muted">스킬을 1개 이상 선택하고 각각 숙련도를 지정해 주세요.</p>
+            <input
+              value={skillSearch}
+              onChange={(event) => setSkillSearch(event.target.value)}
+              className={`${fieldClassName} mt-2`}
+              placeholder="스킬 검색"
+            />
+            <div className="mt-3 flex max-h-40 flex-wrap gap-2 overflow-y-auto">
+              {filteredSkills.map((skill) => (
+                <button
+                  key={skill.code}
+                  type="button"
+                  onClick={() => toggleSkill(skill)}
+                  aria-pressed={false}
+                  className="rounded-full border border-theme-strong px-3 py-1.5 text-[10px] font-bold"
+                >
+                  {skill.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 space-y-2">
+              {conditionForm.skills.map((skill) => (
+                <div
+                  key={skill.code}
+                  className="flex items-center gap-2 rounded-md border border-theme bg-surface-subtle p-2"
+                >
+                  <span className="min-w-0 flex-1 text-[11px] font-bold">{labelOf(skillOptions, skill.code)}</span>
+                  <select
+                    value={skill.levelCode}
+                    onChange={(event) => {
+                      const levelCode = event.target.value;
+                      setConditionForm((current) => ({
+                        ...current,
+                        skills: current.skills.map((item) => (item.code === skill.code ? { ...item, levelCode } : item)),
+                      }));
+                    }}
+                    className="h-8 rounded-md border border-theme bg-surface px-2 text-[10px] outline-none hover:border-brand hover:outline-2 hover:outline-brand focus:border-brand focus:outline-2 focus:outline-brand"
+                  >
+                    {(workConditionsMeta?.skillLevels ?? []).map((level) => (
+                      <option key={level.code} value={level.code}>{level.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    aria-label={`${labelOf(skillOptions, skill.code)} 삭제`}
+                    onClick={() => setConditionForm((current) => ({ ...current, skills: current.skills.filter((item) => item.code !== skill.code) }))}
+                    className="text-[14px] text-theme-muted"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            {showErrors && (conditionForm.skills.length === 0 || conditionForm.skills.some((skill) => !skill.levelCode)) ? (
+              <ErrorText>보유 스킬을 1개 이상 선택하고 숙련도를 모두 지정해 주세요.</ErrorText>
+            ) : null}
+          </div>
         </FormCard>
 
         <FormCard>
@@ -636,7 +1087,7 @@ export function FreelancerResumeRegistration() {
                   />
                 ) : null}
               </div>
-              <div className="mt-3 grid items-end gap-2 sm:grid-cols-[1.3fr_1.3fr_.8fr_.7fr]">
+              <div className="mt-3 grid grid-cols-[1.3fr_1.3fr_.8fr_.7fr] items-end gap-2">
                 <CompactField label="학교명">
                   <input
                     value={education.schoolName}
@@ -721,17 +1172,8 @@ export function FreelancerResumeRegistration() {
                     onChange={(year, month) => updateCareer(career.id, { endYear: year, endMonth: month })}
                   />
                 ) : null}
-                <label className="ml-auto flex cursor-pointer items-center gap-1 text-[10px] text-theme-secondary">
-                  <input
-                    type="checkbox"
-                    checked={career.isEmployed}
-                    onChange={(event) => updateCareer(career.id, { isEmployed: event.target.checked })}
-                    className="accent-[var(--brand)]"
-                  />{" "}
-                  재직 중
-                </label>
               </div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <div className="mt-3 grid grid-cols-4 gap-2">
                 <input
                   value={career.companyName}
                   maxLength={100}
@@ -753,6 +1195,15 @@ export function FreelancerResumeRegistration() {
                   className={compactInputClassName}
                   placeholder="직급"
                 />
+                <label className="flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-theme bg-surface px-2 text-[10px] font-semibold text-theme-secondary hover:border-brand">
+                  <input
+                    type="checkbox"
+                    checked={career.isEmployed}
+                    onChange={(event) => updateCareer(career.id, { isEmployed: event.target.checked })}
+                    className="accent-[var(--brand)]"
+                  />
+                  재직 중
+                </label>
               </div>
               <textarea
                 value={career.jobDescription}
@@ -835,6 +1286,7 @@ export function FreelancerResumeRegistration() {
               </div>
             </EntryBox>
           ))}
+          {showErrors && !certificatesValid ? <ErrorText>취득일자와 자격증명을 입력해 주세요.</ErrorText> : null}
           <AddButton onClick={() => update("certificates", [...draft.certificates, blankCertificate()])}>
             ＋ 자격증 및 어학 추가
           </AddButton>
@@ -849,7 +1301,7 @@ export function FreelancerResumeRegistration() {
             value={draft.summary}
             onChange={(event) => update("summary", event.target.value)}
             maxLength={1500}
-            className={`${fieldClassName} h-36 resize-none py-3 ${showErrors && !draft.summary.trim() ? "border-red-500" : ""}`}
+            className={`${fieldClassName} h-56 resize-none py-3 ${showErrors && !draft.summary.trim() ? "border-red-500" : ""}`}
             placeholder="자기소개를 입력하세요..."
           />
           <p className="mt-2 text-right text-[10px] text-theme-muted">{draft.summary.length} / 1,500자</p>
@@ -861,7 +1313,7 @@ export function FreelancerResumeRegistration() {
             <CardTitle>포트폴리오</CardTitle>
             <p className="mt-1 text-[11px] text-theme-muted">PDF 파일만 가능하며 최대 용량은 100MB입니다.</p>
             <label
-              className={`mt-4 flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed bg-surface-subtle text-center hover:border-brand hover:outline-2 hover:outline-brand ${showErrors && !draft.portfolioFileId ? "border-red-500" : "border-theme-strong"}`}
+              className={`mt-4 flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed bg-surface-subtle text-center hover:border-brand hover:outline-2 hover:outline-brand ${showErrors && !hasPortfolio ? "border-red-500" : "border-theme-strong"}`}
             >
               <Upload size={24} strokeWidth={1.6} className="text-theme-muted" aria-hidden="true" />
               <span className="mt-3 text-[12px] font-bold">PDF 파일을 드래그하거나 클릭하여 업로드</span>
@@ -889,8 +1341,6 @@ export function FreelancerResumeRegistration() {
                     update("portfolioName", uploaded.originalName);
                     update("portfolioFileId", uploaded.fileId);
                   } catch {
-                    update("portfolioName", "");
-                    update("portfolioFileId", undefined);
                     setPortfolioError("포트폴리오를 업로드하지 못했습니다. 다시 시도해 주세요.");
                   } finally {
                     setPortfolioUploading(false);
@@ -903,13 +1353,20 @@ export function FreelancerResumeRegistration() {
             {draft.portfolioName ? (
               <div className="mt-3 flex items-center gap-3 rounded-md border border-theme bg-success-surface px-3 py-2 text-[11px] font-bold text-theme-success">
                 <FileText size={18} className="shrink-0" aria-hidden="true" />
-                <span className="min-w-0 flex-1 truncate">{draft.portfolioName}</span>
+                {draft.portfolioUrl ? (
+                  <a href={draft.portfolioUrl} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate underline">
+                    {draft.portfolioName}
+                  </a>
+                ) : (
+                  <span className="min-w-0 flex-1 truncate">{draft.portfolioName}</span>
+                )}
                 <button
                   type="button"
                   aria-label="포트폴리오 파일 제거"
                   onClick={() => {
                     update("portfolioName", "");
                     update("portfolioFileId", undefined);
+                    update("portfolioUrl", null);
                     setPortfolioError("");
                   }}
                   className="shrink-0 text-theme-muted hover:text-theme-danger"
@@ -918,7 +1375,7 @@ export function FreelancerResumeRegistration() {
                 </button>
               </div>
             ) : null}
-            {showErrors && !draft.portfolioFileId ? <ErrorText>포트폴리오 PDF 파일을 등록해 주세요.</ErrorText> : null}
+            {showErrors && !hasPortfolio ? <ErrorText>포트폴리오 PDF 파일을 등록해 주세요.</ErrorText> : null}
           </FormCard>
         </div>
 
@@ -982,6 +1439,9 @@ export function FreelancerResumeRegistration() {
 
         <FormCard>
           <CardTitle>필수 동의</CardTitle>
+          {hasSavedResume ? (
+            <p className="mt-1 text-[10px] text-theme-muted">최초 등록 시 동의한 내용이며, 이후 수정 저장에는 영향을 주지 않습니다.</p>
+          ) : null}
           <div className="mt-3 space-y-2">
             <AgreementCheckbox
               label="이력서 정보 수집에 동의합니다."
@@ -1004,7 +1464,7 @@ export function FreelancerResumeRegistration() {
               onChange={(checked) => update("agreements", { ...draft.agreements, careerPortfolioUsageAgreed: checked })}
             />
           </div>
-          {showErrors && !agreementsValid ? <ErrorText>모든 약관에 동의해야 저장할 수 있습니다.</ErrorText> : null}
+          {showErrors && !agreementsGate ? <ErrorText>모든 약관에 동의해야 저장할 수 있습니다.</ErrorText> : null}
         </FormCard>
 
         {submitError ? <ErrorText>{submitError}</ErrorText> : null}
@@ -1041,18 +1501,64 @@ export function FreelancerResumeRegistration() {
   );
 }
 
+function ConditionChoice({
+  title,
+  valueCode,
+  options,
+  onChange,
+}: {
+  title: string;
+  valueCode: string;
+  options: { code: string; label: string }[];
+  onChange: (code: string) => void;
+}) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold text-theme-secondary">
+        {title}<span className="ml-1 text-theme-danger">*</span>
+      </p>
+      <div className="mt-2 flex gap-2">
+        {options.map((option) => (
+          <button
+            key={option.code}
+            type="button"
+            onClick={() => onChange(option.code)}
+            className={`flex-1 rounded-md border px-2 py-2 text-[10px] font-bold ${valueCode === option.code ? "border-brand bg-surface-muted text-brand" : "border-theme"}`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ReviewScreen({
   name,
+  birthDate,
   phone,
   email,
   draft,
+  photoUrl,
+  condition,
+  jobCategories,
+  jobRoles,
+  skillOptions,
+  workConditionsMeta,
   notice,
   onEdit,
 }: {
   name: string;
+  birthDate: string | null;
   phone: string;
   email: string;
   draft: ResumeDraft;
+  photoUrl: string;
+  condition: FreelancerCondition | null;
+  jobCategories: MetaOption[];
+  jobRoles: MetaOption[];
+  skillOptions: MetaOption[];
+  workConditionsMeta: WorkConditionsMeta | null;
   notice: string;
   onEdit: () => void;
 }) {
@@ -1075,19 +1581,30 @@ function ReviewScreen({
       <div className="mt-4 space-y-3">
         <ReviewCard
           title="기본 정보"
-          imagePreview={draft.profileImagePreview}
+          imagePreview={photoUrl}
           imageName={draft.profileImageName}
           rows={[
             ["성명", name],
-            ["전화번호", phone],
+            ["생년월일", birthDate ?? "확인 중"],
+            ["연락처", phone],
             ["이메일", email],
-            ["주소", [draft.zipCode, draft.address, draft.addressDetail].filter(Boolean).join(" ")],
           ]}
+          fullRows={[["주소", [draft.zipCode, draft.address, draft.addressDetail].filter(Boolean).join(" ")]]}
         />
+        {condition ? (
+          <ConditionReviewCards
+            condition={condition}
+            jobCategories={jobCategories}
+            jobRoles={jobRoles}
+            skillOptions={skillOptions}
+            workConditionsMeta={workConditionsMeta}
+          />
+        ) : null}
         {draft.educations.map((education, index) => (
           <ReviewCard
             key={education.id}
             title={`학력사항 ${draft.educations.length > 1 ? index + 1 : ""}`}
+            columns={3}
             rows={[
               ["학교명", education.schoolName],
               ["학과(과)", education.major],
@@ -1099,15 +1616,16 @@ function ReviewScreen({
           <ReviewCard
             key={career.id}
             title={`경력사항 ${draft.careers.length > 1 ? index + 1 : ""}`}
+            columns={3}
             rows={[
               ["회사/기관명", career.companyName],
               ["부서 · 직급", [career.department, career.position].filter(Boolean).join(" · ")],
               ["재직 상태", career.isEmployed ? "재직 중" : "근무 종료"],
-              ["담당 업무", career.jobDescription],
             ]}
+            fullRows={[["담당 업무", career.jobDescription]]}
           />
         ))}
-        <ReviewCard title="자기소개" rows={[["내용", draft.summary]]} />
+        <ReviewCard title="자기소개" fullRows={[["내용", draft.summary]]} />
         {draft.certificates.map((certificate, index) => (
           <ReviewCard
             key={certificate.id}
@@ -1127,6 +1645,58 @@ function ReviewScreen({
         />
       </div>
     </ProfileRegistrationShell>
+  );
+}
+
+function ConditionReviewCards({
+  condition,
+  jobCategories,
+  jobRoles,
+  skillOptions,
+  workConditionsMeta,
+}: {
+  condition: FreelancerCondition;
+  jobCategories: MetaOption[];
+  jobRoles: MetaOption[];
+  skillOptions: MetaOption[];
+  workConditionsMeta: WorkConditionsMeta | null;
+}) {
+  const payAmount = Math.floor(condition.payAmount / 10_000).toLocaleString("ko-KR");
+  const minAcceptAmount = Math.floor(condition.minAcceptAmount / 10_000).toLocaleString("ko-KR");
+  const payUnitLabel = labelOf(workConditionsMeta?.payUnits ?? [], condition.payUnit);
+  const periodUnitLabel = labelOf(workConditionsMeta?.periodUnits ?? [], condition.periodUnit);
+
+  return (
+    <>
+      <ReviewCard
+        title="희망 조건"
+        rows={[
+          ["직군", labelOf(jobCategories, condition.jobCategory)],
+          ["직무", labelOf(jobRoles, condition.jobRole)],
+          ["근무 방식", labelOf(workConditionsMeta?.workStyles ?? [], condition.workStyle)],
+          ["근무 형태", labelOf(workConditionsMeta?.workForms ?? [], condition.workForm)],
+          ["희망 급여", `${payUnitLabel} ${payAmount}만원`],
+          ["최저 수용 금액", condition.minAcceptAmount ? `${minAcceptAmount}만원` : "미입력"],
+          ["시작 가능일", condition.startNegotiable ? "협의 가능" : (condition.availableFrom ?? "미입력")],
+          ["예상 기간", condition.periodValue ? `${condition.periodValue}${periodUnitLabel}` : "미입력"],
+          ["프리랜서 경험", condition.hasFreelanceExperience ? "있음" : "없음"],
+          ["전체 경력", condition.careerYears ? `${condition.careerYears}년` : "미입력"],
+        ]}
+      />
+      <FormCard>
+        <h2 className="text-[14px] font-extrabold">보유 스킬</h2>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {condition.skills.map((skill) => (
+            <span
+              key={skill.skillCode}
+              className="rounded-full border border-brand bg-brand/10 px-3 py-1.5 text-[11px] font-bold text-brand"
+            >
+              {labelOf(skillOptions, skill.skillCode)} · {labelOf(workConditionsMeta?.skillLevels ?? [], skill.skillLevel)}
+            </span>
+          ))}
+        </div>
+      </FormCard>
+    </>
   );
 }
 
@@ -1158,14 +1728,19 @@ function CompleteScreen({ name, onView }: { name: string; onView: () => void }) 
 function ReviewCard({
   title,
   rows,
+  fullRows,
   imagePreview,
   imageName,
+  columns = 2,
 }: {
   title: string;
-  rows: (string | undefined)[][];
+  rows?: (string | undefined)[][];
+  fullRows?: (string | undefined)[][];
   imagePreview?: string;
   imageName?: string;
+  columns?: 2 | 3;
 }) {
+  const gridClassName = columns === 3 ? "grid gap-3 sm:grid-cols-3" : "grid gap-3 sm:grid-cols-2";
   return (
     <FormCard>
       <h2 className="text-[14px] font-extrabold">{title}</h2>
@@ -1181,16 +1756,32 @@ function ReviewCard({
             {imageName ? <p className="mt-2 truncate text-[9px] text-theme-muted">{imageName}</p> : null}
           </div>
         ) : null}
-        <dl className="grid gap-3 sm:grid-cols-2">
-          {rows.map(([label, value]) => (
-            <div key={label} className="min-w-0 text-[11px]">
-              <dt className="font-semibold text-theme-secondary">{label}</dt>
-              <dd className="mt-2 min-h-10 break-all rounded-md border border-theme bg-surface px-3 py-2.5 font-semibold text-theme-primary">
-                {value || "미입력"}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <div className="min-w-0 flex-1">
+          {rows?.length ? (
+            <dl className={gridClassName}>
+              {rows.map(([label, value]) => (
+                <div key={label} className="min-w-0 text-[11px]">
+                  <dt className="font-semibold text-theme-secondary">{label}</dt>
+                  <dd className="mt-2 min-h-10 break-all rounded-md border border-theme bg-surface px-3 py-2.5 font-semibold text-theme-primary">
+                    {value || "미입력"}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
+          {fullRows?.length ? (
+            <dl className={rows?.length ? "mt-3 space-y-3" : "space-y-3"}>
+              {fullRows.map(([label, value]) => (
+                <div key={label} className="min-w-0 text-[11px]">
+                  <dt className="font-semibold text-theme-secondary">{label}</dt>
+                  <dd className="mt-2 min-h-10 whitespace-pre-wrap break-words rounded-md border border-theme bg-surface px-3 py-2.5 font-semibold text-theme-primary">
+                    {value || "미입력"}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
+        </div>
       </div>
     </FormCard>
   );
@@ -1331,7 +1922,7 @@ function Field({
         onChange={onChange ? (event) => onChange(event.target.value) : undefined}
         placeholder={placeholder}
       />
-      {error ? <span className="mt-1 block text-[10px] font-bold text-theme-danger">필수 정보를 입력해 주세요.</span> : null}
+      {error ? <span data-form-error="true" className="mt-1 block text-[10px] font-bold text-theme-danger">필수 정보를 입력해 주세요.</span> : null}
     </label>
   );
 }
