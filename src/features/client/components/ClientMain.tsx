@@ -32,8 +32,8 @@ export function ClientMain({ initialUser = null }: ClientMainProps) {
               <span aria-label="사용자 정보 불러오는 중" className="invisible inline-block w-[5.5em]" aria-hidden="true">
                 회원님,
               </span>
-            ) : user?.name ? (
-              `${user.name} 님,`
+            ) : user?.companyName ?? user?.name ? (
+              `${user.companyName ?? user.name} 님,`
             ) : (
               "회원님,"
             )}

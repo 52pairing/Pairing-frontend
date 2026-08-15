@@ -5,6 +5,7 @@ export interface FreelancerMyPageResponse {
   phone: string | null;
   birthDate: string | null;
   address: string | null;
+  addressParts: AddressParts | null;
   profileImageUrl: string | null;
   aiMatchingAgreed: boolean;
   grade: "JUNIOR" | "SENIOR" | "MASTER";
@@ -17,6 +18,7 @@ export interface FreelancerMyPageResponse {
 export interface FreelancerProfileUpdateRequest {
   profileFileId?: number;
   phone?: string;
-  address?: string;
+  address: AddressParts;
   aiMatchingAgreed: boolean;
 }
+import type { AddressParts } from "@/features/common/types/address";

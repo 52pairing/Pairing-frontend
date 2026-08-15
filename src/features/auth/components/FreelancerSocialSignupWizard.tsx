@@ -36,6 +36,8 @@ import {
   clearPendingSocialSignup,
   getPendingSocialSignup,
 } from "@/features/auth/utils/socialAuthFlow";
+import { AddressFields } from "@/features/common/components/AddressFields";
+import { EMPTY_ADDRESS_PARTS } from "@/features/common/types/address";
 
 const STEP_LABELS = FREELANCER_SOCIAL_SIGNUP_STEPS.map((step) => step.label);
 export function FreelancerSocialSignupWizard() {
@@ -151,7 +153,8 @@ function SocialInfoStep({
       today,
     ) &&
     isPhoneNumberValid(phone) &&
-    !!form.phoneChecked;
+    !!form.phoneChecked &&
+    !!form.address?.roadAddress;
 
   return (
     <>
@@ -210,6 +213,10 @@ function SocialInfoStep({
           checked={form.phoneChecked ?? false}
           onCheckedChange={(checked) => patch({ phoneChecked: checked })}
           role="FREELANCER"
+        />
+        <AddressFields
+          value={form.address ?? EMPTY_ADDRESS_PARTS}
+          onChange={(address) => patch({ address })}
         />
       </div>
       <SignupStepNavigation

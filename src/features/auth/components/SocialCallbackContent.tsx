@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { AuthHeader } from "@/features/auth/components/AuthHeader";
 import { completeSocialLogin } from "@/features/auth/services/socialAuth";
+import { clearCurrentUserCache } from "@/features/auth/services/currentUser";
 import { reactivateStomp } from "@/features/negotiation/stomp/client";
 import {
   clearSocialLoginAttempt,
@@ -38,13 +39,13 @@ export function SocialCallbackContent() {
     }
 
     completeSocialLogin(attempt.provider, { code, state })
-      .then(async (result) => {
+      .then((result) => {
         clearSocialLoginAttempt();
 
         if (result.status === "LOGIN") {
-          // 로그인 전(쿠키 없음) 죽은 STOMP 소켓을 새 쿠키로 되살린다.
-          await reactivateStomp();
+          clearCurrentUserCache();
           router.replace(attempt.returnUrl || DEFAULT_RETURN_URL);
+          void reactivateStomp();
           return;
         }
 

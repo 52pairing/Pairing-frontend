@@ -14,6 +14,7 @@ import {
 
 const PROTECTED_PREFIXES = ["/client", "/freelancer", "/chat", "/notifications"];
 const PASSWORD_RESET_PATH = "/login/findpassword/reset";
+const PUBLIC_PREFIXES = ["/login", "/signup", "/reset-password", "/terms", "/privacy", "/grade", "/forbidden"];
 
 export function AuthSessionGuard() {
   const pathname = usePathname();
@@ -30,7 +31,7 @@ export function AuthSessionGuard() {
   }, []);
 
   useEffect(() => {
-    if (pathname === PASSWORD_RESET_PATH) return;
+    if (pathname === "/" || PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return;
     const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
     let cancelled = false;

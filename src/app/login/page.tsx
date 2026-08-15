@@ -71,15 +71,15 @@ function LoginPageContent() {
     try {
       const result = await login({ email, password, role });
 
-      // 로그인 전(쿠키 없음) 핸드셰이크가 거절돼 죽은 STOMP 소켓을 새 쿠키로 되살린다.
-      await reactivateStomp();
-
       if (result.tempPassword) {
         router.push("/login/findpassword/reset");
+        void reactivateStomp();
         return;
       }
 
       router.push(returnUrl || ROLE_HOME_PATH[role]);
+      // 화면 전환을 먼저 끝내고 STOMP는 로그인 결과와 독립적으로 복구합니다.
+      void reactivateStomp();
     } catch (error) {
       if (error instanceof ApiException) {
         if (error.errorCode === "AU_002") {

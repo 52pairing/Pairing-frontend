@@ -75,15 +75,20 @@
 - 계약 출처: 백엔드 `frontend-auth-integration.md`
 - Swagger 확인: 미확인
 - 실제 네트워크 응답: 미검증
+- 원격 이미지 CDN 허용 호스트: `https://cdn.52pairing.kro.kr`
+- 매칭 후보 `profileImageUrl`은 CDN 절대 URL이어야 하며 object key만 내려오면 `next/image`에서 사용할 수 없음
 
 ## 현재 로그인 사용자 조회
 
 - Method / Path: `GET /api/v1/auth/me`
 - 사용 위치: `src/features/auth/services/currentUser.ts`
-- 성공 응답: `{ accountId, email, role, name, tempPassword }`
+- 성공 응답: `{ accountId, email, role, name, companyName, tempPassword }`
+- `companyName`은 클라이언트 회사명이며 프리랜서는 `null`; 클라이언트 메인·헤더는 `companyName ?? name` 표시
 - 인증: HttpOnly 로그인 쿠키
 - 화면 처리: 실제 역할에 맞는 헤더와 사용자 이름·이름 첫 글자 표시
 - 실제 응답: 미검증
+- 로그인·로그아웃·소셜 로그인 성공 시 5초 positive cache와 진행 중 요청을 초기화
+- `/login`, `/signup` 등 공개 경로에서는 `AuthSessionGuard`가 이 API를 호출하지 않음
 
 ## 로그아웃
 
@@ -254,6 +259,19 @@
 - `AU_005`(만료), `AU_012`(시도 초과)는 재발송 가능한 상태로 변경
 - `AU_003`(발송 횟수 초과)은 재발송 잠금
 
+## 결제수단 이메일 인증
+
+- 발송: `POST /api/v1/auth/email-verifications`, `{ email, purpose: "PAYMENT_METHOD" }`
+- 확인: `POST /api/v1/auth/email-verifications/confirm`, `{ email, purpose: "PAYMENT_METHOD", code }`
+- 이메일은 `GET /api/v1/auth/me` 응답을 사용하며 화면에서 입력받지 않음
+- `GET /api/v1/accounts/me/payment-methods`는 인증 불필요이며 탭과 결제 모달에서 그대로 사용
+- 보호 API는 카드·계좌 PUT 두 건만 해당
+- 수정 버튼에서 인증을 선제적으로 표시하고 PUT의 `AU_006`에서도 인증 UI로 복귀
+- 인증 마커는 30분 동안 소비되지 않아 조회와 카드·계좌 수정을 연속 사용
+- 수수료 결제 모달은 결제수단 이메일 인증과 무관하며 기존 흐름 유지
+- 실제 발송·확인·30분 만료 응답: 미검증
+- **백엔드 이슈 발견(2026-08-15)**: 실제 로그인 세션에서 결제수단 수정 버튼 클릭 시 `POST /api/v1/auth/email-verifications`(`{ email, purpose: "PAYMENT_METHOD" }`)가 500 Internal Server Error 반환. 요청 바디는 문서화된 형태와 동일(이메일은 `/auth/me` 실제 값, purpose는 확정된 값)하여 프론트 원인은 아닌 것으로 보이며, 백엔드에 `PAYMENT_METHOD` purpose 처리 중 서버 예외 확인 요청 필요
+
 ## 일반 회원가입 제출
 
 사용 위치: `src/features/auth/services/signup.ts`
@@ -266,7 +284,11 @@
 ### 요청 변환과 화면 처리
 
 - 전화번호와 사업자등록번호는 숫자만 전송
-- 클라이언트 기업 주소는 필수이며 앞뒤 공백을 제거한 한 줄 문자열로 전송 (최대 255자)
+- 세 회원가입 모두 주소를 `{ sido, sigungu, roadAddress, addressDetail, zipCode }` 객체로 필수 전송
+- 세종시는 `sigungu: ""`를 그대로 유지하며 `roadAddress`는 위젯 값을 자르지 않음
+- 카드사는 `GET /api/v1/meta/card-companies`의 영문 `code`를 `card.cardBrand`로 전송
+- 은행은 `GET /api/v1/meta/banks`의 숫자 기관 `code`를 `bankAccount.bankCode`로 전송
+- 카드번호는 숫자 16자리, 계좌번호는 숫자 10~14자리일 때만 제출 가능
 - 프리랜서 생년월일은 `YYYY-MM-DD`로 전송
 - 약관 조회 결과의 모든 `AGREEMENT` 항목을 `{ termsId, agreed }`로 전송하며 선택 약관 미동의도 `false`로 포함
 - 가입 중 완료 버튼을 비활성화해 중복 제출 방지
@@ -317,7 +339,7 @@
 
 ### 요청
 
-- `signUpTicket`, `name`, `phone`, `birthDate`
+- `signUpTicket`, `name`, `phone`, `birthDate`, `address`
 - `card`, `bankAccount`, `agreements`
 - 이메일은 요청에 넣지 않으며 가입 티켓의 소셜 이메일을 서버가 사용
 
@@ -1049,6 +1071,17 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 ---
 
+## 이력서 사진·포트폴리오 URL 응답 확인 (2026-08-15)
+
+- `GET /api/v1/freelancers/me/resume`의 `resume`는 저장(PUT)과 다른 필드명으로 사진·포트폴리오를 내려줍니다.
+  - 저장(PUT): `profileFileId`, `portfolioFileId` (숫자 파일 ID)
+  - 조회(GET): `profileImageUrl`, `portfolioUrl` (CDN 절대 URL 문자열, DB엔 object key만 저장하고 응답 시 조립)
+- `GET /api/v1/freelancers/me`(계정 프로필)의 `profileImageUrl`과 `GET /api/v1/freelancers/me/resume`의 `profileImageUrl`은 서로 다른 값입니다(계정 사진 ≠ 이력서용 사진). 마이페이지 기본 정보와 이력서 화면에서 각각의 값을 사용해야 합니다.
+- 프론트는 조회 응답에 파일 ID가 없으므로, 사진·포트폴리오가 "이미 등록돼 있는지"는 URL 유무로 판단하고, 저장 요청에는 이번 세션에 새로 업로드해 받은 파일 ID가 있을 때만 `profileFileId`/`portfolioFileId`를 포함합니다(생략 시 서버가 기존 값을 유지한다고 가정 — 미검증).
+- 실제 로그인 세션 기반 응답과, 파일 ID 생략 시 서버가 기존 값을 유지하는지는 미검증입니다.
+
+---
+
 ## 프리랜서 마이페이지 등급·이력서 통합 저장 (2026-08-14)
 
 - 등급 현황: `GET /api/v1/grades/me`
@@ -1074,6 +1107,7 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 기본 정보와 기업 정보를 한 화면으로 통합했습니다. 기존 `/client/mypage/company`는 기본 정보 화면으로 이동합니다.
 - 수정은 `PATCH /api/v1/clients/me` 한 번으로 처리합니다.
   - 수정 가능: `companyName`, `employeeCount`, `phone`, `address`, `logoFileId`
+  - `address`는 5칸 객체이며 필수입니다. 조회 표시는 한 줄 `address`, 수정 초기값은 `addressParts`를 사용하고 옛 계정의 `null`을 빈 객체로 방어합니다.
   - 수정 불가: `name`, `businessNo`, `businessField`, `email`
   - 로고를 바꾸지 않았다면 `logoFileId`를 요청에서 생략합니다.
 - 기업 로고: `POST /api/v1/files?purpose=COMPANY_LOGO`, jpg/jpeg/png, 5MB 이하
@@ -1125,6 +1159,7 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 리뷰 작성의 `RV_004`는 “대금 지급이 모두 완료된 후” 안내로 명시 처리합니다.
 - 프리랜서 기본 정보는 `GET/PATCH /api/v1/freelancers/me`를 사용합니다.
   - 수정 가능: `profileFileId`, `phone`, `address`; `aiMatchingAgreed`는 기존 값을 필수 전송
+  - `address`는 5칸 객체로 필수 전송하며 조회의 nullable `addressParts`를 수정 폼 초기값으로 사용합니다.
   - 수정 불가: `name`, `email`, `birthDate`
   - 저장 전에 `PROFILE_UPDATE` 이메일 인증을 완료해야 합니다.
 - 현재 프론트에는 사업 분야·직원 수 선택용 `/api/v1/meta/business-fields`, `/api/v1/meta/employee-counts` 서비스가 이미 존재합니다. 실제 배포 응답은 로그인 없는 브라우저에서 추가 확인 필요합니다.

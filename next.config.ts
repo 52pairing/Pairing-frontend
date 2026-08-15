@@ -6,7 +6,14 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
-  /* 기존 설정 */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.52pairing.kro.kr",
+      },
+    ],
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);

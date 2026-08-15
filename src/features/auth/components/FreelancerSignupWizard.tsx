@@ -32,6 +32,8 @@ import type { FreelancerSignupForm } from "@/features/auth/types";
 import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
 import { buildFreelancerSignupRequest } from "@/features/auth/utils/buildSignupRequest";
 import { ApiException } from "@/lib/api";
+import { AddressFields } from "@/features/common/components/AddressFields";
+import { EMPTY_ADDRESS_PARTS } from "@/features/common/types/address";
 
 const STEP_LABELS = FREELANCER_SIGNUP_STEPS.map((step) => step.label);
 
@@ -141,7 +143,8 @@ function BasicStep({
       today,
     ) &&
     isPhoneNumberValid(phone) &&
-    !!form.phoneChecked;
+    !!form.phoneChecked &&
+    !!form.address?.roadAddress;
 
   return (
     <>
@@ -177,6 +180,10 @@ function BasicStep({
           checked={form.phoneChecked ?? false}
           onCheckedChange={(checked) => patch({ phoneChecked: checked })}
           role="FREELANCER"
+        />
+        <AddressFields
+          value={form.address ?? EMPTY_ADDRESS_PARTS}
+          onChange={(address) => patch({ address })}
         />
       </div>
       <SignupStepNavigation
