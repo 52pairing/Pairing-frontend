@@ -15,7 +15,7 @@ import { FreelancerContractStatusTabs, type FreelancerContractStatus } from "./F
 
 const TAB_CODES: Record<FreelancerContractStatus, ContractListTab> = {
   전체: "ALL",
-  "서명 대기": "AWAITING_ME",
+  "서명 대기": "SIGNING",
   "진행 중": "IN_PROGRESS",
   "정산 대기": "SETTLEMENT_PENDING",
   완료: "COMPLETED",

@@ -9,7 +9,7 @@ import { contractDetail } from "./fixtures";
 let contractId = "31";
 
 jest.mock("next/navigation", () => ({
-  useParams: () => ({ contractId }),
+  useParams: () => ({ projectId: "7", contractId }),
 }));
 jest.mock("@/features/contract/services/contracts", () => ({
   getContractDetail: jest.fn(),
@@ -52,6 +52,12 @@ describe("ContractOverview - freelancer", () => {
     render(<ContractOverview role="freelancer" />);
     expect(await screen.findByText("상대방 서명 대기")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "계약서 서명하기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "PDF 다운로드" })).not.toBeInTheDocument();
+  });
+
+  test("클라이언트 내 계약 링크는 계약 목록으로 이동한다", async () => {
+    render(<ContractOverview role="client" />);
+    expect(await screen.findByRole("link", { name: "← 내 계약" })).toHaveAttribute("href", "/client/contracts");
   });
 
   test("DRAFT 계약에서는 PDF와 서명 이동을 제한한다", async () => {
@@ -64,6 +70,15 @@ describe("ContractOverview - freelancer", () => {
 
   test("PDF Blob을 계약번호 파일명으로 다운로드한다", async () => {
     const user = userEvent.setup();
+    mockGetDetail.mockResolvedValue({
+      ...contractDetail,
+      status: "SIGNED",
+      signatures: contractDetail.signatures.map((signature) => ({
+        ...signature,
+        status: "SIGNED",
+        signedAt: "2026-08-13",
+      })),
+    });
     mockDownloadPdf.mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" }));
     render(<ContractOverview role="freelancer" />);
     await screen.findByRole("heading", { name: "쇼핑몰 리뉴얼" });

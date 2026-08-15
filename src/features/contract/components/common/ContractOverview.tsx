@@ -53,7 +53,7 @@ export function ContractOverview({ role }: ContractOverviewProps) {
     : `/freelancer/contracts/${params.contractId}`;
   const signPath = `${contractPath}/sign`;
   const backHref = role === "client"
-    ? `/client/projects/${params.projectId}?tab=계약`
+    ? "/client/contracts"
     : "/freelancer/contracts";
   const myPartyRole: ContractPartyRole = role === "client" ? "CLIENT" : "FREELANCER";
 
@@ -85,7 +85,7 @@ export function ContractOverview({ role }: ContractOverviewProps) {
   }, [loadContract]);
 
   const downloadPdf = async () => {
-    if (!contract || contract.status === "DRAFT" || isDownloading) return;
+    if (!contract || !areBothPartiesSigned(contract.signatures) || isDownloading) return;
     setIsDownloading(true);
     setErrorMessage("");
     try {
@@ -114,6 +114,7 @@ export function ContractOverview({ role }: ContractOverviewProps) {
   const mySignature = contract.signatures.find((signature) => signature.partyRole === myPartyRole);
   const clientSignature = contract.signatures.find((signature) => signature.partyRole === "CLIENT");
   const freelancerSignature = contract.signatures.find((signature) => signature.partyRole === "FREELANCER");
+  const canDownload = areBothPartiesSigned(contract.signatures);
   const canSign = contract.status === "SIGN_PENDING" && mySignature?.status === "PENDING";
   const isWaitingForCounterpart = contract.status === "SIGN_PENDING" && mySignature?.status === "SIGNED";
   const statusLabel = STATUS_LABELS[contract.status] ?? contract.status;
@@ -159,7 +160,7 @@ export function ContractOverview({ role }: ContractOverviewProps) {
         <section className="mt-4 overflow-hidden rounded-[12px] border border-theme bg-surface">
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-5">
             <h2 className="text-[13px] font-bold">계약서 내용</h2>
-            {contract.status !== "DRAFT" ? <button type="button" disabled={isDownloading} onClick={() => void downloadPdf()} className="h-9 rounded-[8px] border border-theme bg-surface px-4 text-[11px] font-semibold text-theme-secondary transition hover:bg-surface-subtle disabled:cursor-not-allowed disabled:text-theme-muted">{isDownloading ? "다운로드 중..." : "PDF 다운로드"}</button> : null}
+            {canDownload ? <button type="button" disabled={isDownloading} onClick={() => void downloadPdf()} className="h-9 rounded-[8px] border border-theme bg-surface px-4 text-[11px] font-semibold text-theme-secondary transition hover:bg-surface-subtle disabled:cursor-not-allowed disabled:text-theme-muted">{isDownloading ? "다운로드 중..." : "PDF 다운로드"}</button> : null}
           </div>
 
           <div className="space-y-6 px-6 pb-7">
@@ -218,6 +219,12 @@ function getActionTitle(contract: ContractDetailResponse, mySignature?: Contract
   if (contract.status === "SIGN_PENDING" && mySignature?.status === "PENDING") return "위 계약 내용을 확인하고 서명해 주세요.";
   if (contract.status === "SIGN_PENDING") return "내 서명이 완료되었습니다. 상대방의 서명을 기다리고 있습니다.";
   return "계약 체결이 완료되었습니다.";
+}
+
+function areBothPartiesSigned(signatures: ContractSignature[]) {
+  return (["CLIENT", "FREELANCER"] as const).every((partyRole) =>
+    signatures.some((signature) => signature.partyRole === partyRole && signature.status === "SIGNED"),
+  );
 }
 
 function getContractErrorMessage(error: unknown, isPdf = false) {
