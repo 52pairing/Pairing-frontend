@@ -1,6 +1,7 @@
 export type ContractListTab =
   | "ALL"
   | "AWAITING_ME"
+  | "SIGNING"
   | "AWAITING_COUNTERPART"
   | "CONCLUDED"
   | "IN_PROGRESS"

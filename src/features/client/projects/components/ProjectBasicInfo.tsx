@@ -62,16 +62,17 @@ export function ProjectBasicInfo() {
     useState<ProjectWorkConditionsResponse | null>(null);
   const [metaError, setMetaError] = useState("");
 
+  // 조회 결과를 상태에 반영하는 공통 처리 (최초 로드·재시도 버튼이 공유)
+  const applyWorkConditions = (response: ProjectWorkConditionsResponse) => {
+    setWorkConditions(response);
+    setPeriodUnit((current) => current || response.periodUnits[0]?.code || "");
+  };
+
   const loadWorkConditions = async () => {
     setMetaError("");
 
     try {
-      const response = await getProjectWorkConditions();
-
-      setWorkConditions(response);
-      setPeriodUnit(
-        (current) => current || response.periodUnits[0]?.code || "",
-      );
+      applyWorkConditions(await getProjectWorkConditions());
     } catch (error) {
       setMetaError(
         error instanceof Error
@@ -86,12 +87,7 @@ export function ProjectBasicInfo() {
 
     getProjectWorkConditions()
       .then((response) => {
-        if (cancelled) return;
-
-        setWorkConditions(response);
-        setPeriodUnit(
-          (current) => current || response.periodUnits[0]?.code || "",
-        );
+        if (!cancelled) applyWorkConditions(response);
       })
       .catch((error) => {
         if (cancelled) return;

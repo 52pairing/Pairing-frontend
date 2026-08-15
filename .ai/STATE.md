@@ -197,6 +197,60 @@
 - TypeScript·변경 파일 ESLint·production build·관련 테스트 12개 통과
 - 전체 Jest는 기존 `FreelancerProfile` App Router 목 누락 5개 실패, 나머지 167개 통과
 - 실제 가입 201·결제수단 수정 200과 수정 폼 재진입은 로그인 환경에서 미검증
+## 현재 작업 (2026-08-15 — 계약·프로젝트 버그 4건 수정)
+
+- 작업명: 프리랜서 서명 대기 탭, 계약 상세 복귀 경로·PDF 다운로드, 종료 프로젝트 모집 정보 수정
+- 기준 문서: `C:/Users/user/Downloads/frontend-contract-project-fixes-guide.md`
+- 관련 Issue: 생성 전
+- 관련 브랜치: 현재 작업 브랜치
+- 진행 상황: 완료 — 프리랜서 서명 대기 탭을 `SIGNING`으로 변경, 클라이언트 계약 상세 복귀 경로를 `/client/contracts`로 수정, 종료·취소 프로젝트의 모집 마감일·연장 횟수 숨김, 양측 서명 완료 시에만 계약 상세 PDF 다운로드 노출
+- 검증: 관련 Jest 3 suites/18 tests, 변경 파일 ESLint, TypeScript, 프로덕션 빌드, `git diff --check` 통과
+- 실제 API·브라우저: 미검증 — 로그인 테스트 세션이 없고 `SIGNING` 배포 응답을 확인하지 못함
+
+---
+
+## 현재 작업 (2026-08-15 — 채팅/고객문의 파트 정리·렌더링·SEO 최적화)
+
+- 작업명: 채팅·고객지원(support) 파트 리팩터링/최적화 (불필요 코드 정리 + 렌더링 전략 + 번들 실측 + SEO)
+- 관련 Issue: #198 (확인 필요)
+- 관련 브랜치: 현재 작업 브랜치
+- 범위: `features/chat`, `features/support`, `app/support`, 공용 `Header`(사용자 승인), `next.config.ts`, `app/layout.tsx`. 로그인/매칭/마이페이지/메인 제외
+- 진행 상황(완료):
+  - 미사용 코드 3건 삭제(`leaveChatRoom`+`leaveEnabled`, `getUnreadChatCount` 별칭). `writer*` 필드는 유지 선택
+  - `/support` SEO metadata + 루트 `metadataBase`
+  - 문의 첨부 업로드 `Promise.allSettled` 병렬화(롤백·에러코드 유지)
+  - `/support` SSR→SSG(`force-static`), 하위 인증 라우트는 dynamic 유지
+  - `next.config` 실측 후 하이진 설정(`poweredByHeader:false` 등), 이미지 설정은 호스트 미확정 TODO
+  - 공용 `Header` 깜빡임 스켈레톤(`HeaderSkeleton`) — SSG 하드진입 시 게스트→로그인 깜빡임 제거
+- 검증: TypeScript·ESLint 통과, Jest 35 suites/174 tests 통과, `npm run build`에서 `/support` `○ Static` 확인
+- 남은 작업: 아바타 이미지 최적화(실제 호스트 확정 후 `unoptimized` 제거 + `remotePatterns`), 스켈레톤 시각 미세조정(브라우저 확인 시)
+- 기존 실패(무관): `FreelancerProfile.test.tsx` 5건 `useRouter` 하네스 이슈 — 변경 stash 후에도 동일, 팀원 파트라 미수정
+
+---
+
+## 현재 작업 (2026-08-15 — 채팅 입력창 상단 구분선 제거)
+
+- 작업명: 1:1 채팅 입력 영역 위 얇은 구분선 제거
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 진행 상황: 채팅 메시지 입력 폼의 상단 테두리 스타일 제거 완료
+- 변경 파일: `src/features/chat/components/Chat.tsx`
+- 검증: 변경 파일 ESLint, 채팅 Jest 1 suite/8 tests, `git diff --check` 통과
+- 실제 브라우저: 미실행 — 로그인 채팅 데이터가 필요한 화면이며 상단 테두리 클래스만 제거
+
+---
+
+## 현재 작업 (2026-08-14 — 처음 마지노선 등록 최소가 하한: 차단→경고 후 허용)
+
+- 작업명: 처음 협상 시작(POST /start) 시 등록 최소가보다 낮은 단가면 NG_012 차단 대신 확인 모달 후 허용
+- 기준 문서: `C:/Users/user/Downloads/frontend-floor-below-minaccept-0814.md`
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 범위: 처음 입력(start)만. 재조정(/floors)·수락(/answers)은 손대지 않음. 프리랜서+AMOUNT에만 의미
+- 진행 상황: `StartNegotiationRequest.conditions[]`에 `belowMinAccept?` 추가, `handleStart`가 NG_012를 배너 대신 `{ belowMinAccept: true }`로 반환, SetupPanel이 확인 모달을 띄우고 [그래도 시작] 시 AMOUNT만 `belowMinAccept:true`로 재제출
+- 변경 파일: `types/negotiation.ts`, `NegotiationRoom.tsx`, `NegotiationChatFlow.tsx`, 추가 `unit-tests/negotiation/NegotiationStartBelowMinAccept.test.tsx`
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과, 신규 협상 Jest 1 suite/2 tests 통과, `git diff --check` 통과
+- 실제 로그인·API·브라우저: 미검증(테스트 계정 없음). 백엔드 NG_012→belowMinAccept 통과 반영이 배포돼야 실제 동작 확인 가능
 
 ---
 

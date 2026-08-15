@@ -19,6 +19,15 @@ import {
   wonToManwon,
   type WorkConditionLabels,
 } from "@/features/negotiation/utils/conditionFormat";
+import {
+  buildAgreedSummary,
+  buildBelowFloorMessage,
+  findFloorViolation,
+  floorFieldLabel,
+  opponentValue,
+  toOptions,
+  type Decision,
+} from "@/features/negotiation/utils/negotiationDisplay";
 
 /**
  * 협상방 대화 플로우 (실데이터 구동)
@@ -47,8 +56,17 @@ interface NegotiationChatFlowProps {
   messages: NegotiationMessage[];
   /** 조건 값 라벨(근무방식/근무형태/기간 단위) — meta API 기반 */
   labels: WorkConditionLabels;
-  /** 협상 시작(마지노선 저장) — value 는 서버 전송용 문자열 */
-  onStart: (conditions: Array<{ conditionType: ConditionType; value: string }>) => void;
+  /**
+   * 협상 시작(마지노선 저장) — value 는 서버 전송용 문자열.
+   * 등록 최소가보다 낮은 단가(NG_012)면 belowMinAccept=true 를 돌려줘 확인 모달을 띄운다.
+   */
+  onStart: (
+    conditions: Array<{
+      conditionType: ConditionType;
+      value: string;
+      belowMinAccept?: boolean;
+    }>,
+  ) => Promise<{ belowMinAccept: boolean }>;
   /** 조건 승인/재지시 제출 — 마지노선 밖 수락(NG_011)이면 floorViolation=true */
   onSubmitAnswers: (answers: AnswerInput[]) => Promise<{ floorViolation: boolean }>;
   /** 내 마지노선 수정(PATCH) — ok=false 면 message 를 인라인 표시 */
@@ -199,57 +217,6 @@ export function NegotiationChatFlow({
   );
 }
 
-// ── 표시 헬퍼 ──────────────────────────────────────────────────────────
-
-const buildAgreedSummary = (
-  conditions: NegotiationCondition[],
-  labels: WorkConditionLabels,
-): string => {
-  const parts = conditions
-    .filter((condition) => condition.status === "AGREED")
-    .map((condition) => {
-      const value = formatConditionValue(condition.type, condition.agreedValue, labels);
-      const label = conditionLabel(condition.type);
-      return value ? `${label} ${value}` : label;
-    });
-  return parts.length > 0 ? parts.join(" · ") : "모든 조건에 합의했습니다.";
-};
-
-// 내 관점에서 "상대 희망값". 프리랜서면 클라 값, 클라면 프리랜서 값.
-const opponentValue = (
-  condition: NegotiationCondition,
-  viewerRole: "CLIENT" | "FREELANCER",
-): string | null =>
-  viewerRole === "CLIENT" ? condition.freelancerValue : condition.clientValue;
-
-// 마지노선 입력 라벨. 단가·기간은 역할에 따라 최소/최대 의미가 반대다.
-const floorFieldLabel = (
-  type: ConditionType,
-  viewerRole: "CLIENT" | "FREELANCER",
-): string => {
-  const isFreelancer = viewerRole === "FREELANCER";
-  switch (type) {
-    case "AMOUNT":
-      return isFreelancer
-        ? "최소 단가 (이 금액 미만은 거절)"
-        : "최대 단가 (이 금액 초과는 거절)";
-    case "PERIOD":
-      return isFreelancer ? "최소 기간" : "최대 기간";
-    case "WORK_STYLE":
-      return "허용 가능한 근무 방식";
-    case "WORK_FORM":
-      return "허용 가능한 근무 형태";
-    case "START_DATE":
-      return "희망 시작일";
-    default:
-      return conditionLabel(type);
-  }
-};
-
-// Record<code,label> → 정렬 유지된 옵션 배열
-const toOptions = (map: Record<string, string>): Array<{ code: string; label: string }> =>
-  Object.entries(map).map(([code, label]) => ({ code, label }));
-
 // ── 프레젠테이션 컴포넌트 ────────────────────────────────────────────────
 
 function WaitingNotice({ label }: { label: string }) {
@@ -317,7 +284,7 @@ function NegotiationHeader({
         {/* 최종 절충 단계면 라운드 대신 "최종 절충" 표시 */}
         <span>{finalOffer ? "최종 절충" : `라운드 ${round} / ${maxRound}`}</span>
         <span className={`rounded-full border px-3 py-1.5 ${isFailed ? "border-[#fecdca] bg-danger-surface text-theme-danger" : isComplete ? "border-[#abefc6] bg-success-surface text-theme-success" : finalOffer ? "border-[#fdb022] bg-[#fffaeb] text-[#b54708]" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}>
-          {isFailed ? "× 협상 결렬" : isComplete ? "✓ 협상 완료" : finalOffer ? "⚑ 최종 절충안" : "♙ 협상 중"}
+          {isFailed ? "× 협상 결렬" : isComplete ? "✓ 협상 완료" : finalOffer ? "⚑ 최종 절충안" : "협상 중"}
         </span>
       </div>
     </div>
@@ -337,7 +304,7 @@ function ConditionBadges({ conditions }: { conditions: NegotiationCondition[] })
             className={`rounded-full border px-3 py-1.5 text-[11px] font-bold ${isAgreed ? "border-[#abefc6] bg-success-surface text-theme-success" : isRejected ? "border-[#fecdca] bg-danger-surface text-theme-danger" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}
           >
             {conditionLabel(condition.type)}{" "}
-            {isAgreed ? "합의🔒" : isRejected ? "재협상 필요" : "진행중"}
+            {isAgreed ? "합의" : isRejected ? "재협상 필요" : "진행중"}
           </span>
         );
       })}
@@ -653,7 +620,13 @@ function SetupPanel({
   labels: WorkConditionLabels;
   viewerRole: "CLIENT" | "FREELANCER";
   isSubmitting: boolean;
-  onStart: (values: Array<{ conditionType: ConditionType; value: string }>) => void;
+  onStart: (
+    values: Array<{
+      conditionType: ConditionType;
+      value: string;
+      belowMinAccept?: boolean;
+    }>,
+  ) => Promise<{ belowMinAccept: boolean }>;
 }) {
   // 아직 안 낸 조건만 입력·전송한다. 서버가 이미 채워 준 조건(myFloor != null,
   // 예: 프리랜서 AMOUNT=최소 수용가)을 다시 보내면 NG_006(이미 제출)이 난다.
@@ -662,19 +635,43 @@ function SetupPanel({
 
   // 조건별 "서버 전송 형식" 값 저장 (위젯이 변환해서 올려줌)
   const [values, setValues] = useState<Record<number, string>>({});
+  // 등록 최소가보다 낮은 단가로 시작할 때(NG_012) 확인 모달 노출 여부
+  const [belowMinConfirm, setBelowMinConfirm] = useState(false);
 
   const canStart = pending.every(
     (condition) => (values[condition.conditionId] ?? "").trim() !== "",
   );
 
-  const handleStart = () => {
-    onStart(
-      pending.map((condition) => ({
-        conditionType: condition.type,
-        value: values[condition.conditionId] ?? "",
-      })),
-    );
+  // belowMinAccept 는 AMOUNT(프리랜서 등록 최소가 하한)에만 붙인다.
+  const buildConditions = (belowMinAccept: boolean) =>
+    pending.map((condition) => ({
+      conditionType: condition.type,
+      value: values[condition.conditionId] ?? "",
+      ...(belowMinAccept && condition.type === "AMOUNT"
+        ? { belowMinAccept: true }
+        : {}),
+    }));
+
+  const handleStart = async () => {
+    const result = await onStart(buildConditions(false));
+    // 등록 최소가보다 낮음 → 입력칸은 그대로 두고 확인 모달만 띄운다.
+    if (result.belowMinAccept) setBelowMinConfirm(true);
   };
+
+  // [그래도 시작] — 같은 요청을 AMOUNT 만 belowMinAccept=true 로 재제출
+  const confirmBelowMin = async () => {
+    setBelowMinConfirm(false);
+    await onStart(buildConditions(true));
+  };
+
+  // 확인 모달 문구 — 입력한 단가를 보여준다(등록 최소가 값은 응답에 없어 일반형으로 안내).
+  const amountCondition = pending.find((condition) => condition.type === "AMOUNT");
+  const enteredAmountText = amountCondition
+    ? formatConditionValue("AMOUNT", values[amountCondition.conditionId], labels)
+    : "";
+  const belowMinMessage = enteredAmountText
+    ? `입력하신 금액(${enteredAmountText})이 등록하신 최소 수용가보다 낮습니다. 그래도 이 마지노선으로 시작하시겠어요?`
+    : "입력하신 금액이 등록하신 최소 수용가보다 낮습니다. 그래도 이 마지노선으로 시작하시겠어요?";
 
   return (
     <div className="mt-6 flex justify-end">
@@ -732,7 +729,7 @@ function SetupPanel({
         <button
           type="button"
           disabled={!canStart || isSubmitting}
-          onClick={handleStart}
+          onClick={() => void handleStart()}
           className="mt-5 flex h-[42px] w-full cursor-pointer items-center justify-center gap-2 rounded-[9px] bg-[#8878e8] text-[12px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
         >
           {isSubmitting ? (
@@ -745,11 +742,22 @@ function SetupPanel({
           )}
         </button>
       </section>
+
+      {belowMinConfirm ? (
+        <ConfirmModal
+          open
+          title="그래도 이 마지노선으로 시작할까요?"
+          description={belowMinMessage}
+          confirmText="그래도 시작"
+          cancelText="취소"
+          confirmDisabled={isSubmitting}
+          onConfirm={() => void confirmBelowMin()}
+          onClose={() => setBelowMinConfirm(false)}
+        />
+      ) : null}
     </div>
   );
 }
-
-type Decision = "accept" | "reject";
 
 /** 승인/재지시 통합 패널 — 조건별 status 로 분기 (PENDING·AGREED·REJECTED) */
 function ConditionActionPanel({
@@ -997,7 +1005,7 @@ function ConditionActionPanel({
           <div key={condition.conditionId} className="mt-4">
             <p className="text-[11px] text-theme-muted">{conditionLabel(condition.type)}</p>
             <div className="mt-2 rounded-[8px] border border-[#86efac] bg-success-surface py-2 text-center text-[11px] font-bold text-[#16a34a]">
-              ♙ 이미 합의
+              이미 합의
             </div>
           </div>
         ))}
@@ -1047,59 +1055,6 @@ function ConditionActionPanel({
     </div>
   );
 }
-
-// ── 마지노선 밖 수락 판정·문구 ────────────────────────────────────────────
-
-// 숫자로 비교 가능한 조건 값만 뽑는다(AMOUNT=원, PERIOD="N …"의 앞 숫자).
-const numericValue = (
-  type: NegotiationCondition["type"],
-  value: string | null,
-): number | null => {
-  if (value == null || value === "") return null;
-  if (type === "AMOUNT") {
-    const won = Number(value);
-    return Number.isFinite(won) ? won : null;
-  }
-  if (type === "PERIOD") {
-    const amount = Number.parseInt(value, 10);
-    return Number.isFinite(amount) ? amount : null;
-  }
-  return null;
-};
-
-// 수락한 조건 중 "내 마지노선을 넘는" 첫 조건을 찾는다(표시용).
-// 프리랜서 하한: 제안 < 내 마지노선 / 클라 상한: 제안 > 내 마지노선.
-const findFloorViolation = (
-  pending: NegotiationCondition[],
-  decisions: Record<number, Decision>,
-  viewerRole: "CLIENT" | "FREELANCER",
-): NegotiationCondition | null => {
-  for (const condition of pending) {
-    if (decisions[condition.conditionId] !== "accept") continue;
-    const proposed = numericValue(condition.type, condition.proposedValue);
-    const floor = numericValue(condition.type, condition.myFloor);
-    if (proposed == null || floor == null) continue;
-    const breaks = viewerRole === "FREELANCER" ? proposed < floor : proposed > floor;
-    if (breaks) return condition;
-  }
-  return null;
-};
-
-const buildBelowFloorMessage = (
-  violation: NegotiationCondition | null,
-  viewerRole: "CLIENT" | "FREELANCER",
-  labels: WorkConditionLabels,
-): string => {
-  if (!violation) {
-    return "이 제안은 회원님의 마지노선을 넘습니다. 그래도 수락하시겠어요?";
-  }
-  const proposed = formatConditionValue(violation.type, violation.proposedValue, labels);
-  const floor = formatConditionValue(violation.type, violation.myFloor, labels);
-  const isFreelancer = viewerRole === "FREELANCER";
-  const floorLabel = isFreelancer ? `최소 ${floor}` : `최대 ${floor}`;
-  const direction = isFreelancer ? "낮습니다" : "높습니다";
-  return `이 제안(${proposed})은 회원님의 마지노선(${floorLabel})보다 ${direction}. 그래도 수락하시겠어요?`;
-};
 
 // 최종 절충안 패널 — 조건별 절충값을 보여주고 [이 절충안으로 합의]/[협상 포기]만 받는다.
 function FinalOfferPanel({
@@ -1162,7 +1117,7 @@ function FinalOfferPanel({
             <div key={c.conditionId} className="flex items-center justify-between px-1">
               <span className="text-[11px] text-theme-muted">{conditionLabel(c.type)}</span>
               <span className="text-[11px] font-bold text-theme-success">
-                🔒 {formatConditionValue(c.type, c.agreedValue, labels)}
+                {formatConditionValue(c.type, c.agreedValue, labels)}
               </span>
             </div>
           ))}

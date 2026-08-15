@@ -186,6 +186,143 @@
 - 세종시의 빈 `sigungu`를 유지하는 요청 빌더 테스트를 포함해 신규 테스트 3개가 통과했습니다.
 - TypeScript, ESLint, production build는 통과했습니다. 전체 Jest는 기존 `FreelancerProfile` 테스트의 App Router 목 누락으로 5개 실패했고 나머지 155개는 통과했습니다.
 - 실제 다음 위젯 응답 필드와 회원가입 201·프로필 수정 200은 로그인 가능한 브라우저에서 미검증입니다.
+## 2026-08-15 — 계약·프로젝트 버그 4건 수정
+
+- 프리랜서 내 계약 `서명 대기` 목록·건수 조회 탭 코드를 `AWAITING_ME`에서 `SIGNING`으로 변경
+- 클라이언트 계약 상세의 `← 내 계약` 링크를 `/client/contracts`로 수정
+- `CLOSED`, `CANCELED` 프로젝트 상세에서 모집 마감일과 연장 횟수 배지를 숨기도록 상태 조건 추가
+- 계약 상세의 PDF 다운로드를 클라이언트·프리랜서 양측 서명이 모두 `SIGNED`인 경우에만 허용하고, 서명 화면의 PDF 미리보기는 유지
+- 관련 회귀 테스트 추가·수정
+- 검증: 관련 Jest 3 suites/18 tests, 변경 파일 ESLint, TypeScript, 프로덕션 빌드, `git diff --check` 통과
+- 미검증: 실제 로그인 브라우저 흐름과 배포 서버의 `tab=SIGNING` 응답
+
+---
+
+## 2026-08-15 — 채팅/고객문의 파트 정리·렌더링·SEO 최적화 (#198)
+
+- 범위: 클라이언트/프리랜서 공용 **채팅(`features/chat`)·고객지원(`features/support`)** 파트. 로그인/매칭/마이페이지/메인은 팀원 파트라 제외. 전수 코드 리뷰 후 안전한 항목만 반영.
+- **미사용 코드 정리(참조 grep 검증 후)**:
+  - `leaveChatRoom` 서비스 + `ChatRoom.leaveEnabled` 타입 필드 삭제 — UI에 '나가기' 미구현, 앱 참조 0(테스트만 사용). 연동 테스트(`chatRooms.test.ts`, `fixtures.ts`)도 정리.
+  - `getUnreadChatCount` 별칭 삭제 — 전부 `getChatUnreadCount`만 사용, 별칭 참조 0.
+  - `writerName/writerRole/writerEmail`(문의 응답 admin 필드)은 사용자가 유지 선택 → 보존.
+- **SEO**: 루트에 `metadataBase` + title template 추가(`app/layout.tsx`), 공개 페이지 `/support`에 title·description·canonical·OpenGraph 추가(`app/support/page.tsx`). robots/sitemap은 기존 정책 유지(인증 라우트 disallow).
+- **문의 첨부 업로드 병렬화**: `InquiryForm` 순차 `for-await` → `Promise.allSettled` 병렬. 부분 실패 시 성공분 id 롤백·첫 실패 원인 전파 유지(에러코드 분기 그대로).
+- **`/support` SSR → SSG**: `getServerCurrentUser()`(쿠키 의존) 제거 + `export const dynamic = "force-static"`. 콘텐츠가 외부 데이터 0(하드코딩)이라 ISR 대신 SSG가 적합. 하위 인증 라우트(`/support/chatbot`, `/support/inquiries/*`)는 dynamic 유지. 빌드 라우트표에서 `/support`가 `ƒ`→`○ Static` 전환 확인.
+- **`next.config` 실측 튜닝**: `ANALYZE=true npm run build`로 실측 결과 무거운 의존성 없음(@stomp/stompjs gzip 6.6KB·`/chat` 국한, lucide-react는 Next 기본 optimizePackageImports로 트리셰이킹). 코드분할용 설정 대신 `poweredByHeader:false`, `productionBrowserSourceMaps:false` 명시. 이미지 설정은 호스트 미확정으로 TODO 주석만.
+- **헤더 깜빡임 제거(공용 Header, 사용자 승인 하에 팀 공용 파트 수정)**: SSG 하드 진입 시 정적 HTML이 게스트 헤더로 나가 로그인 유저가 '게스트→로그인' 깜빡이던 문제. `Header`에 `isLoading && !user`면 `HeaderSkeleton` 반환하는 분기 추가(역할 확정 전 가로챔). auth 훅/서비스는 무변경(`useCurrentUserState`가 이미 `isLoading` 제공). SSR 페이지는 `initialUser` 덕에 `isLoading=false`라 스켈레톤 미노출 → 실효 영향은 SSG 페이지 한정.
+  - 추가: `src/features/common/components/header/HeaderSkeleton.tsx` / 변경: `Header.tsx`
+- 변경 파일: `next.config.ts`, `app/layout.tsx`, `app/support/page.tsx`, `features/chat/services/chatRooms.ts`, `features/chat/types/chat.ts`, `features/support/components/InquiryForm.tsx`, `features/common/components/header/Header.tsx`, `HeaderSkeleton.tsx`(신규), `unit-tests/chat/chatRooms.test.ts`, `unit-tests/chat/fixtures.ts`
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과(ProfileMenu 기존 warning 1건은 무관), Jest 35 suites/174 tests 통과, `npm run build` 통과 및 `/support` Static 전환 확인.
+- 미검증: 실제 브라우저 렌더(스켈레톤 모양·SSG 하드진입 UX)는 규칙상 미확인. 이미지 최적화(아바타 `unoptimized` 제거)는 실제 이미지 호스트 확정 후 진행 예정.
+- 참고: 전체 Jest 중 `FreelancerProfile.test.tsx` 5건 실패는 본 변경과 무관한 **기존 실패**(변경 stash 후에도 동일, `useRouter` 하네스 이슈). 팀원 파트라 손대지 않음.
+
+---
+
+## 2026-08-15 — 채팅 입력창 상단 구분선 제거
+
+- 1:1 채팅의 메시지 입력 폼에서 상단 테두리(`border-t border-theme`)를 제거해 입력창 위의 얇은 구분선이 표시되지 않도록 수정했습니다.
+- 변경: `src/features/chat/components/Chat.tsx`
+- 검증: 변경 파일 ESLint, 채팅 Jest 1 suite/8 tests, `git diff --check` 통과
+- 미검증: 로그인 채팅 데이터가 필요한 화면이라 실제 브라우저에서는 확인하지 못했습니다.
+
+---
+
+## 2026-08-14 — 처음 마지노선 등록 최소가 하한: 차단→경고 후 허용
+
+- 프리랜서가 처음 협상 시작(`POST /start`) 시 등록 최소 수용가보다 낮은 단가를 넣으면, 기존엔 `NG_012`로 막혔던 것을 확인 모달 후 허용하도록 변경했습니다(PO 확정 정책, `acceptBelowFloor`와 같은 패턴).
+- `StartNegotiationRequest.conditions[]`에 `belowMinAccept?`(boolean, 기본 false)를 추가했습니다. 프리랜서 AMOUNT에만 의미하며 `true`면 등록 최소가 하한 검증만 건너뜁니다.
+- `NegotiationRoom.handleStart`가 `NG_012` 응답을 막다른 배너 대신 `{ belowMinAccept: true }`로 반환하도록 했습니다(상태·입력칸 유지, 화면 전환 없음).
+- `SetupPanel`이 `belowMinAccept`를 받으면 확인 모달("입력하신 금액이 등록 최소 수용가보다 낮습니다…")을 띄우고, [그래도 시작] 시 같은 요청을 **AMOUNT 조건만** `belowMinAccept:true`로 재제출합니다. [취소]는 입력값을 유지합니다. 입력한 단가는 문구에 표시하고, 등록 최소가 값은 응답에 없어 정확한 숫자는 표시하지 않습니다.
+- 범위는 처음 입력(start) 한 곳뿐입니다. 재조정(`PATCH /floors`)·수락(`POST /answers`)은 손대지 않았습니다(백엔드가 `/floors`의 플래그는 무시).
+- 변경: `types/negotiation.ts`, `NegotiationRoom.tsx`, `NegotiationChatFlow.tsx` / 추가: `unit-tests/negotiation/NegotiationStartBelowMinAccept.test.tsx`
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과, 신규 협상 Jest 1 suite/2 tests 통과, `git diff --check` 통과
+- 미검증: 실제 로그인·API·브라우저는 테스트 계정이 없어 확인하지 못했습니다. 백엔드가 `belowMinAccept=true` 시 `start` 하한 가드를 통과시키는 반영이 배포돼야 실제 동작이 확인됩니다.
+## 2026-08-15 — 협상 순수 로직 분리 + 테스트 안전망 (#3 Step 1)
+
+- 배경: `NegotiationChatFlow`(1233줄)는 테스트가 0개인데 재무 성격의 마지노선(floor) 위반 판정 로직을 포함. 컴포넌트 분해 전에 순수 로직을 먼저 분리·테스트해 안전망 확보.
+- 변경:
+  - 신규 `src/features/negotiation/utils/negotiationDisplay.ts` — 순수 함수 7개 + `Decision`/`ViewerRole` 타입 이전: `numericValue`, `findFloorViolation`, `buildBelowFloorMessage`(재무 핵심), `buildAgreedSummary`, `opponentValue`, `floorFieldLabel`, `toOptions`.
+  - `NegotiationChatFlow.tsx`에서 위 함수/로컬 `Decision` 타입 제거, 새 모듈에서 import. 렌더링·동작 로직은 그대로(순수 이동). 1233 → 1136줄.
+  - 신규 `unit-tests/negotiation/negotiationDisplay.test.ts` — 13개 테스트: floor 위반(프리랜서 하한/클라 상한/거절 제외/안쪽 제안), 안내 문구 방향(낮습니다/높습니다), 합의 요약, 라벨/옵션 변환.
+- 검증: TypeScript 통과, 변경/신규 파일 ESLint 통과, 신규 협상 로직 Jest 13/13 통과(협상 파트 첫 테스트).
+- 남은 작업(#3 후속): `MessageItem` 등 `React.memo`로 폴링 재렌더 저감(Step 2), 패널 컴포넌트 분해(Step 3) — 재렌더 개선은 React Profiler(브라우저) 측정이 필요해 별도 진행 권장.
+
+---
+
+## 2026-08-15 — 프로젝트 목록 페이지네이션 URL 동기화 (#5)
+
+- 문제: 목록 탭은 `?tab=`으로 URL에 반영되나 `page`는 로컬 state라, 새로고침·링크 공유 시 페이지 위치가 0으로 유실.
+- 변경: `src/features/client/myprojects/components/ClientProjects.tsx`
+  - 초기 진입 시 `?page=`(1-based)를 읽어 내부 page(0-based)로 반영.
+  - `syncUrl(tab, page)` 헬퍼로 탭 변경·페이지 이동 시 `router.replace`로 쿼리 갱신(첫 페이지는 page 쿼리 생략해 URL 깔끔). 이전/다음 버튼을 `goToPage`로 통일.
+- 측정(테스트로 증명): `unit-tests/client/myprojects/ClientProjects.test.tsx`에 2개 추가
+  - "다음" 클릭 → `?tab=REGISTERED&page=2` 반영 + `getMyProjects({page:1})` 호출.
+  - `?page=2` 초기 진입 → `getMyProjects({page:1})` 호출(새로고침 시 위치 유지).
+- 검증: TypeScript 통과, 변경/테스트 파일 ESLint 통과, ClientProjects Jest 6/6 통과(기존 4 + 신규 2).
+- 미검증: 실제 브라우저 새로고침/공유 UX는 미검증(로직·유닛 테스트 기준).
+
+---
+
+## 2026-08-15 — 정적 메타(/api/v1/meta/*) 조회 캐싱 (네트워크 최적화 #4)
+
+- 문제: 직무·직무카테고리·스킬·근무조건 등 정적 메타 조회(`getProjectJobRoles`/`getProjectJobCategories`/`getProjectSkills`/`getProjectWorkConditions`)가 상세·편집·등록·계약·채팅·프리랜서 등 10곳 이상 컴포넌트에서 마운트마다 매번 재요청됨.
+- 변경: `src/features/client/projects/services/projectPreReview.ts`에 프로미스 캐시 헬퍼(`cacheOnce`) 추가, 4개 GET 게터를 감쌈. 최초 조회 결과(프로미스)를 세션 동안 재사용하고, 실패 시 캐시를 비워 재시도 가능. `createProjectPreReview`(POST)는 캐싱 안 함. 공개 API 시그니처는 동일 → 호출처 무변경.
+- 안전성: 대상은 파라미터 없는 전역 정적 데이터(`/api/v1/meta/*`)이며, 호출처가 결과 배열을 in-place 변경하지 않음(정렬/push 등 없음 확인)이라 공유 참조 안전.
+- 측정(단위 테스트로 증명): 신규 `unit-tests/client/projects/projectPreReviewCache.test.ts` — 같은 게터 3회 호출 시 `apiCall` 1회만, 실패 후에는 재조회로 2회. → 화면 이동마다 반복되던 메타 호출이 세션당 1회로 수렴.
+- 검증: TypeScript 통과, 변경/신규 파일 ESLint 통과, 신규 캐시 테스트 2/2 통과.
+- 참고: 전체 Jest에서 `FreelancerProfile.test.tsx` 5개 실패는 본 변경과 무관한 기존 실패(변경 stash 후에도 동일 실패 확인, 해당 화면은 메타 게터 미사용).
+
+---
+
+## 2026-08-15 — 프로젝트 상세 비기본 탭 지연 로드 (번들 최적화 #2)
+
+- 문제: `ClientProjectDetail`이 추천/협상/계약/진행 탭 컴포넌트를 전부 정적 import → 기본 "프로젝트 정보" 탭만 열어도 4개 탭 코드가 상세 초기 번들에 포함.
+- 변경: `src/features/client/myprojects/components/ClientProjectDetail.tsx`에서 `RecommendedCandidates`·`ProjectNegotiation`·`NegotiationActions`·`ProjectContracts`·`ProjectProgress`를 `next/dynamic({ ssr:false, loading })`로 전환. 기본 정보 탭(`ProjectInformation`)은 정적 유지.
+- 측정(실측, chunk 기준):
+  - 상세 라우트(`[projectId]/page`) 초기 chunk 총량 **157,003 → 124,917 bytes (−32,086 B, −20.4%)**.
+  - 초기 chunk에서 `ProjectProgress`("정산 대기")·`RecommendedCandidates`("AI 추천이 완료") 코드 **분리 확인**(async chunk로 이동).
+- 트레이드오프: 각 비기본 탭 첫 진입 시 async chunk 로드 지연(1회, "불러오고 있습니다" fallback 표시).
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과, `ClientProjectDetail` Jest 4개 통과, 프로덕션 빌드 성공.
+- 미검증: 실제 탭 전환 UX는 브라우저 미검증(로직·타입·유닛 테스트 기준).
+
+---
+
+## 2026-08-15 — 로그인/소셜콜백 초기 번들에서 STOMP 동적 분리 (번들 최적화 #1)
+
+- 문제: 로그인·소셜콜백은 로그인 전(쿠키 없음)이라 실시간 알림이 없는데도, `reactivateStomp` **정적 import** 때문에 `@stomp/stompjs` 포함 chunk(~23KB)가 초기 번들에 딸려옴.
+- 변경: `src/app/login/page.tsx`·`src/features/auth/components/SocialCallbackContent.tsx`의 `reactivateStomp`를 정적 import 제거하고, 로그인 성공 핸들러 안에서 `await import("@/features/negotiation/stomp/client")`로 동적 로드.
+- 인증 페이지(client/*, freelancer/*, projects/*)는 헤더 알림 스트림(`useNotificationStream`)이 STOMP를 쓰므로 공용 로드가 정상 → 그대로 유지.
+- 측정(실측, chunk 기준 — Next 16 + Turbopack은 `next build` First Load JS 라우트 표를 출력하지 않음):
+  - STOMP chunk `1k80-*.js` = **23,425 bytes**, 크기는 동일하나 async chunk로 전환.
+  - `/login`·`/login/social/callback` 초기 번들에서 STOMP chunk 참조 **제거**(before 포함 → after 없음).
+  - STOMP chunk 참조 아티팩트 수 `.next/server/app` 기준 **73 → 62**(−11, 로그인·소셜콜백 파일군 전체).
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과, 프로덕션 빌드 성공.
+- 미검증: 실제 로그인 후 STOMP 재연결 동작은 테스트 계정 부재로 브라우저 미검증(정적→동적 import는 동작 동일, 로드 시점만 지연).
+
+---
+
+## 2026-08-15 — 클라이언트 프로젝트(목록·상세·등록·협상) 데드코드·중복 정리
+
+- 대상: 프로젝트 등록 / 목록 / 상세(정보·협상). 로그인·매칭·마이페이지·메인은 팀원 파트라 미변경.
+- **데드코드 삭제**(참조 재검증 후):
+  - `NegotiationFailedCard.tsx` 파일 전체(어디서도 import 안 됨)
+  - 미사용 타입 `WorkStyle`·`PageResponse`(`negotiation/types/negotiation.ts`), 죽은 타입 re-export 3곳(`ClientProjectCard`·`ProjectStatusTabs`·`ProjectDetailTabs`)
+  - `ClientProjectCardProps.deadline` prop 경로(타입·구조분해·죽은 배지 분기)
+  - `conditionFormat.ts`의 존재하지 않는 심볼(`senderShortLabel`) 참조 주석 정리
+- **중복 로직 공용화**:
+  - 신규 `src/features/client/myprojects/utils/projectDisplay.ts` — `PROJECT_STATUS_LABEL`/`getProjectStatusLabel`, `PERIOD_UNIT_LABEL`, `formatProjectDate`
+  - `ClientProjects`·`ClientProjectDetail`·`ProjectInformation`에 흩어진 프로젝트 상태 라벨(2곳)·기간단위 라벨(2곳)·날짜 포맷(3곳) 중복 제거 후 공용 모듈 참조
+  - 등록 `ProjectBasicInfo`의 근무조건 조회 중복(재시도용 함수 + useEffect 복붙)을 `applyWorkConditions` 공유로 정리(옆 `ProjectRoles`의 `applyMeta` 패턴에 맞춤)
+- **의도적으로 하지 않은 것(사유 기록)**:
+  - 상태 라벨 맵 중 매칭요청(`ProjectFreelancerStatus`)·계약(`ProjectProgress`)은 프로젝트 상태와 **값·의미가 다른 별도 맵**이라 병합하지 않음. 같은 코드 `COMPLETION_PENDING`이 "완료 대기"(프로젝트) vs "정산 대기"(계약)로 갈리는 도메인 간 드리프트는 남은 과제.
+  - API 응답 DTO 미사용 필드(`statusNote`·`paymentStatus`·`floorComparison`·`ProjectTabCount.status` 등)는 백엔드 응답 계약이라 유지(임의 삭제 금지 원칙).
+  - `NegotiationChatFlow`(1233줄) 내부 중복(floor 라벨 4곳·submit 버튼)은 테스트 0개 + 재무 가드레일 로직이라, 컴포넌트 분해 작업 때 테스트 선반영 후 함께 처리로 이연.
+- **재검증으로 되살린 삭제 후보**(전역 참조 확인의 효과):
+  - `agreedAmount` — `FreelancerProjects`에서 사용 → 유지
+  - `calculateTextOverlap`·`hasElaborationDetail` — 유닛 테스트가 직접 import → `export` 유지
+- 변경 파일: `myprojects/components/{ClientProjectCard,ClientProjectDetail,ClientProjects,ProjectDetailTabs,ProjectStatusTabs}.tsx`, `myprojects/information/components/ProjectInformation.tsx`, `myprojects/types/components.ts`, `myprojects/utils/projectDisplay.ts`(신규), `negotiation/types/negotiation.ts`, `negotiation/utils/conditionFormat.ts`, `client/projects/components/ProjectBasicInfo.tsx`
+- 검증: TypeScript(`tsc --noEmit`) 통과, 변경 파일 ESLint 통과, Jest(myprojects+freelancer 72개, register 40개) 전체 통과. 순 변경 약 −60줄.
+- 미검증: 실제 로그인·브라우저 렌더는 테스트 계정 부재로 미확인(로직·타입·유닛 테스트 기준으로만 검증).
 
 ---
 
@@ -2569,5 +2706,3 @@
 - 로딩·빈 상태·오류 재시도·서버 페이지 이동 추가
 - 검증: 클라이언트·프리랜서 결제내역 Jest 2 suites/4 tests, 변경 파일 ESLint, TypeScript, `git diff --check` 통과
 - 실제 API: 배포 Swagger에 summary 경로가 없어 미검증
-
----

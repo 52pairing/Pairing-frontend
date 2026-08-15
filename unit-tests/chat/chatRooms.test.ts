@@ -4,7 +4,6 @@ import {
   getChatRoomByNegotiation,
   getChatRooms,
   getChatUnreadCount,
-  leaveChatRoom,
   markChatRoomRead,
   sendChatMessage,
 } from "@/features/chat/services/chatRooms";
@@ -38,13 +37,11 @@ describe("chatRooms service", () => {
     });
   });
 
-  test("읽음·나가기·전체 미읽음 수 API를 호출한다", () => {
+  test("읽음·전체 미읽음 수 API를 호출한다", () => {
     markChatRoomRead(11);
-    leaveChatRoom(11);
     getChatUnreadCount();
 
     expect(mockApiCall).toHaveBeenNthCalledWith(1, "/api/v1/chat-rooms/11/read", { method: "POST" });
-    expect(mockApiCall).toHaveBeenNthCalledWith(2, "/api/v1/chat-rooms/11/leave", { method: "POST" });
-    expect(mockApiCall).toHaveBeenNthCalledWith(3, "/api/v1/chat-rooms/unread-count");
+    expect(mockApiCall).toHaveBeenNthCalledWith(2, "/api/v1/chat-rooms/unread-count");
   });
 });

@@ -32,6 +32,7 @@ export const getFreelancerResume = () =>
     ...detail,
     resume: detail.resume ? {
       ...detail.resume,
+      profileImageUrl: detail.resume.profileImageUrl ?? null,
       contactPhone: detail.resume.contactPhone ?? "",
       contactEmail: detail.resume.contactEmail ?? "",
       zipCode: detail.resume.zipCode ?? "",
@@ -41,6 +42,7 @@ export const getFreelancerResume = () =>
       careers: detail.resume.careers ?? [],
       certificates: detail.resume.certificates ?? [],
       selfIntroduction: detail.resume.selfIntroduction ?? "",
+      portfolioUrl: detail.resume.portfolioUrl ?? null,
       links: detail.resume.links ?? [],
     } : null,
   }));

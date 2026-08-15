@@ -204,21 +204,35 @@ export function NegotiationRoom() {
     return () => clearInterval(timer);
   }, [negotiationId, detail?.status, detail?.agentState, refreshDetail, refreshMessages]);
 
-  // 협상 시작
+  // 협상 시작. 등록 최소가보다 낮은 단가(NG_012)면 막다른 배너 대신
+  // belowMinAccept=true 로 알려 SetupPanel 이 확인 모달을 띄우게 한다.
   const handleStart = useCallback(
-    async (conditions: Array<{ conditionType: ConditionType; value: string }>) => {
-      if (!negotiationId || isSubmitting) return;
+    async (
+      conditions: Array<{
+        conditionType: ConditionType;
+        value: string;
+        belowMinAccept?: boolean;
+      }>,
+    ): Promise<{ belowMinAccept: boolean }> => {
+      if (!negotiationId || isSubmitting) return { belowMinAccept: false };
       setIsSubmitting(true);
       setActionError(null);
       try {
         await startNegotiation(negotiationId, { conditions });
         await Promise.all([refreshDetail(), refreshMessages()]);
+        return { belowMinAccept: false };
       } catch (error) {
-        setActionError(
-          error instanceof ApiException ? error.message : "협상 시작에 실패했습니다.",
-        );
-        // 실패 후에도 상태 재동기화(예: 이미 제출됨/형식 오류)
-        await refreshDetail();
+        const isBelowMinAccept =
+          error instanceof ApiException && error.errorCode === "NG_012";
+        // NG_012 는 화면 전환 없이 그대로 두고(입력칸 유지), SetupPanel 이 확인 모달을 띄운다.
+        if (!isBelowMinAccept) {
+          setActionError(
+            error instanceof ApiException ? error.message : "협상 시작에 실패했습니다.",
+          );
+          // 실패 후에도 상태 재동기화(예: 이미 제출됨/형식 오류)
+          await refreshDetail();
+        }
+        return { belowMinAccept: isBelowMinAccept };
       } finally {
         setIsSubmitting(false);
       }
@@ -337,7 +351,9 @@ export function NegotiationRoom() {
   const goBackToProject = () => router.push(`${projectsBase}/${projectId}`);
 
   return (
-    <div className="flex h-[calc(100dvh-60px)] min-h-0 flex-col overflow-hidden bg-[#f3f4f8] px-6 pb-4 pt-2 text-theme-primary">
+    <div className="flex h-[calc(100dvh-60px)] min-h-0 flex-col overflow-hidden bg-[#f3f4f8] text-theme-primary">
+      {/* 배경은 전체 폭을 채우되, 내용은 가로로 과하게 넓어지지 않게 중앙 정렬로 최대 폭 제한 */}
+      <div className="mx-auto flex min-h-0 w-full max-w-[1120px] flex-1 flex-col px-6 pb-4 pt-2">
       <header className="shrink-0">
         <button
           type="button"
@@ -427,6 +443,7 @@ export function NegotiationRoom() {
           }
         />
       )}
+      </div>
 
       {isCancelOpen ? (
         <NegotiationCancelModal
