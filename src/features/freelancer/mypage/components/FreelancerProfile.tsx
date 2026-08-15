@@ -82,10 +82,12 @@ export function FreelancerProfile() {
 
         <div className="mt-7 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
           <div
-            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-brand text-[26px] font-bold text-brand-contrast"
-            aria-hidden="true"
+            className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-brand bg-cover bg-center text-[26px] font-bold text-brand-contrast"
+            role="img"
+            aria-label="프로필 사진"
+            style={profile?.profileImageUrl ? { backgroundImage: `url(${profile.profileImageUrl})` } : undefined}
           >
-            {initial}
+            {profile?.profileImageUrl ? null : initial}
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -96,6 +98,11 @@ export function FreelancerProfile() {
                 {myGrade?.label ?? "등급 확인 중"}
               </span>
             </div>
+            {profile ? (
+              <p className="mt-1 text-[12px] font-semibold text-amber-600">
+                ★ {(profile.ratingAverage ?? 0).toFixed(1)} · 리뷰 {profile.reviewCount}건
+              </p>
+            ) : null}
             <p className="mt-1 break-words text-[12px] font-semibold leading-5 text-theme-secondary sm:text-[13px]">
               전문 분야와 경력은 내 이력서에서 관리할 수 있습니다.
             </p>
