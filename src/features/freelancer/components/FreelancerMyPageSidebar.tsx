@@ -1,0 +1,77 @@
+import Link from "next/link";
+
+export const FREELANCER_MY_PAGE_MENU = [
+  { label: "기본 정보", value: "profile", href: "/freelancer/mypage/profile" },
+  {
+    label: "내 이력서 / 포트폴리오",
+    value: "resume",
+    href: "/freelancer/mypage/resume",
+  },
+  { label: "리뷰 관리", value: "reviews", href: "/freelancer/mypage/reviews" },
+  {
+    label: "결제수단",
+    value: "payment-methods",
+    href: "/freelancer/mypage/payment-methods",
+  },
+  {
+    label: "수수료 결제 내역",
+    value: "payments",
+    href: "/freelancer/mypage/payments",
+  },
+  {
+    label: "기본 설정",
+    value: "settings",
+    href: "/freelancer/mypage/settings",
+  },
+] as const;
+
+export type FreelancerMyPageMenu =
+  (typeof FREELANCER_MY_PAGE_MENU)[number]["value"];
+export type FreelancerMyPageActiveMenu =
+  | FreelancerMyPageMenu
+  | "password"
+  | "cancel";
+
+interface FreelancerMyPageSidebarProps {
+  activeMenu: FreelancerMyPageActiveMenu;
+}
+
+export function FreelancerMyPageSidebar({
+  activeMenu,
+}: FreelancerMyPageSidebarProps) {
+  return (
+    <aside className="w-full shrink-0 overflow-hidden rounded-xl border border-theme bg-surface py-2 md:sticky md:top-6 md:w-[200px]">
+      <nav aria-label="프리랜서 마이페이지 메뉴">
+        <ul>
+          {FREELANCER_MY_PAGE_MENU.map((menu) => {
+            const isActive = menu.value === activeMenu;
+            return (
+              <li key={menu.value}>
+                <Link
+                  href={menu.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex h-11 items-center px-5 text-[13px] font-semibold transition-colors ${
+                    isActive
+                      ? "bg-[#edf2f7] text-brand"
+                      : "text-theme-secondary hover:bg-surface-subtle hover:text-theme-secondary"
+                  }`}
+                >
+                  {menu.label}
+                </Link>
+              </li>
+            );
+          })}
+          <li>
+            <Link
+              href="/freelancer/mypage/cancel"
+              aria-current={activeMenu === "cancel" ? "page" : undefined}
+              className={`flex h-11 items-center px-5 text-[13px] font-semibold text-theme-danger transition-colors hover:bg-danger-surface ${activeMenu === "cancel" ? "bg-danger-surface" : ""}`}
+            >
+              회원 탈퇴
+            </Link>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+  );
+}

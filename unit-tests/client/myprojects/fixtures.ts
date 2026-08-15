@@ -1,0 +1,100 @@
+import type { ContractListItem, ContractListPage } from "@/features/contract/types/contractList";
+import type { ClientProjectDetailResponse } from "@/features/client/myprojects/types/projectDetail";
+import type { ClientProjectListItem, ProjectPageResponse } from "@/features/client/myprojects/types/projectList";
+
+export const projectListItem: ClientProjectListItem = {
+  projectId: 7,
+  title: "쇼핑몰 리뉴얼",
+  status: "REGISTERED",
+  jobRoleLabels: ["프론트엔드 개발자"],
+  skillLabels: ["React", "TypeScript"],
+  budgetAmount: 50_000_000,
+  periodLabel: "6개월",
+  startDesiredDate: "2026-09-01",
+  totalHeadcount: 2,
+  createdAt: "2026-08-12T10:00:00",
+  payableSettlementId: 99,
+};
+
+export const projectPage = (content: ClientProjectListItem[] = [projectListItem]): ProjectPageResponse => ({
+  content,
+  page: 0,
+  size: 10,
+  totalElements: content.length,
+  totalPages: 1,
+  first: true,
+  last: true,
+});
+
+export const projectDetail: ClientProjectDetailResponse = {
+  projectId: 7,
+  title: "쇼핑몰 리뉴얼",
+  status: "REGISTERED",
+  statusNote: null,
+  paymentStatus: null,
+  startDesiredDate: "2026-09-01",
+  startNegotiable: true,
+  periodValue: 6,
+  periodUnit: "MONTH",
+  budgetAmount: 50_000_000,
+  workStyle: "REMOTE",
+  workForm: "FULL_TIME",
+  workLocation: null,
+  currentSituation: "기획 완료",
+  mainTask: "프론트엔드 개발",
+  detailScope: "결제 화면 구현",
+  extraNote: null,
+  totalHeadcount: 2,
+  confirmedHeadcount: 1,
+  recruitDeadline: null,
+  extensionCount: 0,
+  freeRerecommendUsed: 0,
+  paidRerecommendUsed: 0,
+  positions: [{
+    positionId: 11,
+    positionNo: 1,
+    jobCategory: "DEVELOPMENT",
+    jobRole: "FRONTEND",
+    minCareerYears: 3,
+    headcount: 2,
+    confirmedCount: 1,
+    status: "OPEN",
+    skills: ["REACT"],
+  }],
+  files: [],
+  createdAt: "2026-08-12T10:00:00",
+  closedAt: null,
+  payableSettlementId: 99,
+};
+
+export const contractItem: ContractListItem = {
+  contractId: 31,
+  contractNo: "CT-2026-0031",
+  projectId: 7,
+  projectTitle: "쇼핑몰 리뉴얼",
+  jobRole: "FRONTEND",
+  counterpartName: "김개발",
+  clientBusinessField: "커머스",
+  status: "SIGN_PENDING",
+  totalAmount: 30_000_000,
+  payUnit: "MONTHLY",
+  payAmount: 5_000_000,
+  startDate: "2026-09-01",
+  endDate: "2027-02-28",
+  workStyle: "REMOTE",
+  signatureRequired: true,
+  clientSigned: false,
+  freelancerSigned: true,
+  depositPaid: false,
+  payableSettlementId: null,
+};
+
+export const contractPage = (content: ContractListItem[] = [contractItem]): ContractListPage => ({
+  content,
+  page: 0,
+  size: 10,
+  totalElements: content.length,
+  totalPages: 1,
+  first: true,
+  last: true,
+});

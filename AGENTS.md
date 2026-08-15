@@ -1,9 +1,171 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# AGENTS.md
 
-# This is NOT the Next.js you know
+이 문서는 AI 도구가 프로젝트 작업을 시작하기 전에 확인해야 하는 문서와 기본 작업 원칙을 안내합니다.
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+이 파일에 프로젝트의 모든 규칙을 중복 작성하지 않습니다.
+각 규칙의 상세 내용은 아래 원본 문서를 따릅니다.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+## 1. 작업 전 확인 순서
 
-<!-- END:nextjs-agent-rules -->
+AI 도구는 작업을 시작하기 전에 아래 문서를 순서대로 확인합니다.
+
+1. `README.md`
+2. `docs/ai/frontend-convention.md`
+3. `docs/ai/security-guide.md`
+4. `.ai/STATE.md`
+5. 작업 유형에 따라 아래 문서 추가 확인
+
+   * Git·Issue·PR 작업: `docs/ai/git-issue-pr-guide.md`
+   * 테스트·검증: `docs/ai/testing-guide.md`
+   * 다크모드·테마 작업: `docs/ai/dark-mode-guide.md`
+   * API 연동: `.ai/API.md`
+   * 이전 작업 이어받기: `.ai/HANDOFF.md`
+   * 과거 완료 작업 확인: `.ai/WORKLOG.md`
+
+## 2. 문서별 역할
+
+### `README.md`
+
+프로젝트 전체 설명과 팀 공통 규칙의 기준 문서입니다.
+
+* 프로젝트 소개
+* 실행 방법
+* Git 브랜치 규칙
+* 커밋 메시지 규칙
+* 버전 및 릴리즈 규칙
+* 팀 공통 협업 방식
+
+Git 관련 내용이 다른 문서와 충돌할 경우 `README.md`를 우선합니다.
+
+### `docs/ai/`
+
+프로젝트에서 계속 유지되는 개발 규칙을 관리합니다.
+
+* `frontend-convention.md`: 프론트엔드 코드 작성 규칙
+* `git-issue-pr-guide.md`: Git·Issue·PR 작업 가이드
+* `security-guide.md`: 보안 및 민감 정보 처리 규칙
+* `testing-guide.md`: 변경 유형별 검증 규칙
+
+### `.ai/`
+
+AI와 함께 진행하는 현재 작업과 작업 이력을 관리합니다.
+
+* `STATE.md`: 현재 진행 중인 한 가지 작업
+* `HANDOFF.md`: 새 채팅·다른 AI·다른 작업자에게 전달할 인수인계
+* `WORKLOG.md`: 완료한 작업 기록
+* `API.md`: 프론트에서 실제 사용하는 API와 변경 사항
+
+## 3. 우선순위
+
+문서와 실제 코드가 다를 경우 아래 우선순위를 따릅니다.
+
+1. 현재 실제 코드와 `package.json`
+2. 루트 `README.md`
+3. `docs/ai/`의 개발 규칙
+4. `.ai/`의 현재 작업 기록
+5. 오래된 작업 이력과 예시
+
+문서가 실제 코드와 다르다면 임의로 코드를 문서에 맞추지 않습니다.
+
+먼저 차이를 확인하고, 필요한 경우 문서를 현재 코드 기준으로 갱신합니다.
+
+## 4. 기본 작업 원칙
+
+* 코드를 수정하기 전에 관련 기존 코드와 폴더 구조를 먼저 확인합니다.
+* 기존 컴포넌트, 훅, 타입, API 호출 패턴을 우선 재사용합니다.
+* 요청받은 범위 밖의 파일을 임의로 수정하지 않습니다.
+* 기능 개발과 대규모 리팩터링을 한 작업에 섞지 않습니다.
+* 사용되지 않는 코드처럼 보여도 참조 여부를 확인하기 전 삭제하지 않습니다.
+* 기존 공통 컴포넌트나 공통 API 클라이언트를 수정하기 전에 영향 범위를 확인합니다.
+* 새로운 라이브러리나 새로운 구조를 팀 합의 없이 도입하지 않습니다.
+* 실제 API 응답을 확인하지 못했다면 필드명과 응답 구조를 추측하지 않습니다.
+* 확인하지 못한 내용은 `확인 필요` 또는 `미검증`으로 기록합니다.
+* 실행하지 않은 검증을 성공한 것처럼 기록하지 않습니다.
+
+## 5. Git 작업 원칙
+
+Git 브랜치, 커밋, Issue, PR 규칙은 아래 문서를 따릅니다.
+
+* `README.md`
+* `docs/ai/git-issue-pr-guide.md`
+
+기본 작업 흐름은 다음과 같습니다.
+
+```text
+Issue 생성
+→ develop 최신화
+→ 작업 브랜치 생성
+→ 작업 및 검증
+→ Pull Request 생성
+→ 팀원 리뷰
+→ develop 병합
+→ 배포 또는 릴리즈 시 develop에서 main으로 Pull Request
+```
+
+다음 작업은 사용자의 명시적인 요청 없이 수행하지 않습니다.
+
+* commit
+* push
+* Pull Request 생성
+* merge
+* 브랜치 삭제
+* Issue 생성 또는 종료
+* 릴리즈 및 태그 생성
+
+## 6. 보안 원칙
+
+다음 정보는 코드, Markdown 문서, 커밋, Issue, PR, 로그에 작성하지 않습니다.
+
+* 비밀번호
+* Access token
+* Refresh token
+* 인증 쿠키
+* 세션 값
+* API key
+* Secret
+* Private key
+* 실제 사용자 개인정보
+* 테스트 계정 자격 증명
+* 환경변수 실제 값
+
+환경변수는 변수 이름과 용도만 문서에 기록합니다.
+
+상세 규칙은 `docs/ai/security-guide.md`를 따릅니다.
+
+## 7. 작업 기록 갱신
+
+### 작업 시작 시
+
+`.ai/STATE.md`에 현재 작업을 작성합니다.
+
+### API를 연동하거나 변경했을 때
+
+`.ai/API.md`에 프론트에서 실제 사용하는 요청·응답과 에러 처리를 기록합니다.
+
+### 발표에 활용할 개발·협업 소재가 생겼을 때
+
+`.ai/PM-발표노트.md`의 관련 항목에 짧은 메모를 추가합니다.
+
+* 발표에 실제 활용할 만한 내용은 `🎤`, 참고 내용은 `📌`, 확인이 필요한 내용은 `❓`로 표시합니다.
+* 가능하면 관련 Issue, PR, 커밋, 화면 캡처, 오류 코드 등 근거 위치를 함께 기록합니다.
+* 단순 작업 목록을 모두 옮기지 않고 문제 정의, 범위 조정, 협업 의사결정, 문제 해결 과정처럼 발표 가치가 있는 내용만 기록합니다.
+
+### 작업 완료 시
+
+`.ai/WORKLOG.md` 최상단에 완료 내용을 추가합니다.
+
+### 새 채팅이나 다른 작업자에게 넘길 때
+
+`.ai/HANDOFF.md`를 현재 작업 기준으로 작성합니다.
+
+## 8. 작업 완료 보고
+
+작업 완료 시 아래 내용을 구분해 보고합니다.
+
+* 구현 또는 수정한 내용
+* 수정한 파일
+* 실행한 검증
+* 실패한 검증
+* 실행하지 못한 검증
+* 실제 화면 또는 API로 확인하지 못한 내용
+* 남은 작업과 주의사항

@@ -1,0 +1,33 @@
+export type ProjectContentField =
+  | "currentSituation"
+  | "mainTask"
+  | "detailScope"
+  | "extraNote";
+
+export type ProjectContentFindingKind =
+  | "privacy"
+  | "missing"
+  | "short"
+  | "repetition"
+  | "elaboration";
+
+export interface ProjectContentFinding {
+  id: string;
+  kind: ProjectContentFindingKind;
+  field: ProjectContentField | "both";
+  title: string;
+  description: string;
+  maskedValue?: string;
+  questions: string[];
+}
+
+export interface ProjectContentPrecheckResult {
+  findings: ProjectContentFinding[];
+  checkedAt: number;
+}
+
+export interface PrivacyCandidate {
+  type: "email" | "phone" | "account" | "rrn";
+  field: ProjectContentField;
+  maskedValue: string;
+}
