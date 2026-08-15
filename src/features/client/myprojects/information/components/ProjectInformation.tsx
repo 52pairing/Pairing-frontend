@@ -5,16 +5,10 @@ import { useState } from "react";
 import { ProjectFreelancerStatus } from "@/features/client/myprojects/information/components/ProjectFreelancerStatus";
 import { downloadProjectFile } from "@/features/client/myprojects/services/projectDetail";
 import type { ProjectInformationProps } from "@/features/client/myprojects/types/components";
-
-const PERIOD_UNIT_LABEL: Record<string, string> = {
-  DAY: "일",
-  WEEK: "주",
-  MONTH: "개월",
-  YEAR: "년",
-};
-
-const formatDate = (value: string | null) =>
-  value ? value.slice(0, 10).replaceAll("-", ".") : "-";
+import {
+  PERIOD_UNIT_LABEL,
+  formatProjectDate,
+} from "@/features/client/myprojects/utils/projectDisplay";
 
 const getDeadlineLabel = (deadline: string | null) => {
   if (!deadline) return null;
@@ -85,7 +79,7 @@ export function ProjectInformation({
         <dl className="mt-5 grid max-w-[760px] grid-cols-2 gap-x-16 gap-y-5">
           <ProjectDetailInfo label="예산" value={`${project.budgetAmount.toLocaleString("ko-KR")}원`} />
           <ProjectDetailInfo label="기간" value={`${project.periodValue}${PERIOD_UNIT_LABEL[project.periodUnit] ?? project.periodUnit}`} />
-          <ProjectDetailInfo label="시작 희망일" value={formatDate(project.startDesiredDate)} />
+          <ProjectDetailInfo label="시작 희망일" value={formatProjectDate(project.startDesiredDate)} />
           <ProjectDetailInfo label="근무 방식" value={workStyleLabel} />
           <ProjectDetailInfo label="근무 형태" value={workFormLabel} />
           {!isRemote && project.workLocation ? <ProjectDetailInfo label="근무 장소" value={project.workLocation} /> : null}

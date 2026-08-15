@@ -2,8 +2,6 @@ import type { ProjectDetailTabsProps } from "@/features/client/myprojects/types/
 
 export const PROJECT_DETAIL_TABS = ["프로젝트 정보", "추천 후보", "협상", "계약", "진행 현황"] as const;
 
-export type { ProjectDetailTab } from "@/features/client/myprojects/types/components";
-
 export function ProjectDetailTabs({ activeTab, onTabChange, rightContent }: ProjectDetailTabsProps) {
   return (
     <div className="mt-10 border-b border-theme">
