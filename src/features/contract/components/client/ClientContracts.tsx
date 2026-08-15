@@ -1,73 +1,62 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { ClientContractTabs, CLIENT_CONTRACT_TABS } from "@/features/contract/components/client/ClientContractTabs";
 import { ClientContractCard } from "@/features/contract/components/client/ClientContractCard";
-import { getAllClientContracts } from "@/features/contract/services/clientContracts";
-import { getContractTabCounts } from "@/features/contract/services/contracts";
-import type { ClientContractListItem, ClientContractTab } from "@/features/contract/types/clientContract";
+import { ListState } from "@/features/contract/components/common/ListState";
+import { useAsyncData } from "@/features/contract/hooks/useAsyncData";
+import { getContracts, getContractTabCounts } from "@/features/contract/services/contracts";
+import type { ClientContractTab } from "@/features/contract/types/clientContract";
 import { getProjectJobRoles } from "@/features/client/projects/services/projectPreReview";
+
+const PAGE_SIZE = 10;
+
+// tab-counts 는 역할 구분 없이 8개 탭을 모두 내려주므로 클라이언트 탭만 골라 배지에 사용한다.
+const CLIENT_TABS = new Set<ClientContractTab>(["ALL", "AWAITING_ME", "AWAITING_COUNTERPART", "CONCLUDED"]);
 
 const isContractTab = (value: string | null): value is ClientContractTab =>
   CLIENT_CONTRACT_TABS.some(({ tab }) => tab === value);
-
-const matchesTab = (contract: ClientContractListItem, tab: ClientContractTab) => {
-  if (tab === "AWAITING_ME") return contract.signatureRequired;
-  if (tab === "AWAITING_COUNTERPART") return contract.status === "SIGN_PENDING" && !contract.signatureRequired;
-  if (tab === "CONCLUDED") return ["SIGNED", "IN_PROGRESS", "COMPLETION_PENDING", "COMPLETED"].includes(contract.status);
-  return true;
-};
 
 export function ClientContracts() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryTab = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<ClientContractTab>(isContractTab(queryTab) ? queryTab : "ALL");
-  const [contracts, setContracts] = useState<ClientContractListItem[]>([]);
-  const [jobRoleLabels, setJobRoleLabels] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [tabRows, setTabRows] = useState<Array<{ tab: ClientContractTab; label: string; count: number }>>([]);
+  const [page, setPage] = useState(0);
 
-  const loadContracts = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage("");
-    try {
-      const [items, jobRoles, countRows] = await Promise.all([
-        getAllClientContracts(),
-        getProjectJobRoles(),
-        getContractTabCounts().catch(() => []),
-      ]);
-      setContracts(items);
-      setJobRoleLabels(Object.fromEntries(jobRoles.map((role) => [role.code, role.label])));
-      const clientTabs = new Set<ClientContractTab>(["ALL", "AWAITING_ME", "AWAITING_COUNTERPART", "CONCLUDED"]);
-      setTabRows(countRows.flatMap((row) => clientTabs.has(row.tab as ClientContractTab)
-        ? [{ tab: row.tab as ClientContractTab, label: row.label, count: row.count }]
-        : []));
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "계약 목록을 불러오지 못했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.resolve().then(() => { if (!cancelled) void loadContracts(); });
-    return () => { cancelled = true; };
-  }, [loadContracts]);
-
-  const visibleContracts = useMemo(
-    () => contracts.filter((contract) => matchesTab(contract, activeTab)),
-    [activeTab, contracts],
+  // 목록은 서버에서 탭 필터 + 페이지네이션(정렬 id DESC 고정)으로 받는다.
+  const loadContracts = useCallback(
+    () => getContracts({ tab: activeTab, page, size: PAGE_SIZE }),
+    [activeTab, page],
   );
+  const { data: contractPage, isLoading, error, reload } = useAsyncData(loadContracts, "계약 목록을 불러오지 못했습니다.");
+
+  // 직무 라벨·탭 배지는 계정 단위 메타라 한 번만 로드한다. 실패해도 목록 렌더는 막지 않는다.
+  const loadMeta = useCallback(async () => {
+    const [jobRoles, countRows] = await Promise.all([
+      getProjectJobRoles().catch(() => []),
+      getContractTabCounts().catch(() => []),
+    ]);
+    return {
+      jobRoleLabels: Object.fromEntries(jobRoles.map((role) => [role.code, role.label])) as Record<string, string>,
+      tabRows: countRows.flatMap((row) => CLIENT_TABS.has(row.tab as ClientContractTab)
+        ? [{ tab: row.tab as ClientContractTab, label: row.label, count: row.count }]
+        : []),
+    };
+  }, []);
+  const { data: meta } = useAsyncData(loadMeta);
+  const jobRoleLabels = meta?.jobRoleLabels ?? {};
+  const tabRows = meta?.tabRows ?? [];
 
   const changeTab = (tab: ClientContractTab) => {
     setActiveTab(tab);
+    setPage(0);
     router.replace(`/client/contracts?tab=${tab}`, { scroll: false });
   };
+
+  const contracts = contractPage?.content ?? [];
 
   return (
     <main className="min-h-screen bg-surface-subtle">
@@ -77,13 +66,17 @@ export function ClientContracts() {
 
         <ClientContractTabs activeTab={activeTab} onTabChange={changeTab} rows={tabRows} />
 
-        {errorMessage ? (
-          <div role="alert" className="mt-6 flex h-[180px] flex-col items-center justify-center gap-3 rounded-[14px] border border-[#fda29b] bg-surface text-[12px] text-theme-danger"><p>{errorMessage}</p><button type="button" onClick={() => void loadContracts()} className="rounded-[8px] border border-[#b42318] px-4 py-2 font-bold">다시 시도</button></div>
-        ) : isLoading ? (
-          <div className="mt-6 flex h-[180px] items-center justify-center rounded-[14px] border border-theme bg-surface text-[12px] text-theme-secondary">계약 목록을 불러오고 있습니다.</div>
-        ) : visibleContracts.length ? (
+        <ListState
+          isLoading={isLoading}
+          error={error}
+          isEmpty={!contracts.length}
+          onRetry={reload}
+          loadingText="계약 목록을 불러오고 있습니다."
+          emptyText="해당 상태의 계약이 없습니다."
+          frameClassName="mt-6 h-[180px] rounded-[14px]"
+        >
           <section className="mt-6 space-y-3">
-            {visibleContracts.map((contract) => (
+            {contracts.map((contract) => (
               <ClientContractCard
                 key={contract.contractId}
                 contract={contract}
@@ -92,9 +85,14 @@ export function ClientContracts() {
               />
             ))}
           </section>
-        ) : (
-          <div className="mt-6 flex h-[180px] items-center justify-center rounded-[14px] border border-theme bg-surface text-[12px] text-theme-muted">해당 상태의 계약이 없습니다.</div>
-        )}
+          {contractPage && contractPage.totalPages > 1 ? (
+            <nav aria-label="계약 목록 페이지" className="mt-6 flex items-center justify-center gap-3">
+              <button type="button" disabled={contractPage.first || isLoading} onClick={() => setPage((current) => current - 1)} className="rounded-lg border border-theme bg-surface px-4 py-2 text-[11px] font-semibold text-theme-secondary disabled:cursor-not-allowed disabled:text-theme-muted">이전</button>
+              <span className="text-[11px] font-semibold text-theme-secondary">{contractPage.page + 1} / {contractPage.totalPages}</span>
+              <button type="button" disabled={contractPage.last || isLoading} onClick={() => setPage((current) => current + 1)} className="rounded-lg border border-theme bg-surface px-4 py-2 text-[11px] font-semibold text-theme-secondary disabled:cursor-not-allowed disabled:text-theme-muted">다음</button>
+            </nav>
+          ) : null}
+        </ListState>
       </div>
     </main>
   );

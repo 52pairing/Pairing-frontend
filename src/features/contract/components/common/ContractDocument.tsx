@@ -64,20 +64,24 @@ export function ContractDocument({ role }: ContractDocumentProps) {
     }
     setIsLoading(true);
     setErrorMessage("");
-    try {
-      const detail = await getContractDetail(contractId);
-      setContract(detail);
 
-      try {
-        const pdf = await downloadContractPdf(contractId);
+    // 계약 상세와 PDF 미리보기는 서로 의존하지 않으므로 병렬로 요청한다.
+    // 상세 실패는 화면 전체 에러(치명), PDF 실패는 미리보기 영역 에러(비치명)로 분리 처리한다.
+    downloadContractPdf(contractId)
+      .then((pdf) => {
         setPdfPreviewUrl((current) => {
           if (current) URL.revokeObjectURL(current);
           return URL.createObjectURL(pdf);
         });
         setPdfErrorMessage("");
-      } catch (error) {
+      })
+      .catch((error) => {
         setPdfErrorMessage(error instanceof Error ? error.message : "계약서 미리보기를 불러오지 못했습니다.");
-      }
+      });
+
+    try {
+      const detail = await getContractDetail(contractId);
+      setContract(detail);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "계약서를 불러오지 못했습니다.");
     } finally {

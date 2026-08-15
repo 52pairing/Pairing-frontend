@@ -6,7 +6,7 @@ export const getClientProjectContracts = (
   size = 10,
 ) => getContracts({ tab: "ALL", projectId, page, size });
 
-export const getClientContracts = (page = 0, size = 100) =>
+const getClientContracts = (page = 0, size = 100) =>
   getContracts({ tab: "ALL", page, size });
 
 export const getAllClientContracts = async () => {

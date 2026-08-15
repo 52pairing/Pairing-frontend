@@ -517,6 +517,7 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 ## 변경 이력
 
+- 2026-08-16: 클라이언트 계약 목록을 `tab=ALL&size=100` 전체 조회+클라 필터에서 **서버 탭 필터+페이지네이션**(`GET /api/v1/contracts?tab={tab}&page&size=10`)으로 전환. 백엔드 회신으로 클라이언트 탭(`AWAITING_ME`/`AWAITING_COUNTERPART`/`CONCLUDED`) 서버 필터 지원 확인. `AWAITING_ME`는 서버가 `DRAFT`·`REJECTED`를 제외해 기존보다 좁음(의도된 동작). 브라우저 응답은 미검증
 - 2026-08-11: 공통 401 refresh·1회 재시도·세션 종료 처리, 보호 경로 및 임시 비밀번호 가드 추가, 실제 응답 미검증
 - 2026-08-11: 마이페이지 비밀번호 변경과 약관 문서 조회 API 연결, 실제 응답 미검증
 - 2026-08-10: 백엔드 2차 답변 반영 — `WORK_FORM`(FULL_TIME/PART_TIME/ANY), 조건 값 라벨 meta API화(`getWorkConditionsMeta` + `formatConditionValue(labels)`, 하드코딩 제거), 협상 자동생성(매칭 수락)·프리랜서 현황 버튼 `status==="NEGOTIATING"` 기반, 헤더 종 배지 제거. 실제 네트워크 응답 미검증
@@ -703,15 +704,17 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 ### 클라이언트 계약 관리
 
 - 화면: `/client/contracts?tab={tab}`
-- `GET /api/v1/contracts?tab=ALL&page={page}&size=100`으로 프로젝트 조건 없이 본인의 전체 계약 조회
-- 첫 응답의 `totalPages`가 2 이상이면 나머지 페이지를 추가 조회해 탭 필터 누락 방지
-- 탭 `ALL`: 전체 계약
-- 탭 `CLIENT_PENDING`: `clientSigned === false`
-- 탭 `CLIENT_SIGNED`: `clientSigned === true && freelancerSigned === false`
-- 탭 `ALL_SIGNED`: `clientSigned === true && freelancerSigned === true`
+- `GET /api/v1/contracts?tab={tab}&page={page}&size=10`으로 **서버 탭 필터 + 페이지네이션** 조회 (2026-08-16 전환, 정렬 id DESC 고정)
+  - 이전에는 `tab=ALL&size=100` 전체 조회 후 클라이언트 필터였으나, 백엔드가 클라이언트 탭 서버 필터링을 지원함을 확인해 프리랜서 화면과 동일한 서버 페이지네이션으로 통일
+- 사용 탭: `ALL`(전체), `AWAITING_ME`(서명 대기), `AWAITING_COUNTERPART`(상대방 서명 대기), `CONCLUDED`(체결 완료)
+  - `CONCLUDED` = `{SIGNED, IN_PROGRESS, COMPLETION_PENDING, COMPLETED}` (기존 클라 필터와 완전 일치)
+  - `AWAITING_COUNTERPART` = 기존 클라 필터와 결과 동일
+  - `AWAITING_ME` = 서버는 `내 서명 PENDING AND 계약 status = SIGN_PENDING`로 **기존보다 좁음**. 기존 `signatureRequired === true`에 섞이던 `DRAFT`(AI 문구 작성 2~5초 구간)·`REJECTED`(상대 거부)가 서버 탭에서는 빠짐 → **의도된 동작(회귀 아님)**, 배지 숫자가 줄어 보일 수 있음
+- 탭 건수 `GET /api/v1/contracts/mine/tab-counts`는 역할 구분 없이 8개 탭을 모두 반환 → 화면에서 클라이언트 탭 4개만 골라 배지 사용. 목록과 tab-counts는 같은 enum(ContractTab) 판정식을 공유
+- `projectId` 미전달 시 본인 전체 계약 기준
 - 계약 카드 UI는 프로젝트 상세의 계약 탭과 공용 컴포넌트 사용
 - 상세 이동: `/client/projects/{projectId}/contracts/{contractId}`
-- 실제 네트워크 응답: 미검증
+- 서버 탭 필터 지원 여부는 백엔드 확인 완료(BE 회신). 단 실제 네트워크 응답은 브라우저 미검증(no-localhost)
 
 ## 계약 상세
 
