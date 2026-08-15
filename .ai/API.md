@@ -794,12 +794,16 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 | --- | --- | --- | --- | --- |
 | GET | `/api/v1/negotiations/{id}` | 협상 상세(조건·라운드·상태) | - | 미검증 |
 | GET | `/api/v1/negotiations/{id}/messages` | 협상 로그(초기/재동기화) | - | 미검증 |
-| POST | `/api/v1/negotiations/{id}/start` | 협상 시작(마지노선 저장) | `{ conditions:[{ conditionType, value }] }` | 미검증 |
+| POST | `/api/v1/negotiations/{id}/start` | 협상 시작(마지노선 저장) | `{ conditions:[{ conditionType, value, belowMinAccept? }] }` | 미검증 |
 | POST | `/api/v1/negotiations/{id}/answers` | 조건 승인/재지시 | `{ roundNo, answers:[{ conditionId, accepted, proposedValue? }] }` | 미검증 |
 | POST | `/api/v1/negotiations/{id}/give-up` | 협상 포기 | `{ reason? }`(선택, 생략 시 `{}`) | 미검증 |
 | POST | `/api/v1/negotiations/{id}/read` | 안 읽은 새 제안 표시 해제 | - | 미검증 |
 
 - 시작/승인·재지시/포기 액션의 성공 응답 구조는 미검증이라, 호출 후 상세·메시지를 GET 재조회해 화면을 재동기화한다.
+- (2026-08-14) `start` 요청 `conditions[]`에 `belowMinAccept?`(boolean, 기본 false) 추가. 프리랜서 AMOUNT에만 의미하며 `true`면 등록 최소가 하한 검증만 건너뜀.
+  - 처음 마지노선 입력에서 등록 최소가보다 낮은 단가를 넣으면 서버가 `NG_012`(FLOOR_BELOW_MIN_ACCEPT) 반환 → SetupPanel이 막다른 배너 대신 확인 모달을 띄우고 [그래도 시작] 시 AMOUNT만 `belowMinAccept:true`로 재제출.
+  - 재조정(`PATCH /floors`)·수락(`POST /answers`)은 변경 없음. `/floors`에는 이 플래그를 보내도 백엔드가 무시함.
+  - 마지노선 밖 상대 제안 수락은 기존 `answers.acceptBelowFloor`(NG_011) 플로우 그대로이며 이번 변경과 별개.
 
 ### REST (목록)
 

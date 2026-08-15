@@ -1,5 +1,24 @@
 # WORKLOG
 
+## 2026-08-15 — 채팅 입력창 상단 구분선 제거
+
+- 1:1 채팅의 메시지 입력 폼에서 상단 테두리(`border-t border-theme`)를 제거해 입력창 위의 얇은 구분선이 표시되지 않도록 수정했습니다.
+- 변경: `src/features/chat/components/Chat.tsx`
+- 검증: 변경 파일 ESLint, 채팅 Jest 1 suite/8 tests, `git diff --check` 통과
+- 미검증: 로그인 채팅 데이터가 필요한 화면이라 실제 브라우저에서는 확인하지 못했습니다.
+
+---
+
+## 2026-08-14 — 처음 마지노선 등록 최소가 하한: 차단→경고 후 허용
+
+- 프리랜서가 처음 협상 시작(`POST /start`) 시 등록 최소 수용가보다 낮은 단가를 넣으면, 기존엔 `NG_012`로 막혔던 것을 확인 모달 후 허용하도록 변경했습니다(PO 확정 정책, `acceptBelowFloor`와 같은 패턴).
+- `StartNegotiationRequest.conditions[]`에 `belowMinAccept?`(boolean, 기본 false)를 추가했습니다. 프리랜서 AMOUNT에만 의미하며 `true`면 등록 최소가 하한 검증만 건너뜁니다.
+- `NegotiationRoom.handleStart`가 `NG_012` 응답을 막다른 배너 대신 `{ belowMinAccept: true }`로 반환하도록 했습니다(상태·입력칸 유지, 화면 전환 없음).
+- `SetupPanel`이 `belowMinAccept`를 받으면 확인 모달("입력하신 금액이 등록 최소 수용가보다 낮습니다…")을 띄우고, [그래도 시작] 시 같은 요청을 **AMOUNT 조건만** `belowMinAccept:true`로 재제출합니다. [취소]는 입력값을 유지합니다. 입력한 단가는 문구에 표시하고, 등록 최소가 값은 응답에 없어 정확한 숫자는 표시하지 않습니다.
+- 범위는 처음 입력(start) 한 곳뿐입니다. 재조정(`PATCH /floors`)·수락(`POST /answers`)은 손대지 않았습니다(백엔드가 `/floors`의 플래그는 무시).
+- 변경: `types/negotiation.ts`, `NegotiationRoom.tsx`, `NegotiationChatFlow.tsx` / 추가: `unit-tests/negotiation/NegotiationStartBelowMinAccept.test.tsx`
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과, 신규 협상 Jest 1 suite/2 tests 통과, `git diff --check` 통과
+- 미검증: 실제 로그인·API·브라우저는 테스트 계정이 없어 확인하지 못했습니다. 백엔드가 `belowMinAccept=true` 시 `start` 하한 가드를 통과시키는 반영이 배포돼야 실제 동작이 확인됩니다.
 ## 2026-08-15 — 협상 순수 로직 분리 + 테스트 안전망 (#3 Step 1)
 
 - 배경: `NegotiationChatFlow`(1233줄)는 테스트가 0개인데 재무 성격의 마지노선(floor) 위반 판정 로직을 포함. 컴포넌트 분해 전에 순수 로직을 먼저 분리·테스트해 안전망 확보.

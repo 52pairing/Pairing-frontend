@@ -56,8 +56,17 @@ interface NegotiationChatFlowProps {
   messages: NegotiationMessage[];
   /** 조건 값 라벨(근무방식/근무형태/기간 단위) — meta API 기반 */
   labels: WorkConditionLabels;
-  /** 협상 시작(마지노선 저장) — value 는 서버 전송용 문자열 */
-  onStart: (conditions: Array<{ conditionType: ConditionType; value: string }>) => void;
+  /**
+   * 협상 시작(마지노선 저장) — value 는 서버 전송용 문자열.
+   * 등록 최소가보다 낮은 단가(NG_012)면 belowMinAccept=true 를 돌려줘 확인 모달을 띄운다.
+   */
+  onStart: (
+    conditions: Array<{
+      conditionType: ConditionType;
+      value: string;
+      belowMinAccept?: boolean;
+    }>,
+  ) => Promise<{ belowMinAccept: boolean }>;
   /** 조건 승인/재지시 제출 — 마지노선 밖 수락(NG_011)이면 floorViolation=true */
   onSubmitAnswers: (answers: AnswerInput[]) => Promise<{ floorViolation: boolean }>;
   /** 내 마지노선 수정(PATCH) — ok=false 면 message 를 인라인 표시 */
@@ -275,7 +284,7 @@ function NegotiationHeader({
         {/* 최종 절충 단계면 라운드 대신 "최종 절충" 표시 */}
         <span>{finalOffer ? "최종 절충" : `라운드 ${round} / ${maxRound}`}</span>
         <span className={`rounded-full border px-3 py-1.5 ${isFailed ? "border-[#fecdca] bg-danger-surface text-theme-danger" : isComplete ? "border-[#abefc6] bg-success-surface text-theme-success" : finalOffer ? "border-[#fdb022] bg-[#fffaeb] text-[#b54708]" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}>
-          {isFailed ? "× 협상 결렬" : isComplete ? "✓ 협상 완료" : finalOffer ? "⚑ 최종 절충안" : "♙ 협상 중"}
+          {isFailed ? "× 협상 결렬" : isComplete ? "✓ 협상 완료" : finalOffer ? "⚑ 최종 절충안" : "협상 중"}
         </span>
       </div>
     </div>
@@ -295,7 +304,7 @@ function ConditionBadges({ conditions }: { conditions: NegotiationCondition[] })
             className={`rounded-full border px-3 py-1.5 text-[11px] font-bold ${isAgreed ? "border-[#abefc6] bg-success-surface text-theme-success" : isRejected ? "border-[#fecdca] bg-danger-surface text-theme-danger" : "border-[#b9d4ff] bg-[#edf5ff] text-[#4b89f7]"}`}
           >
             {conditionLabel(condition.type)}{" "}
-            {isAgreed ? "합의🔒" : isRejected ? "재협상 필요" : "진행중"}
+            {isAgreed ? "합의" : isRejected ? "재협상 필요" : "진행중"}
           </span>
         );
       })}
@@ -611,7 +620,13 @@ function SetupPanel({
   labels: WorkConditionLabels;
   viewerRole: "CLIENT" | "FREELANCER";
   isSubmitting: boolean;
-  onStart: (values: Array<{ conditionType: ConditionType; value: string }>) => void;
+  onStart: (
+    values: Array<{
+      conditionType: ConditionType;
+      value: string;
+      belowMinAccept?: boolean;
+    }>,
+  ) => Promise<{ belowMinAccept: boolean }>;
 }) {
   // 아직 안 낸 조건만 입력·전송한다. 서버가 이미 채워 준 조건(myFloor != null,
   // 예: 프리랜서 AMOUNT=최소 수용가)을 다시 보내면 NG_006(이미 제출)이 난다.
@@ -620,19 +635,43 @@ function SetupPanel({
 
   // 조건별 "서버 전송 형식" 값 저장 (위젯이 변환해서 올려줌)
   const [values, setValues] = useState<Record<number, string>>({});
+  // 등록 최소가보다 낮은 단가로 시작할 때(NG_012) 확인 모달 노출 여부
+  const [belowMinConfirm, setBelowMinConfirm] = useState(false);
 
   const canStart = pending.every(
     (condition) => (values[condition.conditionId] ?? "").trim() !== "",
   );
 
-  const handleStart = () => {
-    onStart(
-      pending.map((condition) => ({
-        conditionType: condition.type,
-        value: values[condition.conditionId] ?? "",
-      })),
-    );
+  // belowMinAccept 는 AMOUNT(프리랜서 등록 최소가 하한)에만 붙인다.
+  const buildConditions = (belowMinAccept: boolean) =>
+    pending.map((condition) => ({
+      conditionType: condition.type,
+      value: values[condition.conditionId] ?? "",
+      ...(belowMinAccept && condition.type === "AMOUNT"
+        ? { belowMinAccept: true }
+        : {}),
+    }));
+
+  const handleStart = async () => {
+    const result = await onStart(buildConditions(false));
+    // 등록 최소가보다 낮음 → 입력칸은 그대로 두고 확인 모달만 띄운다.
+    if (result.belowMinAccept) setBelowMinConfirm(true);
   };
+
+  // [그래도 시작] — 같은 요청을 AMOUNT 만 belowMinAccept=true 로 재제출
+  const confirmBelowMin = async () => {
+    setBelowMinConfirm(false);
+    await onStart(buildConditions(true));
+  };
+
+  // 확인 모달 문구 — 입력한 단가를 보여준다(등록 최소가 값은 응답에 없어 일반형으로 안내).
+  const amountCondition = pending.find((condition) => condition.type === "AMOUNT");
+  const enteredAmountText = amountCondition
+    ? formatConditionValue("AMOUNT", values[amountCondition.conditionId], labels)
+    : "";
+  const belowMinMessage = enteredAmountText
+    ? `입력하신 금액(${enteredAmountText})이 등록하신 최소 수용가보다 낮습니다. 그래도 이 마지노선으로 시작하시겠어요?`
+    : "입력하신 금액이 등록하신 최소 수용가보다 낮습니다. 그래도 이 마지노선으로 시작하시겠어요?";
 
   return (
     <div className="mt-6 flex justify-end">
@@ -690,7 +729,7 @@ function SetupPanel({
         <button
           type="button"
           disabled={!canStart || isSubmitting}
-          onClick={handleStart}
+          onClick={() => void handleStart()}
           className="mt-5 flex h-[42px] w-full cursor-pointer items-center justify-center gap-2 rounded-[9px] bg-[#8878e8] text-[12px] font-bold text-white hover:bg-[#7969dc] disabled:cursor-not-allowed disabled:bg-[#c7c2f4]"
         >
           {isSubmitting ? (
@@ -703,6 +742,19 @@ function SetupPanel({
           )}
         </button>
       </section>
+
+      {belowMinConfirm ? (
+        <ConfirmModal
+          open
+          title="그래도 이 마지노선으로 시작할까요?"
+          description={belowMinMessage}
+          confirmText="그래도 시작"
+          cancelText="취소"
+          confirmDisabled={isSubmitting}
+          onConfirm={() => void confirmBelowMin()}
+          onClose={() => setBelowMinConfirm(false)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -953,7 +1005,7 @@ function ConditionActionPanel({
           <div key={condition.conditionId} className="mt-4">
             <p className="text-[11px] text-theme-muted">{conditionLabel(condition.type)}</p>
             <div className="mt-2 rounded-[8px] border border-[#86efac] bg-success-surface py-2 text-center text-[11px] font-bold text-[#16a34a]">
-              ♙ 이미 합의
+              이미 합의
             </div>
           </div>
         ))}
@@ -1065,7 +1117,7 @@ function FinalOfferPanel({
             <div key={c.conditionId} className="flex items-center justify-between px-1">
               <span className="text-[11px] text-theme-muted">{conditionLabel(c.type)}</span>
               <span className="text-[11px] font-bold text-theme-success">
-                🔒 {formatConditionValue(c.type, c.agreedValue, labels)}
+                {formatConditionValue(c.type, c.agreedValue, labels)}
               </span>
             </div>
           ))}

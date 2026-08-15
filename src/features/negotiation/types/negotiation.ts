@@ -200,9 +200,16 @@ export interface NegotiationListItem {
  * POST /negotiations/{id}/start.
  * 요청 필드명은 `conditionType`(응답 conditions[].type 과 이름 다름).
  * value 는 문자열: 금액은 원 단위(만원 ×10,000), 기간은 "4 MONTH", 날짜는 "2026-09-01".
+ *
+ * belowMinAccept(#... 2026-08-14): 프리랜서 AMOUNT 에만 의미. true 면 처음 마지노선 입력 시
+ * 등록 최소가 하한 검증(NG_012)만 건너뛴다. 기본 false(하위호환). 재조정(/floors)에는 보내도 무시됨.
  */
 export interface StartNegotiationRequest {
-  conditions: Array<{ conditionType: ConditionType; value: string }>;
+  conditions: Array<{
+    conditionType: ConditionType;
+    value: string;
+    belowMinAccept?: boolean;
+  }>;
 }
 
 /**
