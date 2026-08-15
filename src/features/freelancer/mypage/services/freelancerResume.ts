@@ -3,6 +3,7 @@ import type {
   FreelancerCondition,
   MetaOption,
   ResumeDetailResponse,
+  ResumeBody,
   ResumeDraftRequest,
   ResumeUpdateRequest,
   WorkConditionsMeta,
@@ -45,7 +46,7 @@ export const getFreelancerResume = () =>
   }));
 
 export const updateFreelancerResume = (resume: ResumeUpdateRequest) =>
-  apiCall<ResumeUpdateRequest>(`${FREELANCER_BASE}/resume`, {
+  apiCall<ResumeBody>(`${FREELANCER_BASE}/resume`, {
     method: "PUT",
     body: JSON.stringify(resume),
   });

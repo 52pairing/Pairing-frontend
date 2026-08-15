@@ -1,203 +1,38 @@
 "use client";
 
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import { ClientMyPageLayout } from "@/features/client/mypage/components/ClientMyPageLayout";
+import { getReceivedReviews, getReviewSummary, getWrittenReviews } from "@/features/review/services/reviews";
+import type { ReviewPage, ReviewSummary, WrittenReview } from "@/features/review/types/review";
 
 type ReviewTab = "received" | "written";
 
-const RECEIVED_REVIEWS = [
-  {
-    id: 1,
-    author: "김개발",
-    project: "B2B 주문 관리 서비스 리뉴얼",
-    rating: 5,
-    date: "2027.01.02",
-    content: "일정 준수가 정확하고 결과물의 완성도가 높았습니다.",
-  },
-  {
-    id: 2,
-    author: "김서버",
-    project: "핀테크 대시보드 개발",
-    rating: 5,
-    date: "2026.08.10",
-    content: "소통이 원활하고 요구사항 이해도가 뛰어납니다.",
-  },
-] as const;
-
-const WRITTEN_REVIEW = {
-  target: "주식회사 오이랩",
-  project: "B2B 주문 관리 서비스 리뉴얼",
-  date: "2027.01.02",
-  freelancerRating: 5,
-  freelancerReview:
-    "소통이 원활하고 요구사항이 명확하여 프로젝트를 순조롭게 진행할 수 있었습니다.",
-  serviceRating: 5,
-  serviceReview: "매칭부터 계약까지 전 과정이 투명하고 편리했습니다.",
-};
-
 export function ClientReviewManagement() {
   const [tab, setTab] = useState<ReviewTab>("received");
+  const [summary, setSummary] = useState<ReviewSummary | null>(null);
+  const [page, setPage] = useState<ReviewPage<WrittenReview> | null>(null);
+  const [pageNumber, setPageNumber] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  return (
-    <ClientMyPageLayout activeMenu="reviews">
-      <section className="rounded-xl border border-theme bg-surface px-5 py-6 sm:px-8 sm:py-7">
-        <h2 className="text-[16px] font-bold">리뷰 관리</h2>
-        <div
-          className="mt-6 flex border-b border-theme"
-          role="tablist"
-          aria-label="리뷰 구분"
-        >
-          <ReviewTabButton
-            active={tab === "received"}
-            onClick={() => setTab("received")}
-          >
-            받은 리뷰
-          </ReviewTabButton>
-          <ReviewTabButton
-            active={tab === "written"}
-            onClick={() => setTab("written")}
-          >
-            작성한 리뷰
-          </ReviewTabButton>
-        </div>
-        {tab === "received" ? <ReceivedReviews /> : <WrittenReviews />}
-      </section>
-    </ClientMyPageLayout>
-  );
+  useEffect(() => { getReviewSummary().then(setSummary).catch(() => null); }, []);
+  useEffect(() => {
+    let active = true;
+    const request = tab === "received" ? getReceivedReviews(pageNumber) : getWrittenReviews(pageNumber);
+    request.then((response) => { if (active) setPage(response); }).catch((loadError) => { if (active) setError(loadError instanceof Error ? loadError.message : "리뷰를 불러오지 못했습니다."); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [tab, pageNumber]);
+
+  const changeTab = (next: ReviewTab) => { setLoading(true); setError(""); setTab(next); setPageNumber(0); setPage(null); };
+  return <ClientMyPageLayout activeMenu="reviews"><section className="rounded-xl border border-theme bg-surface px-5 py-6 sm:px-8 sm:py-7"><h2 className="text-[16px] font-bold">리뷰 관리</h2><div className="mt-6 flex border-b border-theme" role="tablist"><Tab active={tab === "received"} onClick={() => changeTab("received")}>받은 리뷰</Tab><Tab active={tab === "written"} onClick={() => changeTab("written")}>작성한 리뷰</Tab></div>{tab === "received" && summary ? <div className="mt-6 flex items-center gap-4 rounded-xl bg-surface-subtle px-5 py-5"><strong className="text-[34px]">{(summary.averageScore ?? 0).toFixed(1)}</strong><div><Stars rating={summary.averageScore ?? 0} /><p className="mt-1 text-[11px] font-semibold text-theme-muted">총 {summary.reviewCount}건의 리뷰</p></div></div> : null}{loading ? <p className="py-10 text-center text-[12px] text-theme-muted">리뷰를 불러오는 중입니다.</p> : null}{error ? <p role="alert" className="py-10 text-center text-[12px] text-theme-danger">{error}</p> : null}{!loading && !error && page?.content.length === 0 ? <p className="py-10 text-center text-[12px] text-theme-muted">{tab === "received" ? "받은 리뷰가 없습니다." : "작성한 리뷰가 없습니다."}</p> : null}<div className={tab === "written" ? "mt-5 space-y-4" : "divide-y divide-theme"}>{page?.content.map((review) => tab === "written" ? <WrittenReviewCard key={review.reviewId} review={review} /> : <ReceivedReviewItem key={review.reviewId} review={review} />)}</div>{page && page.totalPages > 1 ? <div className="mt-5 flex justify-center gap-2"><button type="button" disabled={page.first} onClick={() => setPageNumber((value) => value - 1)} className="rounded-md border border-theme px-3 py-2 text-[11px] font-bold disabled:opacity-40">이전</button><span className="px-2 py-2 text-[11px] font-bold">{page.page + 1} / {page.totalPages}</span><button type="button" disabled={page.last} onClick={() => setPageNumber((value) => value + 1)} className="rounded-md border border-theme px-3 py-2 text-[11px] font-bold disabled:opacity-40">다음</button></div> : null}</section></ClientMyPageLayout>;
 }
 
-function ReviewTabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={`relative min-w-[96px] px-4 pb-3 text-[13px] font-bold transition ${active ? "text-brand" : "text-theme-muted hover:text-theme-secondary"}`}
-    >
-      {children}
-      {active ? (
-        <span className="absolute inset-x-0 -bottom-px h-0.5 bg-brand" />
-      ) : null}
-    </button>
-  );
-}
+function ReceivedReviewItem({ review }: { review: WrittenReview }) { return <article className="py-5"><div className="flex flex-wrap items-start justify-between gap-2"><div><p className="text-[13px] font-bold">{review.reviewerName}</p><p className="mt-1 text-[11px] font-semibold text-theme-muted">{review.projectTitle}</p></div><div className="text-right"><Stars rating={review.score} /><time className="ml-3 text-[10px] text-theme-muted">{formatReviewDate(review.createdAt)}</time></div></div>{review.content ? <p className="mt-3 text-[12px] font-semibold leading-5 text-theme-secondary">{review.content}</p> : null}</article>; }
 
-function ReceivedReviews() {
-  return (
-    <div role="tabpanel">
-      <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-surface-subtle px-5 py-5">
-        <strong className="text-[36px] font-extrabold leading-none tracking-[-0.04em]">
-          4.8
-        </strong>
-        <div>
-          <StarRating rating={5} />
-          <p className="mt-1 text-[11px] font-semibold text-theme-muted">
-            총 17건의 리뷰
-          </p>
-        </div>
-      </div>
-      <div className="mt-5 divide-y divide-theme">
-        {RECEIVED_REVIEWS.map((review) => (
-          <article key={review.id} className="py-5 first:pt-3">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-[14px] font-bold">
-                  {review.author}{" "}
-                  <span className="ml-1 text-[11px] font-semibold text-theme-muted">
-                    {review.project}
-                  </span>
-                </p>
-                <p className="mt-3 text-[12px] font-semibold leading-5 text-theme-secondary">
-                  {review.content}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <StarRating rating={review.rating} compact />
-                <time className="text-[11px] font-semibold text-theme-muted">
-                  {review.date}
-                </time>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
-}
+function WrittenReviewCard({ review }: { review: WrittenReview }) { return <article className="overflow-hidden rounded-xl border border-theme"><header className="flex flex-wrap items-start justify-between gap-3 bg-surface-subtle px-5 py-4"><div><h3 className="text-[14px] font-extrabold">{review.projectTitle}</h3><p className="mt-1 text-[10px] font-semibold text-theme-muted">{formatReviewDate(review.createdAt)}</p></div><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold text-theme-muted">수정 및 삭제 불가</span></header><div className="p-4 sm:p-5"><ReviewDetail title={review.reviewerName} score={review.score} content={review.content} /></div></article>; }
 
-function WrittenReviews() {
-  return (
-    <div role="tabpanel" className="pt-5">
-      <article className="border-b border-theme pb-5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <p className="text-[14px] font-bold">
-              {WRITTEN_REVIEW.target}{" "}
-              <span className="ml-1 text-[11px] font-semibold text-theme-muted">
-                {WRITTEN_REVIEW.project}
-              </span>
-            </p>
-            <span className="inline-flex rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold text-theme-secondary">
-              수정 및 삭제 불가
-            </span>
-          </div>
-          <time className="text-[11px] font-semibold text-theme-muted">
-            {WRITTEN_REVIEW.date}
-          </time>
-        </div>
-        <div className="mt-3">
-          <StarRating rating={WRITTEN_REVIEW.freelancerRating} />
-        </div>
-        <p className="mt-2 text-[12px] font-semibold leading-5 text-theme-secondary">
-          {WRITTEN_REVIEW.freelancerReview}
-        </p>
-      </article>
-      <div className="pt-5">
-        <h3 className="text-[12px] font-bold text-theme-muted">
-          서비스 이용 후기
-        </h3>
-        <div className="mt-3 rounded-xl border border-theme px-4 py-4 sm:px-5">
-          <div className="flex items-center justify-between gap-3">
-            <StarRating rating={WRITTEN_REVIEW.serviceRating} />
-            <time className="text-[11px] font-semibold text-theme-muted">
-              {WRITTEN_REVIEW.date}
-            </time>
-          </div>
-          <p className="mt-3 text-[12px] font-semibold leading-5 text-theme-secondary">
-            {WRITTEN_REVIEW.serviceReview}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+function ReviewDetail({ title, score, content }: { title: string; score: number; content: string | null }) { return <div className="rounded-lg border border-theme bg-surface px-4 py-4"><h4 className="text-[11px] font-bold text-theme-muted">{title}</h4><div className="mt-3"><Stars rating={score} /></div><p className="mt-3 text-[12px] font-semibold leading-5 text-theme-secondary">{content || "작성한 내용이 없습니다."}</p></div>; }
+function formatReviewDate(value: string) { return value.slice(0, 10).replaceAll("-", "."); }
 
-function StarRating({
-  rating,
-  compact = false,
-}: {
-  rating: number;
-  compact?: boolean;
-}) {
-  return (
-    <span
-      role="img"
-      aria-label={`평점 ${rating}점`}
-      className={`${compact ? "text-[13px]" : "text-[16px]"} tracking-[0.08em] text-amber-500`}
-    >
-      {Array.from({ length: 5 }, (_, index) =>
-        index < rating ? "★" : "☆",
-      ).join("")}
-    </span>
-  );
-}
+function Tab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) { return <button type="button" role="tab" aria-selected={active} onClick={onClick} className={`relative min-w-24 px-4 pb-3 text-[12px] font-bold ${active ? "text-brand after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-brand" : "text-theme-muted"}`}>{children}</button>; }
+function Stars({ rating }: { rating: number }) { const rounded = Math.round(Math.max(0, Math.min(5, rating))); return <span aria-label={`평점 ${rating}점`} className="text-[14px] tracking-wider text-amber-500">{"★".repeat(rounded)}<span className="text-theme-muted">{"★".repeat(5 - rounded)}</span></span>; }

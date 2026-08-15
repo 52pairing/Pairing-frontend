@@ -6,10 +6,10 @@ export type { ClientMyPageActiveMenu, ClientMyPageMenu } from "@/features/client
 
 export const CLIENT_MY_PAGE_MENU = [
   { label: "기본 정보", value: "profile", href: "/client/mypage/profile" },
-  { label: "기업 정보", value: "company", href: "/client/mypage/company" },
   { label: "리뷰 관리", value: "reviews", href: "/client/mypage/reviews" },
   { label: "결제수단", value: "payment-methods", href: "/client/mypage/payment-methods" },
   { label: "결제 내역", value: "payments", href: "/client/mypage/payments" },
+  { label: "기본 설정", value: "settings", href: "/client/mypage/settings" },
 ] as const;
 
 export function ClientMyPageSidebar({ activeMenu }: ClientMyPageSidebarProps) {

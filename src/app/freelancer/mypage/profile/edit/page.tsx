@@ -1,5 +1,5 @@
-import { FreelancerProfileRegistration } from "@/features/freelancer/mypage/components/FreelancerProfileRegistration";
+import { FreelancerBasicProfileEdit } from "@/features/freelancer/mypage/components/FreelancerBasicProfileEdit";
 
 export default function FreelancerProfileEditPage() {
-  return <FreelancerProfileRegistration />;
+  return <FreelancerBasicProfileEdit />;
 }

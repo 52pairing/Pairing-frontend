@@ -3,6 +3,7 @@
 export interface MetaOption {
   code: string;
   label: string;
+  parentCode?: string | null;
 }
 
 export interface WorkConditionsMeta {
@@ -28,7 +29,6 @@ export interface ConditionSkill {
 export interface FreelancerCondition {
   jobCategory: string;
   jobRole: string;
-  affiliation: string;
   workStyle: WorkStyle;
   workForm: WorkForm;
   payUnit: PayUnit;
@@ -89,7 +89,7 @@ export interface ResumeAgreements {
 }
 
 // PUT /api/v1/freelancers/me/resume
-export interface ResumeUpdateRequest {
+export interface ResumeBody {
   profileFileId?: number;
   contactPhone: string;
   contactEmail: string;
@@ -105,6 +105,10 @@ export interface ResumeUpdateRequest {
   agreements: ResumeAgreements;
 }
 
+export interface ResumeUpdateRequest extends ResumeBody {
+  condition?: FreelancerCondition;
+}
+
 export type ResumeStatus = "COMPLETED" | "INCOMPLETE";
 
 // GET /api/v1/freelancers/me/resume
@@ -112,7 +116,7 @@ export interface ResumeDetailResponse {
   status: ResumeStatus;
   lastModifiedAt: string | null;
   condition: FreelancerCondition | null;
-  resume: ResumeUpdateRequest | null;
+  resume: ResumeBody | null;
   notice: string | null;
 }
 

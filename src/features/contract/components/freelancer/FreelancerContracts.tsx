@@ -117,6 +117,7 @@ export function FreelancerContracts() {
       if (contract.payableSettlementId == null) return;
       setSuccessFeeContract(contract);
     }
+    if (action === "review") router.push(`/freelancer/contracts/${contract.contractId}/review`);
   };
 
   const contracts = contractPage?.content ?? [];

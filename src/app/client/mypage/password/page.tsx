@@ -1,5 +1,5 @@
-import { MyPagePasswordChange } from "@/features/auth/components/MyPagePasswordChange";
+import { redirect } from "next/navigation";
 
 export default function ClientPasswordChangePage() {
-  return <MyPagePasswordChange role="CLIENT" />;
+  redirect("/client/mypage/settings");
 }

@@ -1,9 +1,9 @@
 export type ClientMyPageMenu =
   | "profile"
-  | "company"
   | "reviews"
   | "payment-methods"
   | "payments"
+  | "settings"
   | "password";
 
 export type ClientMyPageActiveMenu = ClientMyPageMenu | "cancel";

@@ -18,6 +18,11 @@ export const FREELANCER_MY_PAGE_MENU = [
     value: "payments",
     href: "/freelancer/mypage/payments",
   },
+  {
+    label: "기본 설정",
+    value: "settings",
+    href: "/freelancer/mypage/settings",
+  },
 ] as const;
 
 export type FreelancerMyPageMenu =

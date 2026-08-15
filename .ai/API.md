@@ -1,5 +1,40 @@
 # API
 
+## 공통 이메일 인증·결제수단 재검증 (2026-08-15)
+
+- 정보 수정 인증은 `PROFILE_UPDATE`, 비밀번호 변경은 `PASSWORD_CHANGE`를 분리 사용
+- 인증 발송 응답의 `expiresAt`으로 타이머를 표시하고 `remainingSendCount=0`이면 재발송 비활성
+- `GET /auth/me`의 `tempPassword=true` 사용자는 비밀번호 변경 인증 단계를 생략
+- 프로필 저장 요청 실패 후에는 인증을 다시 완료해야 재시도 가능
+- 프리랜서도 `GET /accounts/me/payment-methods`, 카드·계좌 PUT을 실제 사용하며 목업 결제정보를 표시하지 않음
+- 계좌 조회 표시는 역할 모두 `bankName + **** + accountLast4`
+- 실제 로그인 세션 기반 인증 소진·임시 비밀번호·결제수단 PUT 응답은 미검증
+
+---
+
+## 프리랜서 리뷰 관리 실제 API 전환 (2026-08-15)
+
+- `GET /api/v1/reviews/summary`: 받은 리뷰 상단 평균·건수
+- `GET /api/v1/reviews/received?page={page}&size=10`: 받은 리뷰 탭
+- `GET /api/v1/reviews/written?page={page}&size=10`: 작성한 리뷰 탭
+- `GET /api/v1/reviews/pending`: 작성 가능한 리뷰 목록
+- 작성한 리뷰 응답에는 사이트 후기가 없으므로 클라이언트·프리랜서 모두 서비스 이용 후기 블록을 숨김
+- `content=null`이면 별점만 표시하고 본문 영역은 렌더링하지 않음
+- 실제 로그인 세션 기반 응답: 미검증
+
+---
+
+## 마이페이지 민감 정보 이메일 인증 (2026-08-14)
+
+- 인증코드 발송: `POST /api/v1/auth/email-verifications`
+- 인증코드 확인: `POST /api/v1/auth/email-verifications/confirm`
+- 공통 요청 용도: `purpose: "PROFILE_UPDATE"`
+- 적용 화면: 클라이언트 기본 정보 수정, 프리랜서 기본 정보 수정, 클라이언트·프리랜서 결제수단 조회
+- 결제수단 `GET`은 인증 성공 전 호출하지 않으며 카드·계좌 정보도 렌더링하지 않음
+- 실제 로그인 세션에서 인증 만료 범위와 결제수단 조회 성공 응답: 미검증
+
+---
+
 ## 프로젝트·계약 후속 연동 (2026-08-13)
 
 - 프로젝트 첨부 다운로드: `GET /api/v1/projects/{projectId}/files/{fileId}/download`
@@ -938,12 +973,15 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
   - `UNPAID_SETTLEMENT`는 `count`가 항상 1이라 화면에 건수를 표시하지 않음
 - 탈퇴 요청 바디: `{ agreed: true, confirmText: "탈퇴하겠습니다", reason?: string(500자) }`
   - `confirmText`는 프론트에서 앞뒤 공백만 정리(trim) 후 전송
-  - 탈퇴 성공 시 `data: null` → 완료 모달 표시 후 `window.location.replace("/")`로 이동
+  - 탈퇴 성공 시 `data: null` → 현재 사용자 메모리 캐시를 즉시 초기화하고 완료 모달 표시
+  - 완료 모달의 확인 버튼을 누르면 `window.location.replace("/")`로 비로그인 메인 이동
+  - `AC_008`도 같은 방식으로 캐시 초기화 후 완료 모달 표시
+  - 초기화 전에 시작된 `/auth/me` 요청이 늦게 완료돼도 캐시를 다시 채우지 못하도록 캐시 세대값으로 차단
 - 화면 진입 시 조회 API를 먼저 호출해 `withdrawable === false`면 탈퇴 버튼을 비활성화하고 `blockers`를 그대로 나열
 - 실패 처리
   - `AC_009`(확인 문구 불일치): 입력칸 아래 인라인 오류로 표시, 입력값 유지
   - `AC_010`(진행 중인 프로젝트·계약), `AC_011`(미납 수수료): 인라인 오류 표시 + 조회 API 재호출로 안내 갱신
-  - `AC_008`(이미 탈퇴한 계정): 완료 상태로 처리해 메인으로 이동
+  - `AC_008`(이미 탈퇴한 계정): 완료 상태로 처리해 완료 모달 표시
   - `GLOBAL_002`(agreed/confirmText 누락): 폼 검증 메시지
   - `401`: "로그인이 필요합니다" 표시(현재 공통 `apiCall`의 `GLOBAL_009/010/011` 자동 처리와 별개로 이 화면 자체 401은 메시지만 표시, 별도 리다이렉트 미구현)
 - 실제 백엔드 성공·오류 응답: 미검증 — 테스트 계정 없어 로그인 상태 브라우저 확인 불가
@@ -1008,5 +1046,87 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 - 목록 표시: `projectTitle`, `clientName`, `paymentMethodLabel`, `paidAt`, `feeAmount`, `status`
 - 회사명은 `payerName`이 아닌 `clientName` 사용
 - 실제 API: 배포 Swagger에 summary 경로가 없어 미검증
+
+---
+
+## 프리랜서 마이페이지 등급·이력서 통합 저장 (2026-08-14)
+
+- 등급 현황: `GET /api/v1/grades/me`
+  - `ratingAverage`는 데이터가 없을 때 null일 수 있어 화면에서는 0으로 표시하고 숫자 포맷 호출 전에 정규화합니다.
+  - `completedProjectCount=0`은 정상값이며 그대로 0% 진행률로 표시합니다.
+  - `nextGradeGuide`, `checkedGuide`는 서버 문구를 그대로 표시합니다.
+- 프리랜서 기준표: `GET /api/v1/grades?role=FREELANCER`
+  - 다음 등급은 `JUNIOR → SENIOR → MASTER`이며 목표치는 해당 등급의 `promotionCondition`에서 가져옵니다.
+  - 현재 OpenAPI의 기준표 응답에는 별도 숫자 목표 필드가 없어 `promotionCondition`의 별점·완료 건수를 파싱해 진행률 목표로 사용합니다.
+- 이력서 조회: `GET /api/v1/freelancers/me/resume`
+  - 응답의 `condition`과 `resume`은 별도 필드이며 `notice`는 상단 파란 안내 박스에 서버 문구 그대로 표시합니다.
+- 통합 저장: `PUT /api/v1/freelancers/me/resume`
+  - 한 화면의 저장 요청에는 `condition` 블록과 이력서 본문을 함께 보내며, 이력서 화면에서 `PUT /me/condition`을 선행 호출하지 않습니다.
+  - `condition`에는 `affiliation` 필드가 없으며 스킬·희망 조건 전체를 교체 저장합니다.
+  - 저장 응답은 이력서 본문만 내려오므로 조회 응답의 `resume` 타입과 통합 저장 요청 타입을 분리했습니다.
+- 실제 로그인 쿠키 기반 등급·이력서 저장 응답: 미검증
+
+---
+
+## 클라이언트 마이페이지 통합 (2026-08-14)
+
+- 기본 정보 조회는 로그인 확인용 `/api/v1/auth/me`가 아니라 `GET /api/v1/clients/me`만 사용합니다.
+- 기본 정보와 기업 정보를 한 화면으로 통합했습니다. 기존 `/client/mypage/company`는 기본 정보 화면으로 이동합니다.
+- 수정은 `PATCH /api/v1/clients/me` 한 번으로 처리합니다.
+  - 수정 가능: `companyName`, `employeeCount`, `phone`, `address`, `logoFileId`
+  - 수정 불가: `name`, `businessNo`, `businessField`, `email`
+  - 로고를 바꾸지 않았다면 `logoFileId`를 요청에서 생략합니다.
+- 기업 로고: `POST /api/v1/files?purpose=COMPANY_LOGO`, jpg/jpeg/png, 5MB 이하
+- 수정 저장 전 `PROFILE_UPDATE` 이메일 인증 발송·확인을 같은 편집 폼에서 완료합니다.
+- 등급 현황과 목표는 `GET /api/v1/grades/me`, `GET /api/v1/grades?role=CLIENT`를 사용합니다. 클라이언트 등급은 `SILVER/GOLD/DIAMOND`입니다.
+- 리뷰 관리는 `GET /api/v1/reviews/summary`, `/received`, `/written`을 사용하며 `content=null`이면 리뷰 본문을 숨깁니다. 작성한 사이트 후기는 조회 API가 없어 표시하지 않습니다.
+- 실제 로그인 쿠키 기반 프로필 수정·로고 업로드·리뷰 응답: 미검증
+
+---
+
+## 파일 업로드·프리랜서 메타 목록 재검증 (2026-08-14)
+
+- 공통 파일 업로드는 multipart 파트 이름 `file`, 쿼리 `purpose`를 사용합니다.
+- 확인한 purpose와 프론트 사전 검증:
+  - `PROFILE_IMAGE`: jpg/jpeg/png, 5MB
+  - `COMPANY_LOGO`: jpg/jpeg/png, 5MB
+  - `PORTFOLIO`: pdf, 100MB
+  - `INQUIRY_ATTACHMENT`: pdf/jpg/jpeg/png, 10MB
+- 기업 로고를 저장 전에 다시 선택하면 앞서 업로드한 미연결 파일을 DELETE한 뒤 새 파일을 업로드합니다.
+- `/meta/job-roles`의 `parentCode`를 타입과 화면에 반영해 선택한 직군에 해당하는 직무만 표시합니다. 직군 변경 시 기존 직무 선택을 초기화합니다.
+- 스킬 검색은 `/meta/skills`의 label을 사용하며 이미 선택한 code는 결과에서 제외합니다.
+- 스킬 숙련도 선택지는 `/meta/work-conditions.skillLevels`를 사용하고 모든 선택 스킬에 숙련도 code가 있어야 다음 단계로 이동합니다.
+- 소속 입력은 화면과 요청에서 제거된 상태를 재확인했습니다.
+
+---
+
+## 리뷰 작성·작성 대기 연동 (2026-08-14)
+
+- 리뷰 작성: `POST /api/v1/reviews`
+  - 요청은 `contractId`, `counterpart`, `site`만 사용합니다.
+  - `counterpart.score`, `site.score`는 각각 1~5점 필수이며 두 객체를 항상 함께 보냅니다.
+  - 두 content는 500자 선택값이며 공백이면 필드를 생략합니다.
+  - 제출 직전에 수정·삭제 불가 확인 문구를 표시합니다.
+  - 클라이언트와 프리랜서가 같은 서비스와 요청 타입을 사용합니다.
+- 작성 대기: `GET /api/v1/reviews/pending`
+  - 프리랜서 마이페이지 리뷰 관리에 목록이 있을 때만 섹션을 표시합니다.
+  - 응답의 `contractId`, `projectTitle`, `counterpartName`, `completedAt`을 사용합니다.
+- 클라이언트 성공보수 결제 완료 화면의 완료 계약별로 리뷰 작성 링크를 제공합니다.
+- 프리랜서 완료 계약의 리뷰 작성 버튼과 마이페이지 작성 대기 항목은 `/freelancer/contracts/{contractId}/review`로 이동합니다.
+- `RV_001`, `RV_004`, `CT_001`, `CT_002` 등 제출 실패는 서버 메시지를 폼에 표시합니다.
+- 실제 결제 완료 계약을 사용한 201·409 응답: 미검증
+
+---
+
+## 마이페이지 프론트 체크리스트 최종 대조 (2026-08-14)
+
+- 결제수단의 `최대 3개의 카드` 문구를 제거했습니다.
+- 계좌 요약 표시는 역할 모두 `bankName + accountLast4`로 직접 조합합니다.
+- 리뷰 작성의 `RV_004`는 “대금 지급이 모두 완료된 후” 안내로 명시 처리합니다.
+- 프리랜서 기본 정보는 `GET/PATCH /api/v1/freelancers/me`를 사용합니다.
+  - 수정 가능: `profileFileId`, `phone`, `address`; `aiMatchingAgreed`는 기존 값을 필수 전송
+  - 수정 불가: `name`, `email`, `birthDate`
+  - 저장 전에 `PROFILE_UPDATE` 이메일 인증을 완료해야 합니다.
+- 현재 프론트에는 사업 분야·직원 수 선택용 `/api/v1/meta/business-fields`, `/api/v1/meta/employee-counts` 서비스가 이미 존재합니다. 실제 배포 응답은 로그인 없는 브라우저에서 추가 확인 필요합니다.
 
 ---

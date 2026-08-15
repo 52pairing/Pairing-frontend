@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
+import { ProfileUpdateVerificationModal } from "@/features/auth/components/ProfileUpdateVerificationModal";
+import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
 import { ClientMyPageLayout } from "@/features/client/mypage/components/ClientMyPageLayout";
 import { useToast } from "@/features/common/hooks/useToast";
 import {
@@ -35,11 +38,15 @@ const EMPTY_PAYMENT: PaymentSummaryState = {
 };
 
 export function ClientPaymentMethods() {
+  const router = useRouter();
   const toast = useToast();
+  const user = useCurrentUser();
+  const [verified, setVerified] = useState(false);
   const [payment, setPayment] = useState(EMPTY_PAYMENT);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
 
   useEffect(() => {
+    if (!verified) return;
     let cancelled = false;
     getMyPaymentMethods()
       .then((methods) => {
@@ -62,15 +69,16 @@ export function ClientPaymentMethods() {
     return () => {
       cancelled = true;
     };
-  }, [toast]);
+  }, [toast, verified]);
 
   return (
     <ClientMyPageLayout activeMenu="payment-methods">
+      {!verified ? <section className="rounded-xl border border-theme bg-surface p-8 text-center text-[13px] font-semibold text-theme-muted">이메일 인증 후 결제수단을 확인할 수 있습니다.</section> : <>
       <PaymentSection title="결제수단">
         <PaymentSummary label={payment.cardDisplayName} onEdit={() => setEditTarget("card")} />
       </PaymentSection>
       <PaymentSection title="계좌 관리" className="mt-4">
-        <PaymentSummary label={payment.accountDisplayName} sublabel={payment.accountHolder} onEdit={() => setEditTarget("account")} />
+        <PaymentSummary label={payment.bankName && payment.accountLast4 ? `${payment.bankName} ****${payment.accountLast4}` : "등록된 계좌 없음"} sublabel={payment.accountHolder} onEdit={() => setEditTarget("account")} />
       </PaymentSection>
       {editTarget === "card" ? (
         <CardEdit
@@ -108,6 +116,8 @@ export function ClientPaymentMethods() {
           }}
         />
       ) : null}
+      </>}
+      {user?.email ? <ProfileUpdateVerificationModal open={!verified} email={user.email} title="결제수단 본인 인증" description="카드와 계좌 정보를 확인하려면 이메일 인증이 필요합니다." onClose={() => router.back()} onVerified={() => setVerified(true)} /> : null}
     </ClientMyPageLayout>
   );
 }

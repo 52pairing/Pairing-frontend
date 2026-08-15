@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -125,6 +126,19 @@ export function SuccessFeeComplete({ role }: SuccessFeeCompleteProps) {
           <h2 className="text-[13px] font-bold">계약 프리랜서</h2>
           {contracts.length === 0 ? <p className="py-8 text-center text-[11px] text-theme-muted">완료된 계약이 없습니다.</p> : <div className="mt-4 space-y-3">{contracts.map((contract) => <article key={contract.contractId} className="flex flex-wrap items-center justify-between gap-4 rounded-[10px] border border-theme px-4 py-3"><div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-[13px] font-bold text-white">{contract.counterpartName.slice(0, 1)}</span><div className="min-w-0"><div className="flex items-center gap-2"><h3 className="truncate text-[12px] font-bold">{contract.counterpartName}</h3><span className="rounded-full bg-success-surface px-2 py-0.5 text-[9px] font-bold text-theme-success">종료</span></div><p className="mt-1 text-[10px] text-theme-secondary">{jobRoleLabels[contract.jobRole] ?? contract.jobRole} · 월 {contract.payAmount.toLocaleString("ko-KR")}원</p></div></div></article>)}</div>}
         </section>
+
+        {contracts.length ? (
+          <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-6">
+            <h2 className="text-[13px] font-bold">리뷰 작성</h2>
+            <div className="mt-4 space-y-2">
+              {contracts.map((contract) => (
+                <Link key={contract.contractId} href={`/client/projects/${projectId}/review?contractId=${contract.contractId}`} className="flex items-center justify-between rounded-lg border border-theme px-4 py-3 text-[11px] font-bold text-brand hover:bg-surface-subtle">
+                  <span>{contract.counterpartName}</span><span>리뷰 작성하기</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
       </div>
     </main>

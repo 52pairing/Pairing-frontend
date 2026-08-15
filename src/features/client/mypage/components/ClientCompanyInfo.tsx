@@ -39,7 +39,7 @@ export function ClientCompanyInfo() {
   };
 
   return (
-    <ClientMyPageLayout activeMenu="company">
+    <ClientMyPageLayout activeMenu="profile">
       <section className="min-h-[345px] rounded-xl border border-theme bg-surface px-5 py-6 sm:px-8 sm:py-7">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold">

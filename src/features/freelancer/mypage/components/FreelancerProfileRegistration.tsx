@@ -10,7 +10,6 @@ import {
   getFreelancerJobRoles,
   getFreelancerSkills,
   getFreelancerWorkConditions,
-  updateFreelancerCondition,
 } from "@/features/freelancer/mypage/services/freelancerResume";
 import type {
   MetaOption,
@@ -29,7 +28,6 @@ type SelectedSkill = { code: string; levelCode: string };
 type StepOneState = {
   categoryCode: string;
   roleCode: string;
-  affiliation: string;
   workStyleCode: string;
   payUnitCode: string;
   pay: string;
@@ -47,7 +45,6 @@ type StepOneState = {
 const initialState: StepOneState = {
   categoryCode: "",
   roleCode: "",
-  affiliation: "",
   workStyleCode: "",
   payUnitCode: "",
   pay: "",
@@ -116,7 +113,6 @@ export function FreelancerProfileRegistration() {
           ...current,
           categoryCode: condition.jobCategory,
           roleCode: condition.jobRole,
-          affiliation: condition.affiliation,
           workStyleCode: condition.workStyle,
           workFormCode: condition.workForm,
           payUnitCode: condition.payUnit,
@@ -167,9 +163,15 @@ export function FreelancerProfileRegistration() {
   const filteredSkills = useMemo(
     () =>
       skillOptions
+        .filter((skill) => !form.skills.some((selected) => selected.code === skill.code))
         .filter((skill) => skill.label.toLowerCase().includes(search.toLowerCase()))
         .slice(0, search ? skillOptions.length : 12),
-    [search, skillOptions],
+    [form.skills, search, skillOptions],
+  );
+
+  const filteredJobRoles = useMemo(
+    () => jobRoles.filter((role) => role.parentCode === form.categoryCode),
+    [form.categoryCode, jobRoles],
   );
 
   const isValid = Boolean(
@@ -185,7 +187,7 @@ export function FreelancerProfileRegistration() {
     Number(form.period) <= 24 &&
     form.freelanceExperience &&
     Number(form.careerYears) >= 1 &&
-    form.skills.length >= 1,
+    form.skills.length >= 1 && form.skills.every((skill) => skill.levelCode),
   );
 
   const toggleSkill = (option: MetaOption) =>
@@ -195,7 +197,7 @@ export function FreelancerProfileRegistration() {
         ? form.skills.filter((skill) => skill.code !== option.code)
         : [
           ...form.skills,
-          { code: option.code, levelCode: workConditions?.skillLevels[0]?.code ?? "BEGINNER" },
+          { code: option.code, levelCode: workConditions?.skillLevels[0]?.code ?? "" },
         ],
     );
 
@@ -210,10 +212,9 @@ export function FreelancerProfileRegistration() {
     const payAmount = Number(form.pay.replaceAll(",", "")) * 10_000;
     const minAcceptAmount = Number(form.minPay.replaceAll(",", "")) * 10_000;
     try {
-      await updateFreelancerCondition({
+      sessionStorage.setItem("pairing.freelancer.resume.condition", JSON.stringify({
         jobCategory: form.categoryCode,
         jobRole: form.roleCode,
-        affiliation: form.affiliation,
         workStyle: form.workStyleCode as never,
         workForm: form.workFormCode as never,
         payUnit: form.payUnitCode as never,
@@ -229,7 +230,7 @@ export function FreelancerProfileRegistration() {
           skillCode: skill.code,
           skillLevel: skill.levelCode as never,
         })),
-      });
+      }));
       router.push("/freelancer/mypage/resume");
     } catch (error) {
       setSubmitError(
@@ -271,8 +272,11 @@ export function FreelancerProfileRegistration() {
             <FieldGroup label="직군">
               <select
                 value={form.categoryCode}
-                onChange={(event) => update("categoryCode", event.target.value)}
-                disabled={metaLoading}
+                onChange={(event) => {
+                  const categoryCode = event.target.value;
+                  setForm((current) => ({ ...current, categoryCode, roleCode: "" }));
+                }}
+                disabled={metaLoading || !form.categoryCode}
                 className={fieldClassName}
               >
                 <option value="">직군 선택</option>
@@ -289,7 +293,7 @@ export function FreelancerProfileRegistration() {
                 className={fieldClassName}
               >
                 <option value="">직무 선택</option>
-                {jobRoles.map((item) => (
+                {filteredJobRoles.map((item) => (
                   <option key={item.code} value={item.code}>{item.label}</option>
                 ))}
               </select>
@@ -298,18 +302,6 @@ export function FreelancerProfileRegistration() {
           {showErrors && !(form.categoryCode && form.roleCode) ? (
             <ErrorText>직군과 직무를 선택해 주세요.</ErrorText>
           ) : null}
-        </FormCard>
-        <FormCard>
-          <label className={labelClassName}>소속</label>
-          <p className="mt-1 text-[10px] text-theme-muted">
-            프리랜서는 개인만 등록할 수 있으며 팀 등록은 지원하지 않습니다.
-          </p>
-          <input
-            value={form.affiliation}
-            onChange={(event) => update("affiliation", event.target.value)}
-            className={fieldClassName}
-            placeholder="예: 개인 프리랜서, 현재 소속 없음"
-          />
         </FormCard>
         <div className="grid gap-4 sm:grid-cols-2">
           <ChoiceCard
