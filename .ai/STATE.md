@@ -1,5 +1,31 @@
 # STATE
 
+## 현재 작업 (2026-08-15 — 채팅 입력창 상단 구분선 제거)
+
+- 작업명: 1:1 채팅 입력 영역 위 얇은 구분선 제거
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 진행 상황: 채팅 메시지 입력 폼의 상단 테두리 스타일 제거 완료
+- 변경 파일: `src/features/chat/components/Chat.tsx`
+- 검증: 변경 파일 ESLint, 채팅 Jest 1 suite/8 tests, `git diff --check` 통과
+- 실제 브라우저: 미실행 — 로그인 채팅 데이터가 필요한 화면이며 상단 테두리 클래스만 제거
+
+---
+
+## 현재 작업 (2026-08-14 — 처음 마지노선 등록 최소가 하한: 차단→경고 후 허용)
+
+- 작업명: 처음 협상 시작(POST /start) 시 등록 최소가보다 낮은 단가면 NG_012 차단 대신 확인 모달 후 허용
+- 기준 문서: `C:/Users/user/Downloads/frontend-floor-below-minaccept-0814.md`
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 범위: 처음 입력(start)만. 재조정(/floors)·수락(/answers)은 손대지 않음. 프리랜서+AMOUNT에만 의미
+- 진행 상황: `StartNegotiationRequest.conditions[]`에 `belowMinAccept?` 추가, `handleStart`가 NG_012를 배너 대신 `{ belowMinAccept: true }`로 반환, SetupPanel이 확인 모달을 띄우고 [그래도 시작] 시 AMOUNT만 `belowMinAccept:true`로 재제출
+- 변경 파일: `types/negotiation.ts`, `NegotiationRoom.tsx`, `NegotiationChatFlow.tsx`, 추가 `unit-tests/negotiation/NegotiationStartBelowMinAccept.test.tsx`
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과, 신규 협상 Jest 1 suite/2 tests 통과, `git diff --check` 통과
+- 실제 로그인·API·브라우저: 미검증(테스트 계정 없음). 백엔드 NG_012→belowMinAccept 통과 반영이 배포돼야 실제 동작 확인 가능
+
+---
+
 ## 현재 작업 (2026-08-14 — 헤더 채팅 아이콘 안읽음 배지)
 
 - 작업명: 상단 채팅 아이콘에 안 읽은 1:1 채팅 총합 배지 표시
