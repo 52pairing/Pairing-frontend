@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { ProjectDetailTabs } from "@/features/client/myprojects/components/ProjectDetailTabs";
-import { ProjectContracts } from "@/features/contract/components/client/ProjectContracts";
 import { ProjectInformation } from "@/features/client/myprojects/information/components/ProjectInformation";
-import { NegotiationActions, ProjectNegotiation } from "@/features/negotiation/components/ProjectNegotiation";
-import { ProjectProgress } from "@/features/client/myprojects/progress/components/ProjectProgress";
 import {
   cancelProjectRegistration,
   closeProjectRecruitment,
@@ -27,7 +25,49 @@ import { ConfirmModal } from "@/features/common/components/Modal";
 import { getProjectJobRoles, getProjectSkills, getProjectWorkConditions } from "@/features/client/projects/services/projectPreReview";
 import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
 import type { SettlementResponse } from "@/features/payment/types/payment";
-import { RecommendedCandidates } from "@/features/matching/components/RecommendedCandidates";
+
+// 비기본 탭(추천/협상/계약/진행)은 지연 로드해 기본 "프로젝트 정보" 탭 진입 시 초기 번들에서 제외한다.
+const TabFallback = () => (
+  <div className="mt-4 flex min-h-48 items-center justify-center text-[12px] text-theme-secondary">
+    불러오고 있습니다.
+  </div>
+);
+
+const RecommendedCandidates = dynamic(
+  () =>
+    import("@/features/matching/components/RecommendedCandidates").then(
+      (m) => m.RecommendedCandidates,
+    ),
+  { ssr: false, loading: TabFallback },
+);
+const ProjectNegotiation = dynamic(
+  () =>
+    import("@/features/negotiation/components/ProjectNegotiation").then(
+      (m) => m.ProjectNegotiation,
+    ),
+  { ssr: false, loading: TabFallback },
+);
+const NegotiationActions = dynamic(
+  () =>
+    import("@/features/negotiation/components/ProjectNegotiation").then(
+      (m) => m.NegotiationActions,
+    ),
+  { ssr: false },
+);
+const ProjectContracts = dynamic(
+  () =>
+    import("@/features/contract/components/client/ProjectContracts").then(
+      (m) => m.ProjectContracts,
+    ),
+  { ssr: false, loading: TabFallback },
+);
+const ProjectProgress = dynamic(
+  () =>
+    import(
+      "@/features/client/myprojects/progress/components/ProjectProgress"
+    ).then((m) => m.ProjectProgress),
+  { ssr: false, loading: TabFallback },
+);
 
 const ACTION_MODAL: Record<ProjectAction, { title: string; description: string; confirmText: string }> = {
   cancelRegistration: { title: "프로젝트 등록을 취소하시겠습니까?", description: "등록을 취소하면 프로젝트가 취소 상태로 변경됩니다.", confirmText: "등록 취소" },

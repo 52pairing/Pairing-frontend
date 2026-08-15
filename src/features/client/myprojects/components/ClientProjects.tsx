@@ -41,8 +41,10 @@ export function ClientProjects() {
   const searchParams = useSearchParams();
   const queryTab = searchParams.get("tab");
   const initialTab = isProjectTab(queryTab) ? queryTab : DEFAULT_TAB;
+  const queryPage = Number(searchParams.get("page"));
+  const initialPage = Number.isInteger(queryPage) && queryPage > 1 ? queryPage - 1 : 0;
   const [activeTab, setActiveTab] = useState<ClientProjectTab>(initialTab);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(initialPage);
   const [projectPage, setProjectPage] = useState<ProjectPageResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -101,10 +103,23 @@ export function ClientProjects() {
     return () => { cancelled = true; };
   }, [loadTabCounts]);
 
+  // 탭·페이지를 URL 쿼리에 반영해 새로고침·공유 시 위치가 유지되도록 한다.
+  // page 쿼리는 사용자 친화적으로 1-based로 표기하고 첫 페이지(0)는 생략한다.
+  const syncUrl = (tab: ClientProjectTab, nextPage: number) => {
+    const params = new URLSearchParams({ tab });
+    if (nextPage > 0) params.set("page", String(nextPage + 1));
+    router.replace(`/client/projects?${params.toString()}`, { scroll: false });
+  };
+
   const changeTab = (tab: ClientProjectTab) => {
     setActiveTab(tab);
     setPage(0);
-    router.replace(`/client/projects?tab=${tab}`, { scroll: false });
+    syncUrl(tab, 0);
+  };
+
+  const goToPage = (nextPage: number) => {
+    setPage(nextPage);
+    syncUrl(activeTab, nextPage);
   };
 
   const confirmCompletion = async () => {
@@ -198,13 +213,13 @@ export function ClientProjects() {
 
             {projectPage && projectPage.totalPages > 1 ? (
               <nav aria-label="프로젝트 목록 페이지" className="flex items-center justify-center gap-3 py-7">
-                <button type="button" disabled={projectPage.first} onClick={() => setPage((current) => Math.max(0, current - 1))} className="rounded-[8px] border border-theme bg-surface px-4 py-2 text-[12px] font-semibold text-theme-secondary disabled:cursor-not-allowed disabled:opacity-40">
+                <button type="button" disabled={projectPage.first} onClick={() => goToPage(Math.max(0, page - 1))} className="rounded-[8px] border border-theme bg-surface px-4 py-2 text-[12px] font-semibold text-theme-secondary disabled:cursor-not-allowed disabled:opacity-40">
                   이전
                 </button>
                 <span className="text-[12px] font-semibold text-theme-secondary">
                   {projectPage.page + 1} / {projectPage.totalPages}
                 </span>
-                <button type="button" disabled={projectPage.last} onClick={() => setPage((current) => current + 1)} className="rounded-[8px] border border-theme bg-surface px-4 py-2 text-[12px] font-semibold text-theme-secondary disabled:cursor-not-allowed disabled:opacity-40">
+                <button type="button" disabled={projectPage.last} onClick={() => goToPage(page + 1)} className="rounded-[8px] border border-theme bg-surface px-4 py-2 text-[12px] font-semibold text-theme-secondary disabled:cursor-not-allowed disabled:opacity-40">
                   다음
                 </button>
               </nav>

@@ -3,16 +3,30 @@ import userEvent from "@testing-library/user-event";
 
 import { ClientProjects } from "@/features/client/myprojects/components/ClientProjects";
 import { getMyProjects } from "@/features/client/myprojects/services/clientProjects";
-import { projectPage } from "./fixtures";
+import { projectPage, projectListItem } from "./fixtures";
 
 const push = jest.fn();
 const replace = jest.fn();
 let tab: string | null = null;
+let pageParam: string | null = null;
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace }),
-  useSearchParams: () => ({ get: () => tab }),
+  useSearchParams: () => ({
+    get: (key: string) => (key === "page" ? pageParam : tab),
+  }),
 }));
+
+// totalPages > 1 인 다중 페이지 응답 (페이지네이션 nav 렌더 조건)
+const multiPage = (page: number): ReturnType<typeof projectPage> => ({
+  content: [projectListItem],
+  page,
+  size: 10,
+  totalElements: 15,
+  totalPages: 2,
+  first: page === 0,
+  last: page === 1,
+});
 
 jest.mock("@/features/client/myprojects/services/clientProjects", () => ({
   getMyProjects: jest.fn(),
@@ -28,6 +42,9 @@ const mockGetMyProjects = jest.mocked(getMyProjects);
 describe("ClientProjects", () => {
   beforeEach(() => {
     tab = null;
+    pageParam = null;
+    push.mockClear();
+    replace.mockClear();
     mockGetMyProjects.mockResolvedValue(projectPage());
   });
 
@@ -56,6 +73,39 @@ describe("ClientProjects", () => {
     render(<ClientProjects />);
 
     expect(await screen.findByText("해당 상태의 프로젝트가 없습니다.")).toBeInTheDocument();
+  });
+
+  test("다음 페이지로 이동하면 page 쿼리를 URL에 반영하고 해당 페이지를 조회한다", async () => {
+    const user = userEvent.setup();
+    mockGetMyProjects.mockResolvedValueOnce(multiPage(0));
+    mockGetMyProjects.mockResolvedValueOnce(multiPage(1));
+    render(<ClientProjects />);
+    await screen.findByText("쇼핑몰 리뉴얼");
+
+    await user.click(screen.getByRole("button", { name: "다음" }));
+
+    expect(replace).toHaveBeenCalledWith(
+      "/client/projects?tab=REGISTERED&page=2",
+      { scroll: false },
+    );
+    expect(mockGetMyProjects).toHaveBeenLastCalledWith({
+      tab: "REGISTERED",
+      page: 1,
+      size: 10,
+    });
+  });
+
+  test("URL에 page 쿼리가 있으면 새로고침 시 해당 페이지를 조회한다", async () => {
+    pageParam = "2"; // 1-based → 내부 page 1
+    mockGetMyProjects.mockResolvedValue(multiPage(1));
+    render(<ClientProjects />);
+    await screen.findByText("쇼핑몰 리뉴얼");
+
+    expect(mockGetMyProjects).toHaveBeenCalledWith({
+      tab: "REGISTERED",
+      page: 1,
+      size: 10,
+    });
   });
 
   test("조회 실패 시 오류와 재시도를 제공한다", async () => {
