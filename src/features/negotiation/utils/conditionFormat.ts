@@ -62,7 +62,7 @@ const SENDER_LABEL: Record<SenderType, string> = {
 export const conditionLabel = (type: ConditionType | string): string =>
   CONDITION_LABEL[type as ConditionType] ?? type;
 
-/** 발신자 라벨. AI 대리인은 화면에서 뭉쳐 "AI"로 표기하고 싶으면 senderShortLabel 사용 */
+/** 발신자 라벨. 알 수 없는 코드는 원문 그대로 노출한다. */
 export const senderLabel = (senderType: SenderType | string): string =>
   SENDER_LABEL[senderType as SenderType] ?? senderType;
 

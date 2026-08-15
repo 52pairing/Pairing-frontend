@@ -2,8 +2,6 @@ import Link from "next/link";
 
 import type { ClientProjectCardProps } from "@/features/client/myprojects/types/components";
 
-export type { ClientProjectCardProps } from "@/features/client/myprojects/types/components";
-
 export function ClientProjectCard({
   projectId,
   title,
@@ -15,7 +13,6 @@ export function ClientProjectCard({
   startDate,
   headcount,
   registeredAt,
-  deadline,
   actionType = "payment",
   detailHref = `/client/projects/${projectId}`,
   onPayment,
@@ -39,11 +36,6 @@ export function ClientProjectCard({
             >
               {status}
             </span>
-            {deadline ? (
-              <span className="rounded-[5px] border border-[#ffd7d7] bg-[#fff4f4] px-2 py-1 text-[11px] font-semibold text-theme-danger">
-                {deadline}
-              </span>
-            ) : null}
           </div>
 
           <div className="mt-2.5 flex items-center gap-1.5">

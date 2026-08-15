@@ -49,9 +49,6 @@ export type ConditionType =
   | "SCOPE"
   | "OTHER";
 
-/** 근무 방식 코드 (WORK_STYLE 값) */
-export type WorkStyle = "REMOTE" | "ONSITE" | "ANY";
-
 // ── STOMP 실시간 이벤트 ──────────────────────────────────────────────
 
 export type NegotiationEventType =
@@ -195,17 +192,6 @@ export interface NegotiationListItem {
   endedAt: string | null;
   /** 최종 절충 단계면 true — 카드에 라운드 배지 대신 "최종 절충" 표시 */
   finalOffer?: boolean;
-}
-
-/** 공통 페이지 응답 형태 (GET /negotiations/mine) */
-export interface PageResponse<T> {
-  content: T[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  first: boolean;
-  last: boolean;
 }
 
 // ── 요청 바디 ────────────────────────────────────────────────────────

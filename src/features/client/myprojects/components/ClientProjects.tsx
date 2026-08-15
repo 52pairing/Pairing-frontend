@@ -13,32 +13,21 @@ import {
 import {
   CLIENT_PROJECT_TABS,
   type ClientProjectListItem,
-  type ClientProjectStatus,
   type ClientProjectTab,
   type ProjectPageResponse,
 } from "@/features/client/myprojects/types/projectList";
+import {
+  formatProjectDate,
+  getProjectStatusLabel,
+} from "@/features/client/myprojects/utils/projectDisplay";
 import { ConfirmModal } from "@/features/common/components/Modal";
 import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
 import type { SettlementResponse } from "@/features/payment/types/payment";
 
 const DEFAULT_TAB: ClientProjectTab = "REGISTERED";
 
-const STATUS_LABEL: Record<ClientProjectStatus, string> = {
-  REGISTERED: "등록 완료",
-  RECRUITING: "모집중",
-  NEGOTIATING: "협상중",
-  CONTRACT_PENDING: "계약 대기",
-  IN_PROGRESS: "진행중",
-  COMPLETION_PENDING: "완료 대기",
-  CLOSED: "종료",
-  CANCELED: "취소됨",
-};
-
 const isProjectTab = (value: string | null): value is ClientProjectTab =>
   CLIENT_PROJECT_TABS.some(({ tab }) => tab === value);
-
-const formatDate = (value: string | null | undefined) =>
-  value ? value.slice(0, 10).replaceAll("-", ".") : "-";
 
 const getActionType = (tab: ClientProjectTab) => {
   if (tab === "REGISTERED") return "payment" as const;
@@ -186,14 +175,14 @@ export function ClientProjects() {
                   key={project.projectId}
                   projectId={project.projectId}
                   title={project.title}
-                  status={STATUS_LABEL[project.status]}
+                  status={getProjectStatusLabel(project.status)}
                   position={project.jobRoleLabels.join(", ")}
                   skills={project.skillLabels}
                   budget={`${project.budgetAmount.toLocaleString("ko-KR")}원`}
                   duration={project.periodLabel}
-                  startDate={formatDate(project.startDesiredDate)}
+                  startDate={formatProjectDate(project.startDesiredDate)}
                   headcount={`${project.totalHeadcount}명`}
-                  registeredAt={formatDate(project.createdAt)}
+                  registeredAt={formatProjectDate(project.createdAt)}
                   actionType={getActionType(activeTab)}
                   detailHref={`/client/projects/${project.projectId}?status=${project.status}&payableSettlementId=${project.payableSettlementId ?? ""}&fromTab=${activeTab}`}
                   onPayment={

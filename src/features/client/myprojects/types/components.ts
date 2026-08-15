@@ -15,7 +15,6 @@ export interface ClientProjectCardProps {
   startDate: string;
   headcount: string;
   registeredAt: string;
-  deadline?: string;
   actionType?: "payment" | "detail" | "complete" | "successFee";
   detailHref?: string;
   onPayment?: () => void;

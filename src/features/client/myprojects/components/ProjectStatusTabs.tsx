@@ -3,8 +3,6 @@ import {
 } from "@/features/client/myprojects/types/projectList";
 import type { ProjectStatusTabsProps } from "@/features/client/myprojects/types/components";
 
-export type { ProjectStatusTabsProps } from "@/features/client/myprojects/types/components";
-
 export function ProjectStatusTabs({
   activeTab,
   onTabChange,

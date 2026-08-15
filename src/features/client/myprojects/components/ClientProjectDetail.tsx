@@ -18,24 +18,16 @@ import {
 } from "@/features/client/myprojects/services/projectDetail";
 import type { ClientProjectDetailResponse } from "@/features/client/myprojects/types/projectDetail";
 import type { ProjectAction, ProjectDetailTab } from "@/features/client/myprojects/types/components";
+import {
+  PERIOD_UNIT_LABEL,
+  formatProjectDate,
+  getProjectStatusLabel,
+} from "@/features/client/myprojects/utils/projectDisplay";
 import { ConfirmModal } from "@/features/common/components/Modal";
 import { getProjectJobRoles, getProjectSkills, getProjectWorkConditions } from "@/features/client/projects/services/projectPreReview";
 import { PaymentMethodModal } from "@/features/payment/components/PaymentMethodModal";
 import type { SettlementResponse } from "@/features/payment/types/payment";
 import { RecommendedCandidates } from "@/features/matching/components/RecommendedCandidates";
-
-const STATUS_LABEL: Record<string, string> = {
-  REGISTERED: "등록 완료",
-  RECRUITING: "모집중",
-  NEGOTIATING: "협상중",
-  CONTRACT_PENDING: "계약 대기",
-  IN_PROGRESS: "진행중",
-  COMPLETION_PENDING: "완료 대기",
-  CLOSED: "종료",
-  CANCELED: "취소됨",
-};
-
-const PERIOD_UNIT_LABEL: Record<string, string> = { DAY: "일", WEEK: "주", MONTH: "개월", YEAR: "년" };
 
 const ACTION_MODAL: Record<ProjectAction, { title: string; description: string; confirmText: string }> = {
   cancelRegistration: { title: "프로젝트 등록을 취소하시겠습니까?", description: "등록을 취소하면 프로젝트가 취소 상태로 변경됩니다.", confirmText: "등록 취소" },
@@ -43,8 +35,6 @@ const ACTION_MODAL: Record<ProjectAction, { title: string; description: string; 
   closeRecruitment: { title: "프로젝트 모집을 종료하시겠습니까?", description: "모집을 종료하면 프로젝트가 취소 상태로 변경됩니다.", confirmText: "모집 종료" },
   complete: { title: "프로젝트를 완료하시겠습니까?", description: "완료 처리 후 프로젝트가 완료 대기 상태로 이동합니다.", confirmText: "프로젝트 완료" },
 };
-
-const formatDate = (value: string | null) => value ? value.slice(0, 10).replaceAll("-", ".") : "-";
 
 export function ClientProjectDetail() {
   const params = useParams<{ projectId: string }>();
@@ -185,11 +175,11 @@ export function ClientProjectDetail() {
           <Link href={projectListHref} className="mb-4 flex w-fit items-center gap-2 text-[12px] font-bold text-theme-secondary transition hover:text-theme-primary"><span aria-hidden="true">←</span>프로젝트 목록으로</Link>
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="break-words text-[22px] font-extrabold leading-tight tracking-[-0.04em]">{project.title}</h1>
-            <span className="shrink-0 rounded-full border border-theme bg-surface px-3 py-1 text-[11px] font-bold text-theme-secondary">{STATUS_LABEL[project.status] ?? project.status}</span>
+            <span className="shrink-0 rounded-full border border-theme bg-surface px-3 py-1 text-[11px] font-bold text-theme-secondary">{getProjectStatusLabel(project.status)}</span>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] font-semibold text-theme-muted">
-            <span>등록일 {formatDate(project.createdAt)}</span>
-            <span>시작 희망일 {formatDate(project.startDesiredDate)}</span>
+            <span>등록일 {formatProjectDate(project.createdAt)}</span>
+            <span>시작 희망일 {formatProjectDate(project.startDesiredDate)}</span>
             <span>기간 {project.periodValue}{PERIOD_UNIT_LABEL[project.periodUnit] ?? project.periodUnit}</span>
             <span>전체 모집 {project.totalHeadcount}명 · 확정 {project.confirmedHeadcount}명</span>
           </div>
