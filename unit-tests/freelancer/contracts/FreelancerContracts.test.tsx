@@ -38,6 +38,14 @@ describe("FreelancerContracts", () => {
     expect(mockGetContracts).toHaveBeenLastCalledWith({ tab: "IN_PROGRESS", page: 0, size: 10 });
   });
 
+  test("서명 대기 탭은 양측 서명 대기를 포함하는 SIGNING으로 조회한다", async () => {
+    const user = userEvent.setup();
+    render(<FreelancerContracts />);
+    await screen.findByRole("heading", { name: "쇼핑몰 리뉴얼" });
+    await user.click(screen.getByRole("button", { name: "서명 대기" }));
+    expect(mockGetContracts).toHaveBeenLastCalledWith({ tab: "SIGNING", page: 0, size: 10 });
+  });
+
   test("빈 목록과 조회 실패·재시도를 처리한다", async () => {
     const user = userEvent.setup();
     mockGetContracts.mockRejectedValueOnce(new Error("계약 목록 API 오류"));

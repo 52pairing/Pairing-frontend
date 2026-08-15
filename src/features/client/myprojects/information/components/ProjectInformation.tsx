@@ -10,8 +10,13 @@ import {
   formatProjectDate,
 } from "@/features/client/myprojects/utils/projectDisplay";
 
-const getDeadlineLabel = (deadline: string | null) => {
+const RECRUITMENT_STATUSES = ["RECRUITING", "NEGOTIATING", "CONTRACT_PENDING"] as const;
+
+const isRecruitmentActive = (status: string) => RECRUITMENT_STATUSES.some((item) => item === status);
+
+const getDeadlineLabel = (deadline: string | null, status: string) => {
   if (!deadline) return null;
+  if (!isRecruitmentActive(status)) return null;
   const deadlineDate = new Date(deadline);
   const today = new Date();
   deadlineDate.setHours(0, 0, 0, 0);
@@ -32,7 +37,8 @@ export function ProjectInformation({
   workStyleLabel,
   workFormLabel,
 }: ProjectInformationProps) {
-  const deadlineLabel = getDeadlineLabel(project.recruitDeadline);
+  const isRecruiting = isRecruitmentActive(project.status);
+  const deadlineLabel = getDeadlineLabel(project.recruitDeadline, project.status);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [downloadingFileId, setDownloadingFileId] = useState<number | null>(null);
   const [downloadError, setDownloadError] = useState("");
@@ -65,9 +71,11 @@ export function ProjectInformation({
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-[14px] font-extrabold">기본 정보</h2>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-theme-secondary">
-              {project.extensionCount} / 2회 사용
-            </span>
+            {isRecruiting ? (
+              <span className="text-[11px] font-bold text-theme-secondary">
+                {project.extensionCount} / 2회 사용
+              </span>
+            ) : null}
             {deadlineLabel ? (
               <span className="rounded-[8px] border border-theme bg-surface px-4 py-2 text-[11px] font-bold text-theme-danger">
                 {deadlineLabel}
