@@ -8,7 +8,7 @@ export type ContractListTab =
   | "SETTLEMENT_PENDING"
   | "COMPLETED";
 
-export type ContractStatus =
+type ContractStatus =
   | "DRAFT"
   | "SIGN_PENDING"
   | "SIGNED"

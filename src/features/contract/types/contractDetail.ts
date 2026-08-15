@@ -1,4 +1,4 @@
-export type ContractDetailStatus =
+type ContractDetailStatus =
   | "DRAFT"
   | "SIGN_PENDING"
   | "SIGNED"
@@ -7,9 +7,9 @@ export type ContractDetailStatus =
   | "COMPLETED"
   | "TERMINATED";
 export type ContractPartyRole = "CLIENT" | "FREELANCER";
-export type ContractSignatureStatus = "PENDING" | "SIGNED" | "REJECTED";
+type ContractSignatureStatus = "PENDING" | "SIGNED" | "REJECTED";
 
-export interface ContractPartyClient {
+interface ContractPartyClient {
   companyName: string;
   businessNo: string;
   representative: string;
@@ -17,14 +17,14 @@ export interface ContractPartyClient {
   phone: string;
 }
 
-export interface ContractPartyFreelancer {
+interface ContractPartyFreelancer {
   name: string;
   phone: string;
   jobRole: string;
   settlementAccount: string;
 }
 
-export interface ContractClause {
+interface ContractClause {
   no: number;
   title: string;
   content: string;

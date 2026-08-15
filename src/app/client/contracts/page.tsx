@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { ClientContracts } from "@/features/contract/components/client/ClientContracts";
+
+export const metadata: Metadata = {
+  title: "계약 관리",
+  robots: { index: false, follow: false },
+};
 
 export default function ContractsPage() {
   return (

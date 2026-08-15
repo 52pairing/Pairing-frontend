@@ -1,9 +1,7 @@
 import Link from "next/link";
 
 import type { ClientContractCardProps, ClientContractListItem } from "@/features/contract/types/clientContract";
-
-const formatAmount = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
-const formatDate = (date: string) => date.replaceAll("-", ".");
+import { formatContractDate, formatKrw } from "@/features/contract/utils/format";
 
 export function ClientContractCard({ contract, jobRoleLabel, detailHref }: ClientContractCardProps) {
   return (
@@ -15,8 +13,8 @@ export function ClientContractCard({ contract, jobRoleLabel, detailHref }: Clien
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] font-semibold">
           <span className="text-theme-secondary">{contract.counterpartName} · {jobRoleLabel}</span>
-          <span className="text-theme-secondary">{formatDate(contract.startDate)} - {formatDate(contract.endDate)}</span>
-          <span className="text-theme-primary">월 {formatAmount(contract.payAmount)}</span>
+          <span className="text-theme-secondary">{formatContractDate(contract.startDate)} - {formatContractDate(contract.endDate)}</span>
+          <span className="text-theme-primary">월 {formatKrw(contract.payAmount)}</span>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px] font-semibold">
           <SignatureStatus label="클라이언트 서명" signed={contract.clientSigned} />

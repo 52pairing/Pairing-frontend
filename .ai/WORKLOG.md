@@ -1,5 +1,57 @@
 # WORKLOG
 
+## 2026-08-16 — 계약 목록 공통화 (항목 C, 동작·화면 보존 리팩터)
+
+- 신규 `useAsyncData<T>` 훅(`features/contract/hooks`): 비동기 로드 공통화 — `requestId` 경쟁 방지 + `cancelled` 이펙트 + `isLoading`/`error` + `reload`. 3개 컨테이너의 중복 로드 idiom 대체
+- 신규 `<ListState>`(`components/common`): 로딩/에러/빈 상태 스캐폴드. 화면별 프레임(`frameClassName`)·에러 스타일(`errorVariant`)을 prop으로 받아 **기존 마크업을 그대로 재현**(무손실)
+- 신규 `<ContractTabBar<T>>`(`components/common`): 탭바 렌더 로직 단일화(활성색/밑줄/카운트 배지). `ClientContractTabs`·`FreelancerContractStatusTabs`는 데이터+variant만 넘기는 **얇은 어댑터**로 축소(기존 export·타입 그대로 유지 → 호출부 무변경)
+- 적용: `ClientContracts`/`ProjectContracts`/`FreelancerContracts` → useAsyncData + ListState. `FreelancerContracts`의 결제 모달·정산 로직은 그대로 보존, 목록 로드/탭건수/스캐폴드만 교체
+- 화면/동작 보존: 상태 박스·탭 마크업을 클래스 단위로 동일 재현. 유일한 의도적 변화는 탭 버튼 `aria-pressed`를 양쪽 일관 적용(접근성 개선, 시각·동작 무변경)
+- 검증: TypeScript·`eslint src/features/contract` 통과, `npm run build` 성공, 계약 Jest 4 suites/25(FreelancerContracts·ProjectContracts 테스트가 리팩터 컴포넌트 직접 검증)·전체 181/186 통과(무관 실패 5건 baseline 동일)
+- 남은 판단(팀): `useAsyncData`를 chat/matching에도 쓰면 `features/common`으로 승격 검토 / 상태박스·탭 레이아웃 통일 여부(현재는 무손실 보존)
+
+## 2026-08-16 — 클라이언트 계약 목록 서버 탭 페이지네이션 전환 (항목 A)
+
+- 백엔드 회신으로 클라이언트 탭 서버 필터링 지원 확인 → `ClientContracts`를 `getAllClientContracts()`(전체 페이지 조회 후 클라 `matchesTab` 필터)에서 **`getContracts({tab, page, size:10})` 서버 탭 필터 + 페이지네이션**으로 전환 (프리랜서 목록과 방식 통일, 정렬 id DESC로 페이지 안정)
+- 구현: `requestIdRef` 경쟁 방지, prev/next 페이지 네비 추가, 직무 라벨·탭 배지는 계정 단위 메타로 1회 로드(실패해도 목록 렌더 비차단), 로컬 `matchesTab`·`useMemo` 제거
+- 동작 변화(의도됨, BE 확인): `AWAITING_ME`(서명 대기) 탭에서 `DRAFT`(AI 문구 작성 2~5초)·`REJECTED`(상대 거부)가 서버 기준으로 빠짐 → 배지 숫자가 줄어 보일 수 있음. `CONCLUDED`/`AWAITING_COUNTERPART`는 기존과 동일
+- `getAllClientContracts`는 `ContractNotificationRedirect`가 계속 사용하므로 서비스 유지
+- 문서: `.ai/API.md` 클라이언트 계약 관리 섹션 + 변경 이력 갱신
+- 검증: TypeScript·`eslint src/features/contract` 통과, `npm run build` 성공(`/client/contracts` 정상), 계약 Jest 4 suites/25·전체 181/186 통과(무관 실패 5건 baseline 동일)
+- 미검증: 실제 로그인 브라우저에서 서버 탭 응답·페이지네이션 동작 (no-localhost) — PR 시 확인 필요
+
+## 2026-08-16 — 계약 파트 마무리 3건 (SEO metadata / PDF 병렬화 / 미사용 export 정리)
+
+- SEO: 계약 라우트 9개 `page.tsx`에 static `metadata`(역할별 `title` + `robots:{index:false,follow:false}`) 추가 — 인증 비공개 페이지의 noindex 방어선(기존 `robots.ts` disallow에 더한 이중 안전) + 탭/히스토리 타이틀 개선
+  - `/client/contracts`(계약 관리), `/freelancer/contracts`(내 계약), `/contracts/[contractId]`(계약), 상세·서명(계약 상세/계약서 서명) 각 역할, 리뷰 작성, 성공보수 결제
+- 렌더링: `ContractDocument` 로드에서 `getContractDetail`과 `downloadContractPdf`를 순차→**병렬**로 변경(미리보기 첫 표시 단축). 상세 실패=치명 에러, PDF 실패=미리보기 영역 에러 분리 처리는 그대로 유지
+- dead code: 외부 미사용 `export` 제거(grep로 정의 파일 밖 미사용 확인) — `getClientContracts`(clientContracts.ts), 타입 `ContractStatus`(contractList.ts), `ContractDetailStatus`·`ContractSignatureStatus`·`ContractPartyClient`·`ContractPartyFreelancer`·`ContractClause`(contractDetail.ts). 타입 자체는 유지, `export`만 제거
+- 검증: TypeScript·`eslint`(contract + 변경 라우트) 통과, `npm run build` 성공(계약 라우트 9개 정상 컴파일), 계약 Jest·전체 181/186 통과(무관 실패 5건 baseline 동일)
+- 미검증: `robots` 메타의 실제 렌더 결과는 브라우저 미확인(no-localhost). 다만 Next 표준 metadata API로 build 통과
+
+## 2026-08-16 — 계약 파트 다크모드 대응 (raw hex → 시맨틱 토큰)
+
+- 신규 시맨틱 색상 토큰 5종 추가(`src/app/globals.css`, light/dark 모두 정의): `--danger-border`, `--success-border`, `--info`, `--info-surface`, `--info-border` + `@theme inline` 매핑
+- 설계 원칙(다크모드 가이드 §5): 큰 상태 패널은 테마 적응형 토큰, 작은 상태 pill은 고정 상태색 유지
+  - `ContractOverview`: 안내/서명/확정/에러 패널의 light 전용 hex(`#eef6fc`/`#cbdcf1`/`#bde9ce`/`#fda29b`) → `info-surface`/`info-border`/`success-border`/`danger-border` (배경+글자 함께 flip → 다크 대비 확보)
+  - `ClientContracts`·`FreelancerContracts`: 에러 박스 `border-[#fda29b]`→`border-danger-border`, 재시도 버튼 `border-[#b42318]`→`border-theme-danger`, 부제 `text-[#748094]`→`text-theme-secondary`
+  - `FreelancerContractStatusTabs`: 활성 `text-[#122d50]`→`text-brand`, 비활성 `text-[#7d8899]`→`text-theme-muted`, 밑줄 `bg-[#15365d]`→`bg-brand` (ClientContractTabs와 토큰 통일)
+  - `FreelancerContractCard`: badge/notice green·red가 flip되는 `text-theme-success/danger`를 쓰다 다크에서 안 보이던 버그 → 고정값(`#067647`/`#b42318`)으로 통일해 나머지 3색과 동일 거동. 보조버튼 `border-[#dce2e9]`→`border-theme`
+  - `ContractCompleteModal`: 다운로드 버튼 no-op `hover:bg-brand`→`hover:bg-brand-hover`, `text-white`→`text-brand-contrast`, 뒤로가기 `border-[#e1e6ed]`→`border-theme`
+- 유지한 고정색(가이드 §5 허용, 상태 구분 고유색): badge 5색 배경/테두리, 완료 모달 성공 아이콘 원(주석 명시)
+- 검증: TypeScript·`eslint src/features/contract` 통과, `npm run build` 성공(새 토큰 유틸 컴파일 확인), 계약 Jest 4 suites/25 tests·전체 181/186 통과(실패 5건은 무관 baseline)
+- 미검증: **실제 브라우저 라이트/다크 시각 확인은 no-localhost 방침으로 미실시** — 가이드 §11 완료조건(시각 확인)은 충족하지 못함. light 값은 기존 hex와 동일하게 잡아 라이트 무변경, dark 값은 팔레트 패턴 추정치 → PR 시 다크 화면 캡처 검증 필요
+
+## 2026-08-15 — 계약 파트 리팩터링: 포매터 중복 제거 + overlay 토큰화
+
+- 계약 파트 공용 포매터 `src/features/contract/utils/format.ts` 신설: `formatContractDate`(`YYYY-MM-DD`/datetime → `YYYY.MM.DD`), `formatKrw`, `formatMonthlyAmount`
+- 카드/상세/완료 모달에 흩어져 있던 동일 포매터 사설 복사본 제거 후 공용 유틸로 대체 (동작 보존)
+  - `ClientContractCard`(`formatAmount`/`formatDate` 삭제), `FreelancerContractCard`(`formatMonthlyAmount`/`formatDate` 삭제), `ContractOverview`(`formatAmount`/`formatDate` 삭제), `ContractCompleteModal`(인라인 `toLocaleString`/`replaceAll` 대체)
+- 다크모드 정합: `ContractCompleteModal` 오버레이 `bg-[#0f172a]/45`(light 전용 raw hex) → `bg-theme-overlay` 토큰 (light/dark 모두 정의됨)
+- 검증: TypeScript(`tsc --noEmit`) 통과, `eslint src/features/contract` 통과, 계약 Jest 4 suites/25 tests 통과, 전체 181/186 통과
+- 미검증/무관: `FreelancerProfile.test.tsx` 5건 실패는 변경 전 baseline에서도 동일(팀원 파트 `useRouter` 하네스 이슈) — 본 변경과 무관 확인(stash 후 재현). 실제 브라우저 다크모드 시각 확인은 no-localhost 방침으로 미검증
+- 보류(추측 금지): ClientContracts 서버 탭 페이지네이션 전환(API.md상 fetch-all은 의도된 설계 + 서버 client-탭 필터링 미검증), badge/notice raw hex 다크모드 대응(blue/purple 토큰 부재 → 토큰 신설+시각 검증 필요)
+
 ## 2026-08-15 — 계약·프로젝트 버그 4건 수정
 
 - 프리랜서 내 계약 `서명 대기` 목록·건수 조회 탭 코드를 `AWAITING_ME`에서 `SIGNING`으로 변경
