@@ -1,5 +1,37 @@
 # STATE
 
+## 현재 작업 (2026-08-15 — 계약 파트 리팩터링: 포매터 중복 제거 + overlay 토큰화)
+
+- 작업명: client·freelancer 계약 파트 정리 (요청: 불필요 코드 / 렌더링 / 최적화 / SEO 전체 진단 후 우선순위 2건 착수)
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 범위: `features/contract` (포매터 유틸 신설 + 카드/상세/완료모달 적용, overlay 토큰 교체). 로그인/매칭/마이페이지/메인 제외
+- 진단 결과 요약:
+  - dead code: 미사용 import·주석코드 없음. `getClientContracts` 등 불필요 `export` 소수 (후속)
+  - 렌더링: 전 계약 페이지 CSR(쿠키 인증). Suspense 비대칭은 `useSearchParams` 강제 경계로 정상
+  - 번들/코드스플리팅: 팀 실측 완료(건강) → 손대지 않음. 이미지: 서명 blob `unoptimized` 정답
+  - SEO: 계약 라우트는 `robots.ts` disallow(의도된 비공개). 페이지 title 부재 + noindex 방어선은 후속 권고
+- 착수 범위(이번 패스):
+  - 포매터 중복 제거: `features/contract/utils/format.ts` 신설(`formatContractDate`/`formatKrw`/`formatMonthlyAmount`), 4개 컴포넌트 사설 복사본 대체 (동작 보존)
+  - overlay 토큰화: `ContractCompleteModal` `bg-[#0f172a]/45` → `bg-theme-overlay`
+- 보류/미검증(추측 금지):
+  - A. ClientContracts 서버 탭 페이지네이션 전환 — API.md상 fetch-all은 의도된 설계 + 서버 client-탭 필터링 미검증 → 백엔드 확인 필요
+  - 상태→라벨 통합 — 역할별 문구 상이로 병합 부적합
+  - badge/notice raw hex 다크모드 대응 — blue/purple 토큰 부재 → 토큰 신설+시각 검증 필요한 별도 작업
+- 진행 상황: 완료 (4단계)
+  - 1단계: `format.ts` 신설 + 4개 컴포넌트 사설 포매터 제거, `ContractCompleteModal` overlay 토큰화
+  - 2단계(다크모드): 시맨틱 토큰 5종 신설(`danger-border`/`success-border`/`info`·`info-surface`·`info-border`), 계약 컴포넌트 light 전용 raw hex → 토큰. badge 5색은 고정 상태색 유지(가이드 §5)
+  - 3단계(SEO): 계약 라우트 9개 `page.tsx`에 static metadata(title + `robots` noindex)
+  - 4단계(렌더링·dead code): `ContractDocument` detail/PDF 병렬화, 외부 미사용 `export` 7개 제거
+- 검증: TypeScript·`eslint`(contract+변경 라우트) 통과, `npm run build` 성공, 계약 Jest 4 suites/25 tests 통과, 전체 181/186 통과
+- 무관 실패: `FreelancerProfile.test.tsx` 5건 — 변경 전 baseline 동일(stash 재현), 팀원 파트라 미수정
+- 실제 API·브라우저: 미검증 (no localhost verify). **다크모드 라이트/다크 시각 확인 미실시** → 가이드 §11 완료조건 미충족, PR 시 캡처 검증 필요. `robots` 메타 렌더 결과도 브라우저 미확인
+- 항목 A 완료(2026-08-16): 백엔드 회신 확인 후 `ClientContracts` 서버 탭 페이지네이션 전환. `AWAITING_ME`는 서버가 DRAFT·REJECTED 제외로 좁아짐(의도됨). `.ai/API.md` 갱신
+- 항목 C 완료(2026-08-16): `useAsyncData` 훅 + `<ListState>` + `<ContractTabBar>` 신설, 3개 컨테이너·2개 탭 어댑터에 적용. 동작·화면 보존(탭 aria-pressed 일관화만 추가)
+- 후속(보류): (B) badge 다크 전용 톤 칩 승격(시각검증). 상태→라벨 통합은 역할별 상이로 제외 확정. `useAsyncData` common 승격·상태박스/탭 레이아웃 통일은 팀 판단 시
+
+---
+
 ## 현재 작업 (2026-08-15 — 계약·프로젝트 버그 4건 수정)
 
 - 작업명: 프리랜서 서명 대기 탭, 계약 상세 복귀 경로·PDF 다운로드, 종료 프로젝트 모집 정보 수정

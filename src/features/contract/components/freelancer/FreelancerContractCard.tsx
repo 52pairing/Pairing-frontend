@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { ContractListItem } from "@/features/contract/types/contractList";
+import { formatContractDate, formatMonthlyAmount } from "@/features/contract/utils/format";
 
 export type ContractAction = "sign" | "upfrontFee" | "successFee" | "review" | "none";
 type BadgeTone = "orange" | "blue" | "green" | "purple" | "red";
@@ -50,8 +51,8 @@ export function FreelancerContractCard({ contract, onAction }: FreelancerContrac
 
       <dl className="mt-5 grid grid-cols-1 gap-x-10 gap-y-3 text-[11px] sm:grid-cols-4">
         <ContractInfo label="계약 금액" value={formatMonthlyAmount(contract.payAmount)} />
-        <ContractInfo label="계약 기간" value={`${formatDate(contract.startDate)} ~ ${formatDate(contract.endDate)}`} />
-        <ContractInfo label="계약서 생성일" value={formatDate(contract.createdAt)} />
+        <ContractInfo label="계약 기간" value={`${formatContractDate(contract.startDate)} ~ ${formatContractDate(contract.endDate)}`} />
+        <ContractInfo label="계약서 생성일" value={formatContractDate(contract.createdAt)} />
         <ContractInfo label="근무" value={contract.workStyle ? WORK_STYLE_LABELS[contract.workStyle] : "-"} />
       </dl>
 
@@ -97,23 +98,25 @@ const ACTION_LABELS: Record<Exclude<ContractAction, "none">, string> = {
   review: "리뷰 작성",
 };
 
+// 상태 구분용 고정 색상(다크모드 가이드 §5 허용). 배경이 고정 밝은 톤이라
+// 글자도 고정값으로 통일해 다크 배경에서도 밝은 칩 위 글자가 읽히도록 유지한다.
 const BADGE_COLORS: Record<BadgeTone, string> = {
   orange: "border-[#f4d49e] bg-[#fff8e9] text-[#e48100]",
   blue: "border-[#bdd9ef] bg-[#eef7fc] text-[#2386bc]",
-  green: "border-[#bde9ce] bg-[#effcf4] text-theme-success",
+  green: "border-[#bde9ce] bg-[#effcf4] text-[#067647]",
   purple: "border-[#d9c8ff] bg-[#f7f1ff] text-[#7c3aed]",
-  red: "border-[#ffc9c5] bg-[#fff2f1] text-theme-danger",
+  red: "border-[#ffc9c5] bg-[#fff2f1] text-[#b42318]",
 };
 
 const NOTICE_COLORS: Record<BadgeTone, string> = {
   orange: "border-[#f2ddba] bg-[#fff9ec] text-[#e48100]",
   blue: "border-[#cbdcf1] bg-[#eef6fc] text-[#3478f6]",
-  green: "border-[#bee8cd] bg-[#effcf4] text-theme-success",
+  green: "border-[#bee8cd] bg-[#effcf4] text-[#067647]",
   purple: "border-[#d9c8ff] bg-[#f7f1ff] text-[#7c3aed]",
-  red: "border-[#ffc9c5] bg-[#fff2f1] text-theme-danger",
+  red: "border-[#ffc9c5] bg-[#fff2f1] text-[#b42318]",
 };
 
-const secondaryButtonClass = "flex h-[31px] cursor-pointer items-center rounded-[7px] border border-[#dce2e9] bg-surface px-3.5 text-[11px] font-semibold text-theme-secondary transition hover:bg-surface-subtle";
+const secondaryButtonClass = "flex h-[31px] cursor-pointer items-center rounded-[7px] border border-theme bg-surface px-3.5 text-[11px] font-semibold text-theme-secondary transition hover:bg-surface-subtle";
 const primaryButtonClass = "flex h-[31px] cursor-pointer items-center rounded-[7px] bg-brand px-3.5 text-[11px] font-bold text-white transition hover:bg-brand-hover";
 const disabledButtonClass = "flex h-[31px] cursor-not-allowed items-center rounded-[7px] bg-surface-muted px-3.5 text-[11px] font-semibold text-theme-muted";
 
@@ -124,9 +127,3 @@ function StatusBadge({ label, tone }: { label: string; tone: BadgeTone }) {
 function ContractInfo({ label, value }: { label: string; value: string }) {
   return <div><dt className="text-theme-muted">{label}</dt><dd className="mt-1.5 font-bold text-theme-primary">{value}</dd></div>;
 }
-
-const formatMonthlyAmount = (amount?: number | null) =>
-  amount == null ? "-" : `월 ${amount.toLocaleString("ko-KR")}원`;
-
-const formatDate = (date?: string | null) =>
-  date ? date.slice(0, 10).replaceAll("-", ".") : "-";

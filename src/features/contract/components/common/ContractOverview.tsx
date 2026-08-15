@@ -10,6 +10,7 @@ import type {
   ContractPartyRole,
   ContractSignature,
 } from "@/features/contract/types/contractDetail";
+import { formatContractDate, formatKrw } from "@/features/contract/utils/format";
 import { ApiException } from "@/lib/api";
 
 interface ContractOverviewProps {
@@ -36,9 +37,6 @@ const WORK_FORM_LABELS: Record<string, string> = {
   PART_TIME: "파트타임",
   ANY: "모두 가능",
 };
-
-const formatDate = (value?: string | null) => value ? value.slice(0, 10).replaceAll("-", ".") : "-";
-const formatAmount = (value: number) => `${value.toLocaleString("ko-KR")}원`;
 
 export function ContractOverview({ role }: ContractOverviewProps) {
   const params = useParams<{ projectId?: string; contractId: string }>();
@@ -134,7 +132,7 @@ export function ContractOverview({ role }: ContractOverviewProps) {
           <p className="mt-3 text-[11px] font-medium text-theme-muted">{contract.clientName} · {contract.jobRole}</p>
         </header>
 
-        {errorMessage ? <p role="alert" className="mt-4 rounded-lg border border-[#fda29b] bg-danger-surface px-4 py-3 text-[12px] text-theme-danger">{errorMessage}</p> : null}
+        {errorMessage ? <p role="alert" className="mt-4 rounded-lg border border-danger-border bg-danger-surface px-4 py-3 text-[12px] text-theme-danger">{errorMessage}</p> : null}
 
         <ContractStatusNotice status={contract.status} />
 
@@ -149,10 +147,10 @@ export function ContractOverview({ role }: ContractOverviewProps) {
           <dl className="mt-5 grid gap-x-16 gap-y-4 md:grid-cols-2">
             <InfoRow label="프로젝트" value={contract.projectTitle} />
             <InfoRow label="역할" value={contract.jobRole} />
-            <InfoRow label="기간" value={`${formatDate(contract.startDate)} ~ ${formatDate(contract.endDate)}`} />
-            <InfoRow label="서명일" value={formatDate(contract.signedAt)} />
+            <InfoRow label="기간" value={`${formatContractDate(contract.startDate)} ~ ${formatContractDate(contract.endDate)}`} />
+            <InfoRow label="서명일" value={formatContractDate(contract.signedAt)} />
             <InfoRow label="클라이언트" value={contract.clientName} />
-            <InfoRow label="금액" value={`월 ${formatAmount(contract.payAmount)}`} />
+            <InfoRow label="금액" value={`월 ${formatKrw(contract.payAmount)}`} />
             <InfoRow label="근무 형태" value={`${workStyleLabel} / ${workFormLabel}`} />
           </dl>
         </section>
@@ -178,7 +176,7 @@ export function ContractOverview({ role }: ContractOverviewProps) {
             ) : null}
           </div>
 
-          <div className="border-t border-[#cbdcf1] bg-[#eef6fc] px-6 py-6">
+          <div className="border-t border-info-border bg-info-surface px-6 py-6">
             <p className="text-[12px] font-bold text-theme-secondary">{getActionTitle(contract, mySignature)}</p>
             <p className="mt-2 text-[11px] leading-5 text-theme-secondary">서명은 전자 서명으로 처리되며 법적 효력이 있습니다. 계약 내용에 동의하는 경우에만 서명해 주세요.</p>
             {canSign ? (
@@ -195,19 +193,19 @@ export function ContractOverview({ role }: ContractOverviewProps) {
 
 function ContractStatusNotice({ status }: { status: ContractDetailResponse["status"] }) {
   if (status === "DRAFT") return <div className="mt-5 rounded-[12px] border border-theme bg-warning-surface px-5 py-4 text-[12px] font-semibold text-theme-warning">계약서를 작성하고 있습니다.</div>;
-  if (status === "SIGN_PENDING") return <div className="mt-5 rounded-[12px] border border-[#cbdcf1] bg-[#eef6fc] px-5 py-4 text-[12px] font-semibold text-theme-secondary">계약서 서명이 필요합니다. 아래 계약 내용을 확인하고 서명해 주세요.</div>;
-  return <div className="mt-5 rounded-[12px] border border-[#bde9ce] bg-success-surface px-5 py-4 text-[12px] font-semibold text-theme-success">계약 체결이 완료되었습니다.</div>;
+  if (status === "SIGN_PENDING") return <div className="mt-5 rounded-[12px] border border-info-border bg-info-surface px-5 py-4 text-[12px] font-semibold text-theme-secondary">계약서 서명이 필요합니다. 아래 계약 내용을 확인하고 서명해 주세요.</div>;
+  return <div className="mt-5 rounded-[12px] border border-success-border bg-success-surface px-5 py-4 text-[12px] font-semibold text-theme-success">계약 체결이 완료되었습니다.</div>;
 }
 
 function SignatureCard({ title, signature }: { title: string; signature?: ContractSignature }) {
   const signed = signature?.status === "SIGNED";
   const statusLabel = signature?.status === "REJECTED" ? "서명 거절" : signed ? "서명 완료" : "서명 대기 중";
-  return <article className={`min-h-[116px] rounded-[10px] border p-4 ${signed ? "border-[#bde9ce] bg-success-surface" : "border-theme bg-surface"}`}><p className={`text-[10px] font-semibold ${signed ? "text-theme-success" : "text-theme-muted"}`}>{signed ? "✓ " : "○ "}{title}</p><p className="mt-3 text-[12px] font-bold">{signature?.name ?? "-"}</p><p className={`mt-1.5 text-[10px] font-semibold ${signed ? "text-theme-success" : "text-theme-muted"}`}>{statusLabel}{signed ? ` · ${formatDate(signature?.signedAt)}` : ""}</p></article>;
+  return <article className={`min-h-[116px] rounded-[10px] border p-4 ${signed ? "border-success-border bg-success-surface" : "border-theme bg-surface"}`}><p className={`text-[10px] font-semibold ${signed ? "text-theme-success" : "text-theme-muted"}`}>{signed ? "✓ " : "○ "}{title}</p><p className="mt-3 text-[12px] font-bold">{signature?.name ?? "-"}</p><p className={`mt-1.5 text-[10px] font-semibold ${signed ? "text-theme-success" : "text-theme-muted"}`}>{statusLabel}{signed ? ` · ${formatContractDate(signature?.signedAt)}` : ""}</p></article>;
 }
 
 function ConfirmationCard({ contract }: { contract: ContractDetailResponse }) {
   const pending = contract.status === "SIGN_PENDING";
-  return <article className={`min-h-[116px] rounded-[10px] border p-4 ${pending ? "border-theme bg-surface" : "border-[#bde9ce] bg-success-surface"}`}><p className={`text-[10px] font-semibold ${pending ? "text-theme-muted" : "text-theme-success"}`}>{pending ? "○ " : "✓ "}계약 확정</p><p className="mt-3 text-[12px] font-bold">{pending ? "서명 대기 중" : "계약 최종 확정"}</p><p className={`mt-1.5 text-[10px] font-semibold ${pending ? "text-theme-muted" : "text-theme-success"}`}>{pending ? "양측 서명 완료 시 확정" : `확정일: ${formatDate(contract.signedAt)}`}</p></article>;
+  return <article className={`min-h-[116px] rounded-[10px] border p-4 ${pending ? "border-theme bg-surface" : "border-success-border bg-success-surface"}`}><p className={`text-[10px] font-semibold ${pending ? "text-theme-muted" : "text-theme-success"}`}>{pending ? "○ " : "✓ "}계약 확정</p><p className="mt-3 text-[12px] font-bold">{pending ? "서명 대기 중" : "계약 최종 확정"}</p><p className={`mt-1.5 text-[10px] font-semibold ${pending ? "text-theme-muted" : "text-theme-success"}`}>{pending ? "양측 서명 완료 시 확정" : `확정일: ${formatContractDate(contract.signedAt)}`}</p></article>;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {

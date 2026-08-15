@@ -22,6 +22,11 @@
   --warning: #a64b12;
   --warning-surface: #fff5d6;
   --warning-border: #ffd46a;
+  --danger-border: #fda29b;
+  --success-border: #bde9ce;
+  --info: #2386bc;
+  --info-surface: #eef6fc;
+  --info-border: #cbdcf1;
   --overlay: rgb(15 23 42 / 40%);
 }
 
@@ -46,6 +51,11 @@
   --warning: #ffd07a;
   --warning-surface: #382b16;
   --warning-border: #7a5b20;
+  --danger-border: #5b2d30;
+  --success-border: #2a5e45;
+  --info: #7cc0e8;
+  --info-surface: #122a3d;
+  --info-border: #2c4c66;
   --overlay: rgb(0 0 0 / 65%);
 }
 
@@ -70,6 +80,11 @@
   --color-theme-warning: var(--warning);
   --color-warning-surface: var(--warning-surface);
   --color-warning-border: var(--warning-border);
+  --color-danger-border: var(--danger-border);
+  --color-success-border: var(--success-border);
+  --color-info: var(--info);
+  --color-info-surface: var(--info-surface);
+  --color-info-border: var(--info-border);
   --color-theme-overlay: var(--overlay);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
