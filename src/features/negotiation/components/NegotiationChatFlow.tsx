@@ -19,6 +19,15 @@ import {
   wonToManwon,
   type WorkConditionLabels,
 } from "@/features/negotiation/utils/conditionFormat";
+import {
+  buildAgreedSummary,
+  buildBelowFloorMessage,
+  findFloorViolation,
+  floorFieldLabel,
+  opponentValue,
+  toOptions,
+  type Decision,
+} from "@/features/negotiation/utils/negotiationDisplay";
 
 /**
  * 협상방 대화 플로우 (실데이터 구동)
@@ -207,57 +216,6 @@ export function NegotiationChatFlow({
     </main>
   );
 }
-
-// ── 표시 헬퍼 ──────────────────────────────────────────────────────────
-
-const buildAgreedSummary = (
-  conditions: NegotiationCondition[],
-  labels: WorkConditionLabels,
-): string => {
-  const parts = conditions
-    .filter((condition) => condition.status === "AGREED")
-    .map((condition) => {
-      const value = formatConditionValue(condition.type, condition.agreedValue, labels);
-      const label = conditionLabel(condition.type);
-      return value ? `${label} ${value}` : label;
-    });
-  return parts.length > 0 ? parts.join(" · ") : "모든 조건에 합의했습니다.";
-};
-
-// 내 관점에서 "상대 희망값". 프리랜서면 클라 값, 클라면 프리랜서 값.
-const opponentValue = (
-  condition: NegotiationCondition,
-  viewerRole: "CLIENT" | "FREELANCER",
-): string | null =>
-  viewerRole === "CLIENT" ? condition.freelancerValue : condition.clientValue;
-
-// 마지노선 입력 라벨. 단가·기간은 역할에 따라 최소/최대 의미가 반대다.
-const floorFieldLabel = (
-  type: ConditionType,
-  viewerRole: "CLIENT" | "FREELANCER",
-): string => {
-  const isFreelancer = viewerRole === "FREELANCER";
-  switch (type) {
-    case "AMOUNT":
-      return isFreelancer
-        ? "최소 단가 (이 금액 미만은 거절)"
-        : "최대 단가 (이 금액 초과는 거절)";
-    case "PERIOD":
-      return isFreelancer ? "최소 기간" : "최대 기간";
-    case "WORK_STYLE":
-      return "허용 가능한 근무 방식";
-    case "WORK_FORM":
-      return "허용 가능한 근무 형태";
-    case "START_DATE":
-      return "희망 시작일";
-    default:
-      return conditionLabel(type);
-  }
-};
-
-// Record<code,label> → 정렬 유지된 옵션 배열
-const toOptions = (map: Record<string, string>): Array<{ code: string; label: string }> =>
-  Object.entries(map).map(([code, label]) => ({ code, label }));
 
 // ── 프레젠테이션 컴포넌트 ────────────────────────────────────────────────
 
@@ -801,8 +759,6 @@ function SetupPanel({
   );
 }
 
-type Decision = "accept" | "reject";
-
 /** 승인/재지시 통합 패널 — 조건별 status 로 분기 (PENDING·AGREED·REJECTED) */
 function ConditionActionPanel({
   conditions,
@@ -1099,59 +1055,6 @@ function ConditionActionPanel({
     </div>
   );
 }
-
-// ── 마지노선 밖 수락 판정·문구 ────────────────────────────────────────────
-
-// 숫자로 비교 가능한 조건 값만 뽑는다(AMOUNT=원, PERIOD="N …"의 앞 숫자).
-const numericValue = (
-  type: NegotiationCondition["type"],
-  value: string | null,
-): number | null => {
-  if (value == null || value === "") return null;
-  if (type === "AMOUNT") {
-    const won = Number(value);
-    return Number.isFinite(won) ? won : null;
-  }
-  if (type === "PERIOD") {
-    const amount = Number.parseInt(value, 10);
-    return Number.isFinite(amount) ? amount : null;
-  }
-  return null;
-};
-
-// 수락한 조건 중 "내 마지노선을 넘는" 첫 조건을 찾는다(표시용).
-// 프리랜서 하한: 제안 < 내 마지노선 / 클라 상한: 제안 > 내 마지노선.
-const findFloorViolation = (
-  pending: NegotiationCondition[],
-  decisions: Record<number, Decision>,
-  viewerRole: "CLIENT" | "FREELANCER",
-): NegotiationCondition | null => {
-  for (const condition of pending) {
-    if (decisions[condition.conditionId] !== "accept") continue;
-    const proposed = numericValue(condition.type, condition.proposedValue);
-    const floor = numericValue(condition.type, condition.myFloor);
-    if (proposed == null || floor == null) continue;
-    const breaks = viewerRole === "FREELANCER" ? proposed < floor : proposed > floor;
-    if (breaks) return condition;
-  }
-  return null;
-};
-
-const buildBelowFloorMessage = (
-  violation: NegotiationCondition | null,
-  viewerRole: "CLIENT" | "FREELANCER",
-  labels: WorkConditionLabels,
-): string => {
-  if (!violation) {
-    return "이 제안은 회원님의 마지노선을 넘습니다. 그래도 수락하시겠어요?";
-  }
-  const proposed = formatConditionValue(violation.type, violation.proposedValue, labels);
-  const floor = formatConditionValue(violation.type, violation.myFloor, labels);
-  const isFreelancer = viewerRole === "FREELANCER";
-  const floorLabel = isFreelancer ? `최소 ${floor}` : `최대 ${floor}`;
-  const direction = isFreelancer ? "낮습니다" : "높습니다";
-  return `이 제안(${proposed})은 회원님의 마지노선(${floorLabel})보다 ${direction}. 그래도 수락하시겠어요?`;
-};
 
 // 최종 절충안 패널 — 조건별 절충값을 보여주고 [이 절충안으로 합의]/[협상 포기]만 받는다.
 function FinalOfferPanel({
