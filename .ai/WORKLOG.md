@@ -1,5 +1,25 @@
 # WORKLOG
 
+## 2026-08-15 — 채팅/고객문의 파트 정리·렌더링·SEO 최적화 (#198)
+
+- 범위: 클라이언트/프리랜서 공용 **채팅(`features/chat`)·고객지원(`features/support`)** 파트. 로그인/매칭/마이페이지/메인은 팀원 파트라 제외. 전수 코드 리뷰 후 안전한 항목만 반영.
+- **미사용 코드 정리(참조 grep 검증 후)**:
+  - `leaveChatRoom` 서비스 + `ChatRoom.leaveEnabled` 타입 필드 삭제 — UI에 '나가기' 미구현, 앱 참조 0(테스트만 사용). 연동 테스트(`chatRooms.test.ts`, `fixtures.ts`)도 정리.
+  - `getUnreadChatCount` 별칭 삭제 — 전부 `getChatUnreadCount`만 사용, 별칭 참조 0.
+  - `writerName/writerRole/writerEmail`(문의 응답 admin 필드)은 사용자가 유지 선택 → 보존.
+- **SEO**: 루트에 `metadataBase` + title template 추가(`app/layout.tsx`), 공개 페이지 `/support`에 title·description·canonical·OpenGraph 추가(`app/support/page.tsx`). robots/sitemap은 기존 정책 유지(인증 라우트 disallow).
+- **문의 첨부 업로드 병렬화**: `InquiryForm` 순차 `for-await` → `Promise.allSettled` 병렬. 부분 실패 시 성공분 id 롤백·첫 실패 원인 전파 유지(에러코드 분기 그대로).
+- **`/support` SSR → SSG**: `getServerCurrentUser()`(쿠키 의존) 제거 + `export const dynamic = "force-static"`. 콘텐츠가 외부 데이터 0(하드코딩)이라 ISR 대신 SSG가 적합. 하위 인증 라우트(`/support/chatbot`, `/support/inquiries/*`)는 dynamic 유지. 빌드 라우트표에서 `/support`가 `ƒ`→`○ Static` 전환 확인.
+- **`next.config` 실측 튜닝**: `ANALYZE=true npm run build`로 실측 결과 무거운 의존성 없음(@stomp/stompjs gzip 6.6KB·`/chat` 국한, lucide-react는 Next 기본 optimizePackageImports로 트리셰이킹). 코드분할용 설정 대신 `poweredByHeader:false`, `productionBrowserSourceMaps:false` 명시. 이미지 설정은 호스트 미확정으로 TODO 주석만.
+- **헤더 깜빡임 제거(공용 Header, 사용자 승인 하에 팀 공용 파트 수정)**: SSG 하드 진입 시 정적 HTML이 게스트 헤더로 나가 로그인 유저가 '게스트→로그인' 깜빡이던 문제. `Header`에 `isLoading && !user`면 `HeaderSkeleton` 반환하는 분기 추가(역할 확정 전 가로챔). auth 훅/서비스는 무변경(`useCurrentUserState`가 이미 `isLoading` 제공). SSR 페이지는 `initialUser` 덕에 `isLoading=false`라 스켈레톤 미노출 → 실효 영향은 SSG 페이지 한정.
+  - 추가: `src/features/common/components/header/HeaderSkeleton.tsx` / 변경: `Header.tsx`
+- 변경 파일: `next.config.ts`, `app/layout.tsx`, `app/support/page.tsx`, `features/chat/services/chatRooms.ts`, `features/chat/types/chat.ts`, `features/support/components/InquiryForm.tsx`, `features/common/components/header/Header.tsx`, `HeaderSkeleton.tsx`(신규), `unit-tests/chat/chatRooms.test.ts`, `unit-tests/chat/fixtures.ts`
+- 검증: TypeScript 통과, 변경 파일 ESLint 통과(ProfileMenu 기존 warning 1건은 무관), Jest 35 suites/174 tests 통과, `npm run build` 통과 및 `/support` Static 전환 확인.
+- 미검증: 실제 브라우저 렌더(스켈레톤 모양·SSG 하드진입 UX)는 규칙상 미확인. 이미지 최적화(아바타 `unoptimized` 제거)는 실제 이미지 호스트 확정 후 진행 예정.
+- 참고: 전체 Jest 중 `FreelancerProfile.test.tsx` 5건 실패는 본 변경과 무관한 **기존 실패**(변경 stash 후에도 동일, `useRouter` 하네스 이슈). 팀원 파트라 손대지 않음.
+
+---
+
 ## 2026-08-15 — 채팅 입력창 상단 구분선 제거
 
 - 1:1 채팅의 메시지 입력 폼에서 상단 테두리(`border-t border-theme`)를 제거해 입력창 위의 얇은 구분선이 표시되지 않도록 수정했습니다.

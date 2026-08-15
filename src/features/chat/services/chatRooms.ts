@@ -25,10 +25,5 @@ export const sendChatMessage = (chatRoomId: number, content: string) =>
 export const markChatRoomRead = (chatRoomId: number) =>
   apiCall<void>(`${BASE}/${chatRoomId}/read`, { method: "POST" });
 
-export const leaveChatRoom = (chatRoomId: number) =>
-  apiCall<unknown>(`${BASE}/${chatRoomId}/leave`, { method: "POST" });
-
 export const getChatUnreadCount = () =>
   apiCall<{ unreadCount: number }>(`${BASE}/unread-count`);
-
-export const getUnreadChatCount = getChatUnreadCount;

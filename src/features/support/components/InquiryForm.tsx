@@ -117,10 +117,18 @@ export function InquiryForm({ initialUser = null }: InquiryFormProps) {
     const uploadedFileIds: number[] = [];
 
     try {
-      for (const file of files) {
-        const uploadedFile = await uploadInquiryFile(file);
-        uploadedFileIds.push(uploadedFile.fileId);
+      // 첨부파일을 병렬 업로드한다. 일부만 성공한 경우에도 성공분 id를 모아
+      // catch에서 롤백할 수 있게 하고, 첫 실패 원인을 그대로 전파해 에러 메시지 분기를 유지한다.
+      const uploadResults = await Promise.allSettled(
+        files.map((file) => uploadInquiryFile(file)),
+      );
+      for (const result of uploadResults) {
+        if (result.status === "fulfilled") uploadedFileIds.push(result.value.fileId);
       }
+      const firstRejection = uploadResults.find(
+        (result) => result.status === "rejected",
+      );
+      if (firstRejection) throw firstRejection.reason;
 
       const createdInquiry = await createInquiry({
         title: title.trim(),

@@ -34,8 +34,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:17000";
+
 export const metadata: Metadata = {
-  title: "Pairing",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Pairing",
+    template: "%s | Pairing",
+  },
   description: "AI 기반 프리랜서 매칭 플랫폼",
 };
 

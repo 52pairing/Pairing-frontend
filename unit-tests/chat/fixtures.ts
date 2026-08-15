@@ -16,7 +16,6 @@ export const firstRoom: ChatRoom = {
   lastMessageAt: "2026-08-13T09:30:00",
   unreadCount: 2,
   inputEnabled: true,
-  leaveEnabled: true,
 };
 
 export const secondRoom: ChatRoom = {

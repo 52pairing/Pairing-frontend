@@ -9,7 +9,6 @@ export interface ChatRoom {
   lastMessageAt: string | null;
   unreadCount: number;
   inputEnabled: boolean;
-  leaveEnabled: boolean;
 }
 
 export type ChatRoomListItem = ChatRoom;
