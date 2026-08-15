@@ -1,25 +1,57 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { createReview } from "@/features/review/services/reviews";
+import { ApiException } from "@/lib/api";
 
 const MAX_REVIEW_LENGTH = 500;
 const STAR_SCORES = [1, 2, 3, 4, 5] as const;
 
 export function FreelancerReviewForm() {
   const { projectId } = useParams<{ projectId: string }>();
+  const params = useParams<{ projectId?: string; contractId?: string }>();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const contractId = Number(params.contractId ?? searchParams.get("contractId"));
+  const isFreelancer = pathname.startsWith("/freelancer/");
   const [freelancerRating, setFreelancerRating] = useState(0);
   const [serviceRating, setServiceRating] = useState(0);
   const [freelancerReview, setFreelancerReview] = useState("");
   const [serviceReview, setServiceReview] = useState("");
-  const canSubmit = freelancerRating > 0 && serviceRating > 0;
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const canSubmit = Number.isInteger(contractId) && contractId > 0 && freelancerRating > 0 && serviceRating > 0 && !submitting;
+
+  const submit = async () => {
+    if (!canSubmit || !window.confirm("리뷰는 등록 후 수정하거나 삭제할 수 없습니다. 등록하시겠습니까?")) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      await createReview({
+        contractId,
+        counterpart: { score: freelancerRating, ...(freelancerReview.trim() ? { content: freelancerReview.trim() } : {}) },
+        site: { score: serviceRating, ...(serviceReview.trim() ? { content: serviceReview.trim() } : {}) },
+      });
+      router.replace(isFreelancer ? "/freelancer/mypage/reviews" : `/client/projects/${params.projectId}`);
+    } catch (error) {
+      setSubmitError(
+        error instanceof ApiException && error.errorCode === "RV_004"
+          ? "대금 지급이 모두 완료된 후 리뷰를 작성할 수 있습니다."
+          : error instanceof Error ? error.message : "리뷰를 등록하지 못했습니다.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <main className="min-h-[calc(100dvh-60px)] bg-surface-subtle px-4 py-8 text-theme-primary sm:px-5 sm:py-12">
       <div className="mx-auto w-full max-w-[1104px]">
         <Link
-          href={`/client/projects/${projectId}`}
+          href={isFreelancer ? "/freelancer/mypage/reviews" : `/client/projects/${projectId}`}
           className="text-gray-500 text-[12px] font-semibold"
         >
           &lt; 뒤로 가기
@@ -27,10 +59,10 @@ export function FreelancerReviewForm() {
 
         <div className="mt-4">
           <h1 className="text-2xl font-extrabold tracking-[-0.04em]">
-            클라이언트 평가
+            리뷰 작성
           </h1>
           <p className="mt-2 text-[12px] font-semibold text-theme-muted">
-            AI 추천 엔진 개발 · 김개발
+            계약 상대와 페어링 서비스 이용 경험을 평가해 주세요.
           </p>
         </div>
 
@@ -44,17 +76,17 @@ export function FreelancerReviewForm() {
 
         <form
           className="mt-6 space-y-4"
-          onSubmit={(event) => event.preventDefault()}
+          onSubmit={(event) => { event.preventDefault(); void submit(); }}
         >
           <section className="rounded-xl border border-theme bg-surface px-4 py-6 sm:px-7 sm:py-7">
-            <h2 className="text-[14px] font-bold">클라이언트 평가</h2>
+            <h2 className="text-[14px] font-bold">상대 평가</h2>
 
             <div className="mt-5">
               <p
                 id="freelancer-rating-label"
                 className="text-[12px] font-semibold text-theme-muted"
               >
-                클라이언트 별점 <span className="text-theme-danger">*</span>
+                상대 평가 별점 <span className="text-theme-danger">*</span>
               </p>
               <div
                 role="radiogroup"
@@ -90,7 +122,7 @@ export function FreelancerReviewForm() {
               value={freelancerReview}
               maxLength={MAX_REVIEW_LENGTH}
               onChange={(event) => setFreelancerReview(event.target.value)}
-              placeholder="클라이언트에 대한 솔직한 리뷰를 남겨주세요. (선택, 최대 500자)"
+              placeholder="계약 상대에 대한 솔직한 리뷰를 남겨주세요. (선택, 최대 500자)"
               className="mt-4 h-28 w-full resize-none rounded-lg border border-theme bg-surface px-4 py-3 text-[12px] leading-5 text-theme-primary outline-none placeholder:font-semibold placeholder:text-theme-muted focus:border-theme-strong focus:ring-2 focus:ring-brand/20 sm:h-[100px]"
             />
             <p
@@ -156,12 +188,13 @@ export function FreelancerReviewForm() {
             </p>
           </section>
 
+          {submitError ? <p role="alert" className="text-[12px] font-semibold text-theme-danger">{submitError}</p> : null}
           <button
             type="submit"
             disabled={!canSubmit}
             className="h-12 w-full rounded-xl bg-brand text-[13px] font-bold text-brand-contrast transition hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-theme-muted"
           >
-            평가 등록하기
+            {submitting ? "등록 중..." : "평가 등록하기"}
           </button>
         </form>
       </div>

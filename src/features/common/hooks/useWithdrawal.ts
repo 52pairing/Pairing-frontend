@@ -7,6 +7,7 @@ import {
   withdrawAccount,
 } from "@/features/common/services/withdrawal";
 import type { WithdrawalBlocker } from "@/features/common/types/withdrawal";
+import { clearCurrentUserCache } from "@/features/auth/services/currentUser";
 import { ApiException } from "@/lib/api";
 
 export const WITHDRAWAL_CONFIRMATION_TEXT = "탈퇴하겠습니다";
@@ -63,6 +64,10 @@ export function useWithdrawal() {
   const [submitError, setSubmitError] = useState("");
   const [completed, setCompleted] = useState(false);
 
+  const clearWithdrawnSession = useCallback(() => {
+    clearCurrentUserCache();
+  }, []);
+
   const loadEligibility = useCallback(async () => {
     setStatus("loading");
     setEligibilityError("");
@@ -104,9 +109,11 @@ export function useWithdrawal() {
         confirmText: confirmation.trim(),
         reason: reason.trim() || undefined,
       });
+      clearWithdrawnSession();
       setCompleted(true);
     } catch (error) {
       if (error instanceof ApiException && error.errorCode === "AC_008") {
+        clearWithdrawnSession();
         setCompleted(true);
         return;
       }
@@ -120,7 +127,7 @@ export function useWithdrawal() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [agreed, canSubmit, confirmation, loadEligibility, reason]);
+  }, [agreed, canSubmit, clearWithdrawnSession, confirmation, loadEligibility, reason]);
 
   return {
     status,

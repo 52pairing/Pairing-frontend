@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ThemeControl } from "@/features/common/theme/ThemeControl";
 import { ThemeLogo } from "@/features/common/theme/ThemeLogo";
 
 interface HeaderShellProps {
@@ -24,7 +23,6 @@ export function HeaderShell({ homeHref, nav, actions }: HeaderShellProps) {
         </nav>
 
         <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 sm:min-w-[180px] sm:gap-3">
-          <ThemeControl />
           {actions}
         </div>
       </div>

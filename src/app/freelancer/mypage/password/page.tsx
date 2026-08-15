@@ -1,5 +1,5 @@
-import { MyPagePasswordChange } from "@/features/auth/components/MyPagePasswordChange";
+import { redirect } from "next/navigation";
 
 export default function FreelancerPasswordChangePage() {
-  return <MyPagePasswordChange role="FREELANCER" />;
+  redirect("/freelancer/mypage/settings");
 }

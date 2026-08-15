@@ -1,5 +1,5 @@
-import { ClientCompanyInfo } from "@/features/client/mypage/components/ClientCompanyInfo";
+import { redirect } from "next/navigation";
 
 export default function ClientCompanyPage() {
-  return <ClientCompanyInfo />;
+  redirect("/client/mypage/profile");
 }

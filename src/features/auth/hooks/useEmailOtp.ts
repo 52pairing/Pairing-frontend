@@ -88,7 +88,7 @@ export const useEmailOtp = ({ email, purpose = "SIGNUP" }: UseEmailOtpOptions) =
   };
 
   const handleVerify = async () => {
-    if (!email || !code || secondsLeft <= 0 || isConfirming) return;
+    if (!email || !code || secondsLeft <= 0 || isConfirming) return false;
 
     const requestId = ++requestIdRef.current;
     setIsConfirming(true);
@@ -101,6 +101,7 @@ export const useEmailOtp = ({ email, purpose = "SIGNUP" }: UseEmailOtpOptions) =
       setVerified(true);
       setExpiresAt("");
       setSecondsLeft(0);
+      return true;
     } catch (confirmError) {
       if (requestId !== requestIdRef.current) return;
 
@@ -116,6 +117,7 @@ export const useEmailOtp = ({ email, purpose = "SIGNUP" }: UseEmailOtpOptions) =
           ? confirmError.message
           : "인증코드 확인 중 문제가 발생했습니다.",
       );
+      return false;
     } finally {
       if (requestId === requestIdRef.current) setIsConfirming(false);
     }

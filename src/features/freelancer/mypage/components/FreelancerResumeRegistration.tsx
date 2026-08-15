@@ -14,7 +14,9 @@ import {
 import { uploadFreelancerFile } from "@/features/freelancer/mypage/services/freelancerFiles";
 import type {
   CampusType,
+  FreelancerCondition,
   GraduationStatus,
+  ResumeBody,
   ResumeUpdateRequest,
 } from "@/features/freelancer/mypage/types/resume";
 import {
@@ -27,6 +29,16 @@ import {
 type Screen = "form" | "review" | "complete";
 const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_PORTFOLIO_SIZE = 100 * 1024 * 1024;
+const CONDITION_STORAGE_KEY = "pairing.freelancer.resume.condition";
+
+function readStoredCondition(): FreelancerCondition | null {
+  try {
+    const value = sessionStorage.getItem(CONDITION_STORAGE_KEY);
+    return value ? JSON.parse(value) as FreelancerCondition : null;
+  } catch {
+    return null;
+  }
+}
 
 const GRADUATION_STATUS_OPTIONS: { code: GraduationStatus; label: string }[] = [
   { code: "GRADUATED", label: "졸업" },
@@ -167,7 +179,7 @@ function parseDate(date?: string | null) {
 }
 
 // 서버에 저장된 이력서를 화면 상태로 되돌립니다.
-function mapApiToDraft(resume: ResumeUpdateRequest): ResumeDraft {
+function mapApiToDraft(resume: ResumeBody): ResumeDraft {
   return {
     phone: resume.contactPhone,
     email: resume.contactEmail,
@@ -264,6 +276,8 @@ export function FreelancerResumeRegistration() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [draft, setDraft] = useState<ResumeDraft>(emptyDraft);
+  const [condition, setCondition] = useState<FreelancerCondition | null>(null);
+  const [notice, setNotice] = useState("");
   const [showErrors, setShowErrors] = useState(false);
   const [profileImageError, setProfileImageError] = useState("");
   const [portfolioError, setPortfolioError] = useState("");
@@ -285,6 +299,8 @@ export function FreelancerResumeRegistration() {
     getFreelancerResume()
       .then(async (detail) => {
         if (!active) return;
+        setCondition(detail.condition ?? readStoredCondition());
+        setNotice(detail.notice ?? "");
         if (detail.resume) {
           setDraft(mapApiToDraft(detail.resume));
           setScreen("review");
@@ -340,7 +356,7 @@ export function FreelancerResumeRegistration() {
     (item) => item.schoolName.trim() && item.startYear && item.startMonth,
   );
   const careersValid = draft.careers.every(
-    (item) => item.companyName.trim() && item.department.trim() && item.jobDescription.trim() && item.startYear && item.startMonth,
+    (item) => item.companyName.trim() && item.startYear && item.startMonth,
   );
   const agreementsValid = Object.values(draft.agreements).every(Boolean);
   const isValid = Boolean(
@@ -354,10 +370,12 @@ export function FreelancerResumeRegistration() {
     careersValid &&
     draft.summary.trim() &&
     draft.portfolioFileId &&
-    agreementsValid,
+    agreementsValid &&
+    condition,
   );
 
   const buildPayload = (): ResumeUpdateRequest => ({
+    condition: condition as FreelancerCondition,
     profileFileId: draft.profileImageFileId,
     contactPhone: draft.phone,
     contactEmail: effectiveEmail,
@@ -443,7 +461,7 @@ export function FreelancerResumeRegistration() {
   if (screen === "complete")
     return <CompleteScreen name={name} onView={() => setScreen("review")} />;
   if (screen === "review")
-    return <ReviewScreen name={name} phone={draft.phone} email={effectiveEmail} draft={draft} onEdit={() => setScreen("form")} />;
+    return <ReviewScreen name={name} phone={draft.phone} email={effectiveEmail} draft={draft} notice={notice} onEdit={() => setScreen("form")} />;
 
   return (
     <ProfileRegistrationShell
@@ -460,7 +478,7 @@ export function FreelancerResumeRegistration() {
           if (!isValid) scrollToFirstError(formRef.current);
         }}
       >
-        <ResumeSaveStatus />
+        <ResumeSaveStatus notice={notice} />
         {loadError ? <ErrorText>{loadError}</ErrorText> : null}
         <FormCard>
           <CardTitle>기본 정보</CardTitle>
@@ -1028,20 +1046,24 @@ function ReviewScreen({
   phone,
   email,
   draft,
+  notice,
   onEdit,
 }: {
   name: string;
   phone: string;
   email: string;
   draft: ResumeDraft;
+  notice: string;
   onEdit: () => void;
 }) {
   return (
     <ProfileRegistrationShell step={2} title="내 이력서" description="등록된 이력서와 포트폴리오 정보를 확인할 수 있습니다.">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="rounded-lg border border-warning-border bg-warning-surface px-4 py-3 text-[11px] font-bold text-theme-warning">
-          수정한 프로필은 새로운 추천과 매칭부터 반영됩니다.
-        </p>
+        {notice ? (
+          <p className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-[11px] font-bold text-blue-700">
+            {notice}
+          </p>
+        ) : <span />}
         <button
           type="button"
           onClick={onEdit}
@@ -1174,18 +1196,12 @@ function ReviewCard({
   );
 }
 
-function ResumeSaveStatus() {
-  return (
-    <>
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-theme bg-surface px-4 py-3 text-[10px] font-semibold text-theme-muted">
-        <span className="rounded-full bg-success-surface px-3 py-1.5 font-bold text-theme-success">이력서 정보</span>
-        <span>마지막 수정일은 저장된 이력서 정보를 기준으로 표시됩니다.</span>
-      </div>
-      <p className="rounded-lg border border-warning-border bg-warning-surface px-4 py-3 text-[10px] font-semibold leading-5 text-theme-warning">
-        수정한 이력서는 새로운 추천과 매칭부터 반영되며, 이미 진행 중인 요청과 협상에는 영향을 주지 않습니다.
-      </p>
-    </>
-  );
+function ResumeSaveStatus({ notice }: { notice: string }) {
+  return notice ? (
+    <p className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-[10px] font-semibold leading-5 text-blue-700">
+      {notice}
+    </p>
+  ) : null;
 }
 
 function CardTitle({ children, optional = false }: { children: ReactNode; optional?: boolean }) {

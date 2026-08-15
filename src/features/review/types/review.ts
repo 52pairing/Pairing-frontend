@@ -11,6 +11,15 @@ export interface WrittenReview {
 
 export interface PendingReview {
   contractId: number;
+  projectTitle: string;
+  counterpartName: string;
+  completedAt: string;
+}
+
+export interface CreateReviewRequest {
+  contractId: number;
+  counterpart: { score: number; content?: string | null };
+  site: { score: number; content?: string | null };
 }
 
 export interface ReviewPage<T> {
@@ -21,4 +30,10 @@ export interface ReviewPage<T> {
   totalPages: number;
   first: boolean;
   last: boolean;
+}
+
+export interface ReviewSummary {
+  averageScore: number | null;
+  reviewCount: number;
+  grade: string;
 }
