@@ -17,9 +17,15 @@ const nextConfig: NextConfig = {
   // 클라이언트 소스맵을 프로덕션 번들에 포함하지 않는다(기본값이나 의도를 명시).
   productionBrowserSourceMaps: false,
 
-  // NOTE(이미지 최적화, 보류): 채팅 아바타(next/image)가 unoptimized 상태다.
-  // 실제 이미지 호스트(S3/CDN 도메인) 확정 후 아래처럼 등록하고 unoptimized 제거 예정.
-  // images: { remotePatterns: [{ protocol: "https", hostname: "<확정 필요>" }] },
+  // 매칭 후보 프로필 이미지 등 실제 CDN 호스트 확정 완료.
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.52pairing.kro.kr",
+      },
+    ],
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);

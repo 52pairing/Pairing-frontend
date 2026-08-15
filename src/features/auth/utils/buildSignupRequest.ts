@@ -30,7 +30,13 @@ export const buildClientSignupRequest = (
   businessNo: normalizeDigits(form.businessRegistrationNumber ?? ""),
   businessField: form.businessField ?? "",
   employeeCount: form.employeeCount ?? "",
-  address: (form.address ?? "").trim(),
+  address: {
+    sido: form.address?.sido ?? "",
+    sigungu: form.address?.sigungu ?? "",
+    roadAddress: form.address?.roadAddress ?? "",
+    addressDetail: form.address?.addressDetail ?? "",
+    zipCode: form.address?.zipCode ?? "",
+  },
   email: `${form.emailLocalPart ?? ""}@${form.emailDomain ?? ""}`,
   name: form.representativeName ?? "",
   phone: normalizeDigits(form.phone ?? ""),
@@ -71,6 +77,13 @@ export const buildFreelancerSignupRequest = (
   password: form.password ?? "",
   passwordConfirm: form.confirmPassword ?? "",
   birthDate: buildBirthDate(form),
+  address: {
+    sido: form.address?.sido ?? "",
+    sigungu: form.address?.sigungu ?? "",
+    roadAddress: form.address?.roadAddress ?? "",
+    addressDetail: form.address?.addressDetail ?? "",
+    zipCode: form.address?.zipCode ?? "",
+  },
   card: {
     cardNumber: form.cardNumber ?? "",
     cardBrand: form.cardBrand ?? "",
@@ -92,6 +105,13 @@ export const buildFreelancerSocialSignupRequest = (
   name: form.name ?? "",
   phone: normalizeDigits(form.phone ?? ""),
   birthDate: buildBirthDate(form),
+  address: {
+    sido: form.address?.sido ?? "",
+    sigungu: form.address?.sigungu ?? "",
+    roadAddress: form.address?.roadAddress ?? "",
+    addressDetail: form.address?.addressDetail ?? "",
+    zipCode: form.address?.zipCode ?? "",
+  },
   card: {
     cardNumber: form.cardNumber ?? "",
     cardBrand: form.cardBrand ?? "",

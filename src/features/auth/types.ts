@@ -22,6 +22,7 @@ export interface CurrentUserResponse {
   email: string;
   role: LoginRole;
   name: string;
+  companyName: string | null;
   tempPassword: boolean;
 }
 
@@ -55,7 +56,8 @@ export type VerificationPurpose =
   | "SIGNUP"
   | "UNLOCK"
   | "PASSWORD_CHANGE"
-  | "PROFILE_UPDATE";
+  | "PROFILE_UPDATE"
+  | "PAYMENT_METHOD";
 
 // 이메일 인증코드 발송 요청
 export interface SendVerificationCodeRequest {
@@ -97,6 +99,14 @@ export type SignupRole = "client" | "freelancer";
 
 export type SocialProvider = "kakao" | "google";
 
+export interface SignupFormAddress {
+  sido: string;
+  sigungu: string;
+  roadAddress: string;
+  addressDetail: string;
+  zipCode: string;
+}
+
 export interface ClientSignupForm {
   // ── Step1 기업 정보 ──
   companyName?: string;
@@ -107,8 +117,8 @@ export interface ClientSignupForm {
   businessField?: string;
   /** 직원 수 선택값 */
   employeeCount?: string;
-  /** 기업 주소 (가입 API 필수값, 최대 255자) */
-  address?: string;
+  /** 주소 검색에서 선택한 기업 주소 */
+  address?: SignupFormAddress;
 
   // ── Step2 담당자 정보 ──
   representativeName?: string;
@@ -142,6 +152,7 @@ export interface FreelancerSignupForm {
   birthDay?: string;
   phone?: string;
   phoneChecked?: boolean;
+  address?: SignupFormAddress;
 
   // ── Step2 이메일 인증 + 비밀번호 ──
   emailLocalPart?: string;
@@ -174,6 +185,7 @@ export interface FreelancerSocialSignupForm {
   birthDay?: string;
   phone?: string;
   phoneChecked?: boolean;
+  address?: SignupFormAddress;
 
   // ── Step2 카드/계좌 등록 ──
   cardNumber?: string;

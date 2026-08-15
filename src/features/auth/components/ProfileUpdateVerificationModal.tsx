@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { useEmailOtp } from "@/features/auth/hooks/useEmailOtp";
 import { Modal } from "@/features/common/components/Modal";
+import type { VerificationPurpose } from "@/features/auth/types";
 
 interface ProfileUpdateVerificationModalProps {
   open: boolean;
@@ -11,12 +12,13 @@ interface ProfileUpdateVerificationModalProps {
   description?: string;
   onVerified: () => void;
   onClose: () => void;
+  purpose?: VerificationPurpose;
 }
 
-export function ProfileUpdateVerificationModal({ open, email, title = "이메일 인증", description = "본인 확인을 완료해야 정보를 수정할 수 있습니다.", onVerified, onClose }: ProfileUpdateVerificationModalProps) {
+export function ProfileUpdateVerificationModal({ open, email, title = "이메일 인증", description = "본인 확인을 완료해야 정보를 수정할 수 있습니다.", onVerified, onClose, purpose = "PROFILE_UPDATE" }: ProfileUpdateVerificationModalProps) {
   const titleId = useId();
   const descriptionId = useId();
-  const otp = useEmailOtp({ email, purpose: "PROFILE_UPDATE" });
+  const otp = useEmailOtp({ email, purpose });
   const close = () => { otp.reset(); onClose(); };
   const confirm = async () => {
     if (await otp.handleVerify()) {

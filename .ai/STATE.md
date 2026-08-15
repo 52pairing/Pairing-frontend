@@ -1,5 +1,202 @@
 # STATE
 
+## 현재 작업 (2026-08-15 — 고아 파일 삭제, 이력서 화면 문구 분기)
+
+- 작업명: 연결되지 않는 옛 1단계 마법사 파일 삭제, 이력서 화면 제목·설명을 최초 등록/수정/조회 상태별로 분리
+- 배경: 사용자에게 "희망 조건 입력 화면을 이력서 화면에 통합 유지 vs 옛 1단계 마법사 부활" 중 선택을 물었고, 통합 유지로 결정됨에 따라 옛 마법사 파일은 더 이상 쓸 이유가 없어 삭제 요청받음. 또한 최초 등록 화면과 이미 등록된 화면을 볼 때 문구가 똑같아 구분이 안 된다는 지적
+- 진행 상황:
+  - `src/features/freelancer/mypage/components/FreelancerProfileRegistration.tsx` 삭제(2026-08-13 마이페이지 개편 이후 어떤 라우트에서도 참조되지 않던 고아 컴포넌트였음을 사전에 확인)
+  - [FreelancerResumeRegistration.tsx](../src/features/freelancer/mypage/components/FreelancerResumeRegistration.tsx): 작성 화면의 제목·설명을 `hasSavedResume` 기준으로 분기
+    - 최초 등록(이력서 없음): "이력서 등록" / "희망 조건과 이력서, 포트폴리오를 등록해 주세요."
+    - 기존 이력서 수정: "내 이력서 수정" / "이력서와 포트폴리오 정보를 수정합니다."
+    - 조회(보기) 화면: 기존 그대로 "내 이력서" / "등록된 이력서와 포트폴리오 정보를 확인할 수 있습니다."(변경 없음)
+- 검증: 변경 파일 TypeScript(`tsc --noEmit`) 전체 통과, ESLint 통과. `/freelancer/mypage/resume` 직접 접근 시 컴파일 에러 없음 확인
+- 실제 화면: 로그인이 필요해 문구 전환은 브라우저로 확인하지 못함
+
+---
+
+## 현재 작업 (2026-08-15 — 메인페이지 CTA 문구 이력서 유무로 분기)
+
+- 작업명: 메인페이지 CTA 버튼 문구를 이력서 완료 여부에 따라 "프로필 등록하기" ↔ "내 이력서 보기"로 분기
+- 배경: 이력서가 이미 있는 사용자에게도 "프로필 등록하기"라고 뜨는 게 어색하다는 지적. 링크 목적지(`/freelancer/mypage/resume`)는 이미 이력서 유무로 작성/조회를 분기하므로 그대로 두고, 버튼 문구만 상태에 맞게 바꿈
+- 진행 상황: [FreelancerMain.tsx](../src/features/freelancer/components/FreelancerMain.tsx)에서 로그인된 사용자에 한해 `GET /api/v1/freelancers/me`의 `resumeCompleted`(기존에 타입에는 있었으나 어디서도 쓰이지 않던 필드)를 조회해 버튼 문구를 분기. href는 두 경우 모두 `/freelancer/mypage/resume`로 동일
+- 별도 발견: 같은 히어로 영역의 "시니어 등급" 배지는 실제 등급 API(`GET /grades/me`) 호출 없이 하드코딩된 문자열이라, 이력서·프로젝트 이력이 없는 신규 가입자에게도 항상 노출됨. 사용자에게 보고했고 수정 여부는 아직 확정되지 않음(응답 대기)
+- 검증: 변경 파일 TypeScript·ESLint 통과. `/freelancer` 직접 접근 시 컴파일 에러 없음 확인
+- 실제 화면: 로그인이 필요해 실제 분기(버튼 문구 전환)는 브라우저로 확인하지 못함
+
+---
+
+## 현재 작업 (2026-08-15 — 메인페이지 "프로필 등록하기" → 이력서 화면 직결)
+
+- 작업명: 메인페이지 "프로필 등록하기" 버튼을 `/freelancer/mypage/resume`로 연결(사용자 승인 후 결정)
+- 배경: 원래(2026-08-12 최초 커밋) `/freelancer/mypage/profile`은 등록 마법사 1단계였으나, 이후 마이페이지 API 연동 과정에서 이 라우트가 "기본 정보 조회 화면"으로 바뀌었음(라우트 재사용). 그 결과 지금 구조에서 CTA가 `/freelancer/mypage/profile`로 가면 이력서 유무와 무관하게 항상 같은 기본 정보 화면만 보여주고, "이력서 없으면 작성/있으면 조회" 분기는 사이드바에서 별도로 "이력서" 탭을 눌러야만 볼 수 있었음
+- 결정: 새 분기 로직을 만들지 않고, 이미 그 분기를 구현하고 있는 `/freelancer/mypage/resume`(`FreelancerResumeRegistration`)로 CTA를 바로 연결. 로직 중복 없이 기존 코드 재사용
+- 진행 상황: [FreelancerMain.tsx](../src/features/freelancer/components/FreelancerMain.tsx) href를 `/freelancer/mypage/resume`로 변경
+- 검증: 변경 파일 ESLint·TypeScript 통과, `/freelancer` 직접 접근 시 컴파일 에러 없이 정상 동작(로그인 리다이렉트) 확인
+- 실제 화면: 로그인이 필요해 클릭 후 실제 분기 동작은 브라우저로 확인하지 못함
+
+---
+
+## 현재 작업 (2026-08-15 — 메인페이지 "프로필 등록하기" 링크 원복, 이전 기록 정정)
+
+- 작업명: 메인페이지 "프로필 등록하기" 버튼 링크를 원래 값(`/freelancer/mypage/profile`)으로 되돌리고, 아래 "이력서 화면 희망 조건 통합·라벨/디자인 복원" 항목의 잘못된 기록을 정정
+- 배경: 앞선 작업에서 "메인페이지 버튼이 원래 `/freelancer/mypage/resume`로 연결됐었는데 끊겼다"고 추측해 `/freelancer/mypage/resume`로 바꿨으나, 이는 검증 없이 추측한 내용이었음. `git log`/`git show`로 최초 커밋(f327732, 2026-08-12)부터 현재 HEAD까지 확인한 결과 이 버튼은 **처음부터 계속** `/freelancer/mypage/profile`로 연결돼 있었고, `/freelancer/mypage/resume`로 연결된 적은 한 번도 없었음
+- 진행 상황: [FreelancerMain.tsx](../src/features/freelancer/components/FreelancerMain.tsx)의 href를 `/freelancer/mypage/profile`로 되돌림
+- 검증: 변경 파일 ESLint 통과
+- 교훈: "예전엔 이랬을 것" 같은 추측은 실제 `git log`로 검증한 뒤에 코드를 바꿔야 함(이번엔 사용자가 재차 확인해줘서 알아챔)
+
+---
+
+## 현재 작업 (2026-08-15 — 이력서 사진·포트폴리오 URL 응답 반영)
+
+- 작업명: 이력서 조회 응답에 실제로 내려오는 `profileImageUrl`/`portfolioUrl`을 반영해 이전 임시 조치(계정 사진 재사용)를 제거
+- 배경: 사용자가 백엔드에 확인한 결과 `GET /api/v1/freelancers/me/resume`가 `profileImageUrl`(CDN 절대 URL), `portfolioUrl`을 이미 내려주고 있었음(DB엔 object key만 저장, 응답 시 CDN 도메인을 붙여 완성). 저장(PUT)은 `profileFileId`/`portfolioFileId`(숫자 ID)를 받지만 조회(GET)는 URL 문자열로 내려주는 **비대칭 계약**이라 필드명만 보고는 존재를 알기 어려웠음. 계정 프로필 사진(`/freelancers/me`)과 이력서용 사진(`/freelancers/me/resume`)은 서로 다른 값이라는 점도 확인함
+- 진행 상황:
+  - [types/resume.ts](../src/features/freelancer/mypage/types/resume.ts): GET 응답 전용 `ResumeDetailBody` 타입 신설(`profileImageUrl`, `portfolioUrl` 포함, PUT 전용 `ResumeBody`와 분리). `ResumeDetailResponse.resume`의 타입을 이 타입으로 교체
+  - [freelancerResume.ts](../src/features/freelancer/mypage/services/freelancerResume.ts): `getFreelancerResume()` 매핑에 `profileImageUrl`/`portfolioUrl` 정규화 추가
+  - [FreelancerResumeRegistration.tsx](../src/features/freelancer/mypage/components/FreelancerResumeRegistration.tsx)
+    - 지난 턴에 임시로 썼던 "계정 프로필 사진 재사용"(`getFreelancerProfile` 호출)을 제거하고, 이력서 자체의 `profileImageUrl`을 표시에 사용하도록 수정 — 이제 계정 사진이 아니라 실제 이력서용 사진이 보임
+    - 조회 응답은 파일 ID를 내려주지 않으므로(URL만 내려줌), 사진·포트폴리오가 "등록돼 있는지" 여부는 `profileImageFileId || profileImageUrl`(사진), `portfolioFileId || portfolioUrl`(포트폴리오)로 판단하도록 필수값 검증을 변경
+    - 저장(PUT) 요청은 이번 세션에 새로 업로드해 숫자 ID를 받은 경우에만 `profileFileId`/`portfolioFileId`를 보내고, 그렇지 않으면 필드 자체를 생략(기존 `ClientProfile.tsx`의 `logoFileId` 생략 패턴과 동일) — 서버가 생략된 필드는 기존 값을 유지한다는 전제이며 **미검증**
+    - 포트폴리오는 이미 등록된 경우 파일명을 `portfolioUrl`로 연결되는 링크로 표시해 실제 업로드된 파일을 바로 열어볼 수 있게 함
+- 검증: 변경 파일 TypeScript(`tsc --noEmit`) 전체 통과, ESLint 통과. `/freelancer/mypage/resume` 직접 접근 시 컴파일 에러 없이 로그인 리다이렉트로 정상 동작 확인
+- 실제 화면: 로그인이 필요해 사진·포트폴리오 링크가 실제로 어떻게 보이는지는 브라우저로 확인하지 못했습니다
+- 확인 필요: PUT 요청에서 `profileFileId`/`portfolioFileId`를 생략했을 때 서버가 기존 값을 그대로 유지하는지 여부(로그인 세션에서 검증 필요)
+
+---
+
+## 현재 작업 (2026-08-15 — 이력서 화면 희망 조건 통합·라벨/디자인 복원)
+
+- 작업명: 이력서 화면에 희망 조건(condition) 섹션 통합, 라벨·전화번호 표기·프로필 사진·보유 스킬 디자인을 이전 버전과 일치시킴
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 배경: 사용자가 "디자인이 다 전이랑 달라졌다"고 지적. 확인 결과 두 가지 원인이 겹쳐 있었음
+  1. `.ai/API.md`의 "프리랜서 마이페이지 등급·이력서 통합 저장(2026-08-14)" 항목에 따르면 `condition`과 이력서 본문은 **같은 화면에서 한 번에 PUT** 하도록 설계가 확정됐는데, 실제 화면에는 조건 입력 UI 자체가 빠져 있었음(과거 별도 1단계 마법사였던 `FreelancerProfileRegistration.tsx`가 라우트 연결이 끊겨 고아 상태로 방치됨). 그 결과 조건은 이전에 sessionStorage에 남아있던 값에만 의존했고, 새 계정은 조건을 입력할 방법이 없었음
+  2. ~~메인페이지 "프로필 등록하기" 버튼이 언젠가 `/freelancer/mypage/profile`(기본 정보 조회 화면)로 바뀌어 있어, 실제 등록 화면(`/freelancer/mypage/resume`)으로 가는 진입점 자체가 사라져 있었음~~ → **정정(위 최신 항목 참고)**: `git log` 확인 결과 이 버튼은 최초 커밋부터 계속 `/freelancer/mypage/profile`이었고 끊긴 적이 없었음. 아래 진행 상황의 링크 변경은 검증 없는 추측이었고 이후 원복함
+- 진행 상황:
+  - [FreelancerResumeRegistration.tsx](../src/features/freelancer/mypage/components/FreelancerResumeRegistration.tsx)
+    - "희망 조건" `FormCard`를 이력서/조건 사이에 신설. 직군·직무·근무방식·근무형태·희망급여단위·희망급여·최저수용금액·시작가능일·협의여부·희망기간·기간단위·프리랜서경험·경력(년)·보유스킬을 사용자가 준 표 기준 필수/선택으로 재구현. 스킬 선택 UI는 예전 `FreelancerProfileRegistration.tsx`의 타원(`rounded-full`) 배지 스타일을 그대로 재사용
+    - 조회(review) 화면의 "보유 스킬"도 코드 문자열이 아니라 타원 배지 목록으로, 직군/직무/근무방식 등도 실제 코드가 아니라 메타 API의 라벨로 표시(기존엔 raw code를 그대로 보여주고 있었음)
+    - 라벨을 사용자가 준 표 그대로 "연락처"·"이메일"·"기본 주소"로 되돌림(이전 대화에서 붙였던 "연락처(이력서용)"/"연락 이메일"은 되돌림). 우편번호는 표대로 필수에서 제외
+    - `mapApiToDraft`에서 `contactPhone`에 `formatPhoneNumber`를 적용해 조회·수정 화면 모두 하이픈 포함 형식으로 표시(이전엔 서버 원본 숫자 그대로 표시되던 버그)
+    - 자격증 입력 시 취득일자·자격증명 필수 검증 추가(표 5번 항목), 약관 동의는 최초 등록 시에만 필수이고 이후 수정 저장은 막지 않도록 게이트 추가(표 9번 항목)
+    - 프로필 사진: 이력서 API 응답에는 사진 URL 필드가 없어(파일 ID만 있음), 계정 조회(`GET /freelancers/me`)의 `profileImageUrl`을 저장된 사진의 표시용 URL로 임시 사용함 — **이 값이 실제로 이력서용 사진과 같은 파일인지는 미확인**이라 백엔드 확인 필요
+    - 이전 1단계 마법사와의 연결에 쓰이던 `sessionStorage` 브릿지(`pairing.freelancer.resume.condition`) 제거(같은 화면으로 통합돼 더 이상 필요 없음)
+  - ~~[FreelancerMain.tsx](../src/features/freelancer/components/FreelancerMain.tsx): 메인페이지 "프로필 등록하기" 버튼을 `/freelancer/mypage/resume`로 재연결~~ → **정정**: 검증 없는 추측이었음. 위 최신 항목에서 `/freelancer/mypage/profile`로 원복함
+  - `FreelancerProfileRegistration.tsx`(고아 상태였던 예전 1단계 마법사)는 어디서도 참조되지 않는 상태 그대로 두고 삭제하지 않음(요청 범위 밖 삭제 금지 원칙)
+- 검증: 변경 파일 TypeScript(`tsc --noEmit`) 전체 통과, ESLint 통과. `/freelancer/mypage/resume` 직접 접근 시 로그인 리다이렉트까지 정상 동작(컴파일 에러 없음)으로 확인
+- 실제 화면: 로그인이 비밀번호 입력을 요구해 조건 섹션·스킬 배지·사진 표시가 실제로 어떻게 보이는지는 브라우저로 확인하지 못했습니다. 사용자 확인 필요
+- 확인 필요: 이력서 프로필 사진이 계정 프로필 사진과 동일한 파일인지 여부(현재는 계정 사진을 그대로 재사용)
+
+---
+
+## 현재 작업 (2026-08-15 — 이력서 수정 이메일 인증 제거·최초 작성 안내 문구)
+
+- 작업명: 이력서 수정 진입 시 이메일 인증 요구 제거, 이력서 미작성 계정에 최초 작성 안내 문구 추가
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 배경: 사용자가 이력서 수정에는 이메일 인증이 필요 없다고 확인함(계정 정보 수정과 달리 이력서 연락처는 별개 값이라는 이전 정리와 일관). 또한 이력서가 없는 신규 계정이 조회 화면 없이 바로 작성 폼으로 들어가는 것을 보고 "처음 작성"이라는 안내가 없어 헷갈린다는 피드백
+- 진행 상황:
+  - [FreelancerResumeRegistration.tsx](../src/features/freelancer/mypage/components/FreelancerResumeRegistration.tsx): 조회 화면의 "수정하기" 버튼에서 `ProfileUpdateVerificationModal` 인증 게이트를 제거하고 바로 편집 폼으로 전환하도록 되돌림(`verificationOpen` 상태·모달 제거)
+  - 이력서가 없어 처음부터 작성 폼이 보이는 경우(`hasSavedResume === false`)에만 "아직 등록된 이력서가 없어 처음 작성하는 화면입니다. 아래 정보를 입력하고 저장하면 이력서가 등록됩니다." 안내 문구를 폼 상단에 표시. 기존에 저장된 이력서를 수정하러 온 경우에는 표시하지 않음
+- 검증: 변경 파일 TypeScript(`tsc --noEmit`) 통과, ESLint 통과
+- 실제 화면: 로그인에 비밀번호 입력이 필요해 로그인된 이력서 화면은 브라우저로 미검증. 사용자 확인 필요
+
+---
+
+## 현재 작업 (2026-08-15 — 프리랜서 프로필 별점·이력서 연락처 라벨 정리)
+
+- 작업명: 프리랜서 프로필 화면 별점·리뷰 건수 표시, 이력서 연락처 라벨/안내 문구 정리
+- 관련 Issue: 확인 필요
+- 관련 브랜치: 현재 작업 브랜치
+- 배경: 백엔드 변경 없음. `GET /freelancers/me`가 이미 내려주는 `ratingAverage`/`reviewCount`를 프리랜서 프로필 화면만 그리지 않아 클라이언트 화면과 동일한 형태로 맞춤. 이력서의 전화번호·이메일·주소는 계정 정보와 별개의 `Resume` 엔티티 컬럼(비우면 계정 값 대체)인데 화면 라벨이 이를 설명하지 않아 계정 정보를 고치는 칸으로 오인될 수 있어 라벨·안내 문구만 수정
+- 진행 상황:
+  - [FreelancerProfile.tsx](../src/features/freelancer/mypage/components/FreelancerProfile.tsx): 이름 옆에 `★ {ratingAverage} · 리뷰 {reviewCount}건`을 `ClientProfile.tsx`와 동일한 형태로 추가(리뷰 0건이어도 숨기지 않음, 클라이언트 쪽과 동일 정책)
+  - [FreelancerResumeRegistration.tsx](../src/features/freelancer/mypage/components/FreelancerResumeRegistration.tsx): 기본 정보 카드에 "매칭된 클라이언트에게 보여줄 연락처입니다. 비우면 회원정보의 값을 사용합니다. 로그인 정보를 바꾸려면 기본 정보 탭에서 수정하세요." 안내 문구 추가, 전화번호/이메일 라벨을 "연락처(이력서용)"/"연락 이메일"로 변경(수정 폼과 조회(review) 화면 모두 반영)
+- 검증: 변경 파일 TypeScript(`tsc --noEmit`)·ESLint 통과, 관련 기존 `FreelancerProfile.test.tsx`는 이번 변경과 무관하게 기존부터 실패하던 App Router 목 누락 5건과 동일하게 실패(회귀 아님)
+- 실제 화면: 로그인에 비밀번호 입력이 필요해 로그인된 마이페이지·이력서 화면은 브라우저로 미검증. 사용자 확인 필요
+
+---
+
+## 현재 작업 (2026-08-15 — 마이페이지 기존 디자인 복원)
+
+- 클라이언트 기본 정보 화면의 여백·타이포·프로필 정보 배치와 다음 등급 진행 카드를 기존 디자인으로 복원
+- 클라이언트 기본 정보 편집 상태의 상단 취소·저장 버튼, 입력 높이와 2열 폼 배치를 기존 디자인으로 복원
+- 프리랜서 프로필 조회에서 저장된 사진을 표시하고, 수정 화면의 상단 원형 프로필 영역에서 사진을 등록·변경하도록 복원
+- 저장된 프리랜서 이력서는 조회 전용 화면으로 먼저 표시하고, 수정하기 클릭 시 이메일 인증 완료 후에만 편집 화면으로 전환
+- 이력서 조회 화면에서 누락됐던 희망 조건과 보유 스킬 카드를 통합 `condition` 응답값으로 복원
+- 클라이언트·프리랜서 리뷰 목록의 작성자·프로젝트·본문·별점·작성일 배치를 기존 디자인으로 복원
+- 실제 프로필·등급·리뷰 API 연동과 이메일 인증, 최근 확정된 작성 리뷰 카드 구성은 유지
+- 변경 파일 ESLint, TypeScript, `git diff --check` 통과
+- 로컬 브라우저는 인증 세션이 없어 로그인 리다이렉트까지만 확인하여 실제 마이페이지 화면은 미검증
+
+---
+
+## 현재 작업 (2026-08-15 — 원격 프로필 이미지 CDN 허용)
+
+- `next/image` 원격 호스트에 `https://cdn.52pairing.kro.kr` 등록
+- 기존 bundle analyzer wrapper 유지
+- 백엔드 `CandidateResponse.profileImageUrl` 절대 URL 변환 배포 필요
+- object key 문자열만 내려오는 현재 응답으로는 이미지 표시 불가
+- production build·`git diff --check` 통과
+
+---
+
+## 현재 작업 (2026-08-15 — 로그인 후 화면 전환 실패 수정)
+
+- 일반 로그인 성공·로그아웃 완료 시 현재 사용자 모듈 캐시 초기화
+- 로그인 내비게이션을 STOMP 재연결보다 먼저 실행하고 재연결 실패를 로그인과 분리
+- 소셜 로그인 성공 경로에도 동일한 캐시 초기화·비동기 STOMP 복구 적용
+- 로그인·회원가입 등 공개 경로에서 `AuthSessionGuard`의 `/auth/me` 호출 차단
+- 테마 초기화 Script를 head에서 body 첫 자식으로 이동
+- TypeScript·변경 파일 ESLint·production build·`git diff --check` 통과
+- 실제 역할 교차 재로그인·브라우저 콘솔은 로그인 환경에서 확인 필요
+
+---
+
+## 현재 작업 (2026-08-15 — 클라이언트 회사명 표시)
+
+- `/auth/me` 응답 타입에 nullable `companyName` 추가
+- 클라이언트 메인 인사말과 헤더 프로필명을 `companyName ?? name`으로 표시
+- 클라이언트 마이페이지는 기존부터 회사명·담당자명을 올바르게 분리해 추가 변경 없음
+- 프리랜서 헤더는 기존 개인 이름 표시 유지
+- TypeScript·변경 파일 ESLint·production build·`git diff --check` 통과
+
+---
+
+## 현재 작업 (2026-08-15 — 결제수단 이메일 인증)
+
+- 최종 첨부 계약에 따라 결제수단 GET은 인증 없이 즉시 조회·표시
+- 카드·계좌 수정 버튼에서 `PAYMENT_METHOD` 인증 모달을 선제적으로 표시
+- 인증 성공 후 선택한 수정 폼을 열고 30분 마커 동안 카드·계좌 수정 연속 사용
+- 카드·계좌 PUT의 `AU_006`은 입력 폼을 유지한 채 인증 모달로 복귀
+- 수수료 결제 모달의 T4 인증 변경은 제거하고 기존 조회·결제 흐름 유지
+- TypeScript·변경 파일 ESLint·production build 통과
+- 전체 Jest 167개 통과, 기존 `FreelancerProfile` App Router 목 누락 5개 실패
+- 실제 이메일 발송·30분 만료·연속 수정은 로그인 환경에서 확인 필요
+
+---
+
+## 현재 작업 (2026-08-15 — 백엔드 주소 객체 계약 연동)
+
+- 회원가입 3종과 클라이언트·프리랜서 기본 정보 수정의 `address`를 5칸 객체로 변경
+- 다음 우편번호 검색을 공통 `AddressFields`로 연결하고 도로명주소는 읽기 전용, 상세주소만 직접 입력
+- 조회 화면은 서버의 한 줄 `address`, 수정 초기값은 nullable `addressParts` 사용
+- TypeScript·ESLint 통과, 신규 주소 빌더 테스트 3개 통과
+- 전체 Jest: 155개 통과, 기존 `FreelancerProfile` 라우터 목 누락 5개 실패
+- production build 통과(네트워크 허용 환경에서 Google Fonts 다운로드 포함)
+- 실제 위젯 필드·회원가입 201·마이페이지 PATCH 200은 로그인 테스트 환경에서 확인 필요
+
+---
+
+## 현재 작업 (2026-08-15 — 카드사 메타·결제번호 검증 연동)
+
+- 가입 3종 카드사를 `/meta/card-companies`, 은행을 `/meta/banks` select로 분리
+- 결제수단 조회의 `cardCompany`를 카드 수정 폼 초기 코드로 사용
+- 가입·양 역할 마이페이지 카드번호 16자리, 계좌번호 10~14자리 공통 검증 적용
+- TypeScript·변경 파일 ESLint·production build·관련 테스트 12개 통과
+- 전체 Jest는 기존 `FreelancerProfile` App Router 목 누락 5개 실패, 나머지 167개 통과
+- 실제 가입 201·결제수단 수정 200과 수정 폼 재진입은 로그인 환경에서 미검증
 ## 현재 작업 (2026-08-15 — 계약 파트 리팩터링: 포매터 중복 제거 + overlay 토큰화)
 
 - 작업명: client·freelancer 계약 파트 정리 (요청: 불필요 코드 / 렌더링 / 최적화 / SEO 전체 진단 후 우선순위 2건 착수)

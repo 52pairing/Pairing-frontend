@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useCurrentUserState } from "@/features/auth/hooks/useCurrentUser";
 import type { CurrentUserResponse } from "@/features/auth/types";
+import { getFreelancerProfile } from "@/features/freelancer/mypage/services/freelancerProfile";
+import { getMyGrade } from "@/features/freelancer/mypage/services/grade";
 import {
   StepArrow,
   StepCheckIcon,
@@ -14,6 +17,18 @@ interface FreelancerMainProps {
 
 export function FreelancerMain({ initialUser = null }: FreelancerMainProps) {
   const { user, isLoading } = useCurrentUserState(initialUser);
+  const [resumeCompleted, setResumeCompleted] = useState(false);
+  const [gradeLabel, setGradeLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getFreelancerProfile()
+      .then((profile) => setResumeCompleted(Boolean(profile.resumeCompleted)))
+      .catch(() => null);
+    getMyGrade()
+      .then((grade) => setGradeLabel(grade.label))
+      .catch(() => null);
+  }, [user]);
 
   return (
     <main
@@ -26,9 +41,11 @@ export function FreelancerMain({ initialUser = null }: FreelancerMainProps) {
       <section className="bg-gradient-to-br from-[#183b5f] via-[#28557f] to-[#386b99]">
         <div className="mx-auto flex min-h-[400px] max-w-[1080px] flex-col justify-center px-5 py-16 sm:px-8">
           {/* 등급 */}
-          <span className="mb-5 w-fit rounded-full bg-[#4678a6] px-4 py-1.5 text-xs font-bold text-white">
-            시니어 등급
-          </span>
+          {gradeLabel ? (
+            <span className="mb-5 w-fit rounded-full bg-[#4678a6] px-4 py-1.5 text-xs font-bold text-white">
+              {gradeLabel} 등급
+            </span>
+          ) : null}
 
           {/* 메인 문구 */}
           <h1 className="text-4xl font-extrabold leading-[1.28] tracking-[-0.04em] text-white sm:text-[44px]">
@@ -55,10 +72,10 @@ export function FreelancerMain({ initialUser = null }: FreelancerMainProps) {
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              href="/freelancer/mypage/profile"
+              href="/freelancer/mypage/resume"
               className="inline-flex h-12 items-center justify-center rounded-lg bg-white px-7 text-sm font-extrabold text-[#17365d] transition hover:bg-[#edf4fa]"
             >
-              프로필 등록하기
+              {resumeCompleted ? "내 이력서 보기" : "프로필 등록하기"}
               <span className="ml-2 text-[14px]" aria-hidden="true">→</span>
             </Link>
           </div>

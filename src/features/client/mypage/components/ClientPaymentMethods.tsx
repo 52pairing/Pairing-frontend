@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { ProfileUpdateVerificationModal } from "@/features/auth/components/ProfileUpdateVerificationModal";
+import {
+  digitsOnly,
+  isValidAccountNo,
+  isValidCardNumber,
+} from "@/features/auth/components/CardAccountFields";
 import { useCurrentUser } from "@/features/auth/hooks/useCurrentUser";
+import { useSignupOptions } from "@/features/auth/hooks/useSignupOptions";
+import { getBanks, getCardCompanies } from "@/features/auth/services/signupMeta";
+import { ApiException } from "@/lib/api";
 import { ClientMyPageLayout } from "@/features/client/mypage/components/ClientMyPageLayout";
 import { useToast } from "@/features/common/hooks/useToast";
 import {
@@ -18,6 +25,7 @@ type EditTarget = "card" | "account" | null;
 interface PaymentSummaryState {
   cardDisplayName: string;
   cardBrand: string;
+  cardCompany: string;
   cardLast4: string;
   cardHolder: string;
   accountDisplayName: string;
@@ -29,6 +37,7 @@ interface PaymentSummaryState {
 const EMPTY_PAYMENT: PaymentSummaryState = {
   cardDisplayName: "등록된 카드 없음",
   cardBrand: "",
+  cardCompany: "",
   cardLast4: "",
   cardHolder: "",
   accountDisplayName: "등록된 계좌 없음",
@@ -38,15 +47,15 @@ const EMPTY_PAYMENT: PaymentSummaryState = {
 };
 
 export function ClientPaymentMethods() {
-  const router = useRouter();
   const toast = useToast();
   const user = useCurrentUser();
   const [verified, setVerified] = useState(false);
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [pendingEditTarget, setPendingEditTarget] = useState<EditTarget>(null);
   const [payment, setPayment] = useState(EMPTY_PAYMENT);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
 
   useEffect(() => {
-    if (!verified) return;
     let cancelled = false;
     getMyPaymentMethods()
       .then((methods) => {
@@ -57,6 +66,7 @@ export function ClientPaymentMethods() {
           ...current,
           cardDisplayName: card?.displayName ?? current.cardDisplayName,
           cardBrand: card?.cardBrand ?? current.cardBrand,
+          cardCompany: card?.cardCompany ?? current.cardCompany,
           cardLast4: card?.cardLast4 ?? current.cardLast4,
           cardHolder: card?.cardHolder ?? current.cardHolder,
           accountDisplayName: account?.displayName ?? current.accountDisplayName,
@@ -69,27 +79,46 @@ export function ClientPaymentMethods() {
     return () => {
       cancelled = true;
     };
-  }, [toast, verified]);
+  }, [toast]);
+
+  const requestEdit = (target: Exclude<EditTarget, null>) => {
+    if (verified) {
+      setEditTarget(target);
+      return;
+    }
+    setPendingEditTarget(target);
+    setVerificationOpen(true);
+  };
 
   return (
     <ClientMyPageLayout activeMenu="payment-methods">
-      {!verified ? <section className="rounded-xl border border-theme bg-surface p-8 text-center text-[13px] font-semibold text-theme-muted">이메일 인증 후 결제수단을 확인할 수 있습니다.</section> : <>
       <PaymentSection title="결제수단">
-        <PaymentSummary label={payment.cardDisplayName} onEdit={() => setEditTarget("card")} />
+        <PaymentSummary label={payment.cardDisplayName} onEdit={() => requestEdit("card")} />
       </PaymentSection>
       <PaymentSection title="계좌 관리" className="mt-4">
-        <PaymentSummary label={payment.bankName && payment.accountLast4 ? `${payment.bankName} ****${payment.accountLast4}` : "등록된 계좌 없음"} sublabel={payment.accountHolder} onEdit={() => setEditTarget("account")} />
+        <PaymentSummary label={payment.bankName && payment.accountLast4 ? `${payment.bankName} ****${payment.accountLast4}` : "등록된 계좌 없음"} sublabel={payment.accountHolder} onEdit={() => requestEdit("account")} />
       </PaymentSection>
       {editTarget === "card" ? (
         <CardEdit
           payment={payment}
           onCancel={() => setEditTarget(null)}
           onSave={async (brand, number, holder) => {
-            const saved = await updateMyCard({ cardBrand: brand, cardNumber: number, cardHolder: holder });
+            let saved;
+            try {
+              saved = await updateMyCard({ cardBrand: brand, cardNumber: number, cardHolder: holder });
+            } catch (error) {
+              if (error instanceof ApiException && error.errorCode === "AU_006") {
+                setVerified(false);
+                setVerificationOpen(true);
+                return;
+              }
+              throw error;
+            }
             setPayment((current) => ({
               ...current,
               cardDisplayName: saved.displayName,
               cardBrand: saved.cardBrand ?? brand,
+              cardCompany: saved.cardCompany ?? brand,
               cardLast4: saved.cardLast4 ?? number.slice(-4),
               cardHolder: saved.cardHolder ?? holder,
             }));
@@ -103,7 +132,17 @@ export function ClientPaymentMethods() {
           payment={payment}
           onCancel={() => setEditTarget(null)}
           onSave={async (bankCode, number, holder) => {
-            const saved = await updateMyBankAccount({ bankCode, accountNo: number, accountHolder: holder });
+            let saved;
+            try {
+              saved = await updateMyBankAccount({ bankCode, accountNo: number, accountHolder: holder });
+            } catch (error) {
+              if (error instanceof ApiException && error.errorCode === "AU_006") {
+                setVerified(false);
+                setVerificationOpen(true);
+                return;
+              }
+              throw error;
+            }
             setPayment((current) => ({
               ...current,
               accountDisplayName: saved.displayName,
@@ -116,8 +155,7 @@ export function ClientPaymentMethods() {
           }}
         />
       ) : null}
-      </>}
-      {user?.email ? <ProfileUpdateVerificationModal open={!verified} email={user.email} title="결제수단 본인 인증" description="카드와 계좌 정보를 확인하려면 이메일 인증이 필요합니다." onClose={() => router.back()} onVerified={() => setVerified(true)} /> : null}
+      {user?.email ? <ProfileUpdateVerificationModal open={verificationOpen} email={user.email} purpose="PAYMENT_METHOD" title="결제수단 본인 인증" description="카드 또는 계좌를 수정하려면 이메일 인증이 필요합니다." onClose={() => { setVerificationOpen(false); setPendingEditTarget(null); }} onVerified={() => { setVerified(true); setVerificationOpen(false); if (pendingEditTarget) setEditTarget(pendingEditTarget); setPendingEditTarget(null); }} /> : null}
     </ClientMyPageLayout>
   );
 }
@@ -131,29 +169,31 @@ function PaymentSummary({ label, sublabel, onEdit }: { label: string; sublabel?:
 }
 
 function CardEdit({ payment, onCancel, onSave }: { payment: PaymentSummaryState; onCancel: () => void; onSave: (brand: string, number: string, holder: string) => Promise<void> }) {
-  const [brand, setBrand] = useState(payment.cardBrand);
+  const [brand, setBrand] = useState(payment.cardCompany);
   const [number, setNumber] = useState("");
   const [holder, setHolder] = useState(payment.cardHolder);
   const [saving, setSaving] = useState(false);
-  const valid = brand.trim() !== "" && number.replace(/\D/g, "").length >= 12 && holder.trim() !== "";
+  const { options, isLoading, isError, retry } = useSignupOptions(getCardCompanies);
+  const valid = brand.trim() !== "" && isValidCardNumber(number) && holder.trim() !== "";
   const save = async () => {
     setSaving(true);
-    try { await onSave(brand, number.replace(/\D/g, ""), holder); } finally { setSaving(false); }
+    try { await onSave(brand, digitsOnly(number), holder); } finally { setSaving(false); }
   };
-  return <EditCard title="카드 수정" onCancel={onCancel}><EditField label="카드사"><input value={brand} onChange={(event) => setBrand(event.target.value)} className="payment-input" /></EditField><EditField label="카드 번호"><input value={number} inputMode="numeric" autoComplete="cc-number" onChange={(event) => setNumber(formatCardNumber(event.target.value))} placeholder="카드 번호를 입력해 주세요" className="payment-input" /></EditField><EditField label="소유자"><input value={holder} onChange={(event) => setHolder(event.target.value)} autoComplete="cc-name" className="payment-input" /></EditField><SaveButton disabled={!valid || saving} onClick={() => void save()} label={saving ? "저장 중..." : "수정하기"} /></EditCard>;
+  return <EditCard title="카드 수정" onCancel={onCancel}><EditField label="카드사"><select value={brand} onChange={(event) => setBrand(event.target.value)} disabled={isLoading || isError} className="payment-input"><option value="">{isLoading ? "카드사 목록을 불러오는 중..." : "카드사를 선택해 주세요."}</option>{options.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}</select>{isError ? <RetryButton onClick={retry} label="카드사 목록 다시 불러오기" /> : null}</EditField><EditField label="카드 번호"><input value={number} inputMode="numeric" autoComplete="cc-number" maxLength={19} onChange={(event) => setNumber(formatCardNumber(event.target.value))} placeholder="카드 번호를 입력해 주세요" className="payment-input" /></EditField><EditField label="소유자"><input value={holder} onChange={(event) => setHolder(event.target.value)} autoComplete="cc-name" className="payment-input" /></EditField><SaveButton disabled={!valid || saving} onClick={() => void save()} label={saving ? "저장 중..." : "수정하기"} /></EditCard>;
 }
 
 function AccountEdit({ payment, onCancel, onSave }: { payment: PaymentSummaryState; onCancel: () => void; onSave: (bankCode: string, number: string, holder: string) => Promise<void> }) {
-  const [bank, setBank] = useState("SHINHAN");
+  const [bank, setBank] = useState("");
   const [number, setNumber] = useState("");
   const [holder, setHolder] = useState(payment.accountHolder);
   const [saving, setSaving] = useState(false);
-  const valid = number.length >= 8 && holder.trim() !== "";
+  const { options, isLoading, isError, retry } = useSignupOptions(getBanks);
+  const valid = bank !== "" && isValidAccountNo(number) && holder.trim() !== "";
   const save = async () => {
     setSaving(true);
-    try { await onSave(bank, number, holder); } finally { setSaving(false); }
+    try { await onSave(bank, digitsOnly(number), holder); } finally { setSaving(false); }
   };
-  return <EditCard title="계좌 수정" onCancel={onCancel}><EditField label="은행"><select value={bank} onChange={(event) => setBank(event.target.value)} className="payment-input"><option value="SHINHAN">신한은행</option><option value="KOOKMIN">국민은행</option><option value="WOORI">우리은행</option><option value="HANA">하나은행</option></select></EditField><EditField label="계좌 번호"><input value={number} inputMode="numeric" onChange={(event) => setNumber(event.target.value.replace(/\D/g, ""))} placeholder="'-' 없이 숫자만 입력해 주세요" className="payment-input" /></EditField><EditField label="예금주"><input value={holder} onChange={(event) => setHolder(event.target.value)} className="payment-input" /></EditField><SaveButton disabled={!valid || saving} onClick={() => void save()} label={saving ? "저장 중..." : "수정하기"} /></EditCard>;
+  return <EditCard title="계좌 수정" onCancel={onCancel}><EditField label="은행"><select value={bank} onChange={(event) => setBank(event.target.value)} disabled={isLoading || isError} className="payment-input"><option value="">{isLoading ? "은행 목록을 불러오는 중..." : "은행을 선택해 주세요."}</option>{options.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}</select>{isError ? <RetryButton onClick={retry} label="은행 목록 다시 불러오기" /> : null}</EditField><EditField label="계좌 번호"><input value={number} inputMode="numeric" maxLength={14} onChange={(event) => setNumber(event.target.value.replace(/\D/g, ""))} placeholder="'-' 없이 숫자만 입력해 주세요" className="payment-input" /></EditField><EditField label="예금주"><input value={holder} onChange={(event) => setHolder(event.target.value)} className="payment-input" /></EditField><SaveButton disabled={!valid || saving} onClick={() => void save()} label={saving ? "저장 중..." : "수정하기"} /></EditCard>;
 }
 
 function EditCard({ title, onCancel, children }: { title: string; onCancel: () => void; children: React.ReactNode }) {
@@ -162,4 +202,5 @@ function EditCard({ title, onCancel, children }: { title: string; onCancel: () =
 
 function EditField({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block"><span className="mb-2 block text-[12px] font-semibold text-theme-muted">{label} <span className="text-theme-danger">*</span></span>{children}</label>; }
 function SaveButton({ disabled, onClick, label }: { disabled: boolean; onClick: () => void; label: string }) { return <div className="flex justify-end pt-1"><button type="button" disabled={disabled} onClick={onClick} className="h-11 min-w-[180px] rounded-md bg-brand px-6 text-[13px] font-bold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-theme-muted">{label}</button></div>; }
+function RetryButton({ onClick, label }: { onClick: () => void; label: string }) { return <button type="button" onClick={onClick} className="mt-2 text-[11px] font-semibold text-theme-danger underline">{label}</button>; }
 function formatCardNumber(value: string) { return value.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1-"); }

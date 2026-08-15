@@ -12,6 +12,7 @@ export interface ClientMyPageResponse {
   name: string;
   phone: string | null;
   address: string | null;
+  addressParts: AddressParts | null;
   grade: ClientGradeCode;
   ratingAverage: number | null;
   reviewCount: number;
@@ -22,6 +23,7 @@ export interface ClientProfileUpdateRequest {
   companyName: string;
   employeeCount: EmployeeCountCode;
   phone?: string;
-  address?: string;
+  address: AddressParts;
   logoFileId?: number;
 }
+import type { AddressParts } from "@/features/common/types/address";

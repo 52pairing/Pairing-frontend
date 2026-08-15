@@ -131,7 +131,7 @@ function PasswordStepper({ step }: { step: PasswordStep }) {
         return (
           <li key={label} className="relative flex flex-col items-center">
             {index > 0 ? <span className="absolute right-1/2 top-3 h-px w-full bg-theme" aria-hidden="true" /> : null}
-            <span className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-extrabold transition-colors ${complete ? "border-emerald-500 bg-emerald-500 text-white" : active ? "border-brand bg-brand text-white shadow-[0_0_0_3px_rgba(23,54,93,0.08)]" : "border-theme bg-surface text-theme-muted"}`}>{complete ? "✓" : number}</span>
+            <span className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-extrabold transition-colors ${complete ? "border-[#17365d] bg-[#17365d] text-white" : active ? "border-brand bg-brand text-white shadow-[0_0_0_3px_rgba(23,54,93,0.08)]" : "border-theme bg-surface text-theme-muted"}`}>{complete ? "✓" : number}</span>
             <span className={`mt-2 text-[10px] font-bold ${active ? "text-brand" : "text-theme-muted"}`}>{label}</span>
           </li>
         );
@@ -197,12 +197,22 @@ function PasswordForm(props: PasswordFormProps) {
 
 function CompletionStep() {
   return (
-    <div className="flex flex-col items-center border-t border-theme py-12 text-center">
-      <span className="flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500 bg-emerald-50 text-2xl font-bold text-emerald-500 shadow-[0_0_0_8px_rgba(16,185,129,0.06)]" aria-hidden="true">✓</span>
+    <div className="flex flex-col items-center py-12 text-center">
+      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-brand" aria-hidden="true">
+        <CheckIcon />
+      </span>
       <p className="mt-5 text-[17px] font-extrabold tracking-[-0.02em]">비밀번호가 변경되었습니다.</p>
       <p className="mt-2 text-[12px] font-medium text-theme-muted">다음 로그인부터 새 비밀번호를 사용해 주세요.</p>
       <button type="button" onClick={() => window.location.replace("/login?passwordChanged=true")} className="mt-7 h-10 rounded-[7px] bg-brand px-7 text-[12px] font-bold text-white transition hover:bg-brand-hover">확인</button>
     </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m5 12.5 4.5 4.5L19 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 

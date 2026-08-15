@@ -1,10 +1,12 @@
 // 카드/계좌 등록 스텝
 // 클라이언트/프리랜서 일반/프리랜서 소셜 3개 플로우가 동일하게 재사용합니다.
-// 카드사(cardBrand)는 별도 meta 엔드포인트가 없어 자유 입력으로 받습니다.
 "use client";
 
 import { useSignupOptions } from "@/features/auth/hooks/useSignupOptions";
-import { getBanks } from "@/features/auth/services/signupMeta";
+import {
+  getBanks,
+  getCardCompanies,
+} from "@/features/auth/services/signupMeta";
 
 export interface CardAccountValues {
   cardNumber: string;
@@ -25,10 +27,16 @@ export const CardAccountFields = ({
 }: CardAccountFieldsProps) => {
   const {
     options: bankOptions,
-    isLoading,
-    isError,
-    retry,
+    isLoading: isBankLoading,
+    isError: isBankError,
+    retry: retryBanks,
   } = useSignupOptions(getBanks);
+  const {
+    options: cardCompanies,
+    isLoading: isCardCompanyLoading,
+    isError: isCardCompanyError,
+    retry: retryCardCompanies,
+  } = useSignupOptions(getCardCompanies);
 
   return (
     <div className="space-y-8">
@@ -43,13 +51,32 @@ export const CardAccountFields = ({
             <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               카드사 <span className="text-[#356DF3]">*</span>
             </label>
-            <input
-              type="text"
+            <select
               value={values.cardBrand}
               onChange={(e) => onChange({ cardBrand: e.target.value })}
-              placeholder="예) 신한카드"
+              disabled={isCardCompanyLoading || isCardCompanyError}
               className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
-            />
+            >
+              <option value="">
+                {isCardCompanyLoading
+                  ? "카드사 목록을 불러오는 중..."
+                  : "카드사를 선택해 주세요."}
+              </option>
+              {cardCompanies.map((company) => (
+                <option key={company.code} value={company.code}>
+                  {company.label}
+                </option>
+              ))}
+            </select>
+            {isCardCompanyError ? (
+              <button
+                type="button"
+                onClick={retryCardCompanies}
+                className="mt-2 text-xs font-semibold text-red-500 underline"
+              >
+                카드사 목록 다시 불러오기
+              </button>
+            ) : null}
           </div>
 
           <div>
@@ -63,6 +90,7 @@ export const CardAccountFields = ({
               onChange={(e) =>
                 onChange({ cardNumber: e.target.value.replace(/[^\d-]/g, "") })
               }
+              maxLength={19}
               placeholder="1234-1234-1234-1234"
               className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
             />
@@ -81,11 +109,11 @@ export const CardAccountFields = ({
             <select
               value={values.bankCode}
               onChange={(e) => onChange({ bankCode: e.target.value })}
-              disabled={isLoading || isError}
+              disabled={isBankLoading || isBankError}
               className="h-11 w-full rounded-md border border-theme px-3 text-sm text-theme-primary outline-none focus:border-brand disabled:cursor-not-allowed disabled:text-theme-muted"
             >
               <option value="" disabled>
-                {isLoading ? "은행 목록을 불러오는 중..." : "은행 선택"}
+                {isBankLoading ? "은행 목록을 불러오는 중..." : "은행 선택"}
               </option>
               {bankOptions.map((bank) => (
                 <option key={bank.code} value={bank.code}>
@@ -93,12 +121,12 @@ export const CardAccountFields = ({
                 </option>
               ))}
             </select>
-            {isError ? (
+            {isBankError ? (
               <div className="mt-2 flex items-center gap-2 text-xs text-red-500">
                 <span>은행 목록을 불러오지 못했습니다.</span>
                 <button
                   type="button"
-                  onClick={retry}
+                  onClick={retryBanks}
                   className="font-semibold underline"
                 >
                   다시 시도
@@ -118,6 +146,7 @@ export const CardAccountFields = ({
               onChange={(e) =>
                 onChange({ accountNumber: e.target.value.replace(/\D/g, "") })
               }
+              maxLength={14}
               placeholder="'-' 없이 숫자만 입력해 주세요."
               className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
             />
@@ -141,9 +170,19 @@ export const CardAccountFields = ({
   );
 };
 
+export const digitsOnly = (value: string) => value.replace(/\D/g, "");
+
+export const isValidCardNumber = (value: string) =>
+  digitsOnly(value).length === 16;
+
+export const isValidAccountNo = (value: string) => {
+  const length = digitsOnly(value).length;
+  return length >= 10 && length <= 14;
+};
+
 export const isCardAccountValid = (values: CardAccountValues) =>
   values.cardBrand.length > 0 &&
-  values.cardNumber.length > 0 &&
+  isValidCardNumber(values.cardNumber) &&
   values.bankCode.length > 0 &&
-  values.accountNumber.length > 0 &&
+  isValidAccountNo(values.accountNumber) &&
   values.accountHolder.length > 0;

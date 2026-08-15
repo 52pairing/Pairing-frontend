@@ -37,13 +37,21 @@ export interface SignupAgreement {
   agreed: boolean;
 }
 
+export interface SignupAddress {
+  sido: string;
+  sigungu: string;
+  roadAddress: string;
+  addressDetail: string;
+  zipCode: string;
+}
+
 // 클라이언트 최종 회원가입 요청입니다.
 export interface ClientSignupRequest {
   companyName: string;
   businessNo: string;
   businessField: string;
   employeeCount: string;
-  address: string;
+  address: SignupAddress;
   email: string;
   name: string;
   phone: string;
@@ -62,6 +70,7 @@ export interface FreelancerSignupRequest {
   password: string;
   passwordConfirm: string;
   birthDate: string;
+  address: SignupAddress;
   card: SignupCard;
   bankAccount: SignupBankAccount;
   agreements: SignupAgreement[];
@@ -73,6 +82,7 @@ export interface FreelancerSocialSignupRequest {
   name: string;
   phone: string;
   birthDate: string;
+  address: SignupAddress;
   card: SignupCard;
   bankAccount: SignupBankAccount;
   agreements: SignupAgreement[];

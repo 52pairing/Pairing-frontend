@@ -55,6 +55,7 @@ export interface AccountPaymentMethod {
   methodType: "CARD" | "BANK_ACCOUNT";
   displayName: string;
   cardBrand: string | null;
+  cardCompany: string | null;
   cardLast4: string | null;
   cardHolder: string | null;
   bankName: string | null;

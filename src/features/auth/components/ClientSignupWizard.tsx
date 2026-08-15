@@ -33,6 +33,8 @@ import type { ClientSignupForm } from "@/features/auth/types";
 import type { SignupTermsItem } from "@/features/auth/types/signupApiTypes";
 import { buildClientSignupRequest } from "@/features/auth/utils/buildSignupRequest";
 import { ApiException } from "@/lib/api";
+import { AddressFields } from "@/features/common/components/AddressFields";
+import { EMPTY_ADDRESS_PARTS } from "@/features/common/types/address";
 
 const STEP_LABELS = CLIENT_SIGNUP_STEPS.map((step) => step.label);
 
@@ -134,7 +136,7 @@ function CompanyStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
     !!form.businessRegistrationChecked &&
     !!form.businessField &&
     !!form.employeeCount &&
-    (form.address ?? "").trim().length > 0;
+    !!form.address?.roadAddress;
 
   return (
     <>
@@ -170,23 +172,11 @@ function CompanyStep({ form, patch, onPrevious, onNext }: ClientStepProps) {
           value={form.employeeCount}
           onChange={(value) => patch({ employeeCount: value })}
         />
-        <div>
-          <label
-            htmlFor="company-address"
-            className="mb-2 block text-sm font-semibold text-theme-secondary"
-          >
-            기업 주소 <span className="text-[#356DF3]">*</span>
-          </label>
-          <input
-            id="company-address"
-            type="text"
-            value={form.address ?? ""}
-            onChange={(event) => patch({ address: event.target.value })}
-            maxLength={255}
-            placeholder="기업 주소를 입력해 주세요."
-            className="h-11 w-full rounded-md border border-theme px-4 text-sm text-theme-primary outline-none placeholder:text-theme-muted focus:border-brand"
-          />
-        </div>
+        <AddressFields
+          label="기업 주소"
+          value={form.address ?? EMPTY_ADDRESS_PARTS}
+          onChange={(address) => patch({ address })}
+        />
       </div>
       <SignupStepNavigation
         onPrevious={onPrevious}

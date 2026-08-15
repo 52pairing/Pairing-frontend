@@ -12,3 +12,7 @@ export const getEmployeeCounts = () =>
 // 계좌 정보에서 사용할 은행 목록을 가져옵니다.
 export const getBanks = () =>
   apiCall<SignupOption[]>("/api/v1/meta/banks");
+
+// 카드 등록에서 서버 enum 코드와 표시 이름을 가져옵니다.
+export const getCardCompanies = () =>
+  apiCall<SignupOption[]>("/api/v1/meta/card-companies");

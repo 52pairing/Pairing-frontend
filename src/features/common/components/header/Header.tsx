@@ -33,7 +33,7 @@ export function Header({ role = "guest", initialUser = null }: HeaderProps) {
   if (currentRole === "client") {
     return (
       <ClientHeader
-        name={user?.name}
+        name={user?.companyName ?? user?.name}
         isNameLoading={isLoading}
         chatCount={chatCount}
         noticeCount={noticeCount}
