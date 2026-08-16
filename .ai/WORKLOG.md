@@ -1,5 +1,16 @@
 # WORKLOG
 
+## 2026-08-16 — ECS 프로덕션 런타임 의존성 오류 수정 (#212)
+
+- `next start`가 런타임에 로드하는 `next.config.ts`의 정적 import를 보장하기 위해 `@next/bundle-analyzer`를 `devDependencies`에서 `dependencies`로 이동
+- `npm install --package-lock-only`로 루트 및 전이 의존성의 프로덕션 플래그 갱신
+- 검증: `npm ls --omit=dev @next/bundle-analyzer`에서 16.3.1 확인, `npm run build`, `git diff --check` 통과
+- 미실행: 로컬 Docker 엔진 미기동으로 프로덕션 이미지·컨테이너·HTTP 200 검증 불가
+- 미검증: ECS 재배포 및 ALB 헬스체크
+- 참고: npm audit high severity 1건은 이번 변경 범위 밖이라 자동 수정하지 않음
+
+---
+
 ## 2026-08-15 — 최초 작성 화면의 서버 notice 중복 노출 수정
 
 - 서버가 내려주는 `notice`("수정한 이력서는 새로운 추천부터 반영됩니다...")는 이미 이력서가 있고 수정하는 상황을 전제로 한 문구인데, 이력서가 아예 없는 최초 작성 화면에서도 항상 함께 떠서 "처음 작성" 안내 문구와 모순돼 보였습니다.

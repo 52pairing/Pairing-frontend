@@ -238,6 +238,8 @@
   - 📌 AI 서버 폴백 시 메시지에 `(stub)` 저장(프론트 문제 아님) → 원인 구분에 시간
   - 📌 로컬(localhost:17000) → 배포 백엔드 CORS 이미 열려 있어 로컬에서 실서버 테스트 가능
 - 배포·운영 (FE/BE 동시 반영, 환경변수 관리, 배포 후 확인 절차):
+  - 🎤 **빌드는 성공했는데 ECS 태스크만 즉시 종료** → builder는 devDependencies 포함, runner는 `npm ci --omit=dev`; 런타임에도 읽히는 `next.config.ts`의 `@next/bundle-analyzer`가 dev로 이동한 것이 원인 (Issue #212, CloudWatch `MODULE_NOT_FOUND`)
+  - 📌 조치: `@next/bundle-analyzer`를 production dependency로 복구 + lockfile 전이 의존성 플래그 갱신. 후속 후보: Docker 컨테이너 HTTP 스모크 테스트, Next standalone 전환
   - 🎤 **배포 환경 실시간이 한 번도 안 됨** → 원인: ALB가 `/api/*` 만 백엔드로 라우팅 → WebSocket 경로 `/ws`→**`/api/ws`** 한 줄 수정으로 해결
   - 📌 WS도 쿠키 인증 → 배포 시 `CORS_ALLOWED_ORIGINS`에 프론트 도메인 등록 필요(REST+WS 공용)
   - 🎤 비동기 A2A 배포 후 실서버에서 `CONNECTED`, 사용자 식별, 하트비트 `10000,10000`, `AGENT_RUNNING→AGREED` 실시간 흐름까지 검증. 단, 검증 중 1006 연결 종료를 경험해 REST 폴링 폴백 필요성을 실제 장애로 확인
