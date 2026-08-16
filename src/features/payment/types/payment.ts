@@ -9,12 +9,6 @@ export interface PaymentSummary {
   duration?: string;
 }
 
-export interface PaymentMethod {
-  id: string;
-  issuer: string;
-  maskedNumber: string;
-}
-
 export type SettlementPhase = "DEPOSIT" | "SUCCESS_FEE";
 export type SettlementStatus = "PENDING" | "PAID" | "OVERDUE" | "FAILED" | "CANCELED";
 
@@ -72,14 +66,4 @@ export interface SettlementPageResponse {
   totalPages: number;
   first: boolean;
   last: boolean;
-}
-
-export interface SuccessFeePaymentSummary {
-  projectTitle: string;
-  duration: string;
-  contractAmount: number;
-  baseRate: number;
-  discountLabel?: string;
-  discountRate?: number;
-  paymentAmount: number;
 }
