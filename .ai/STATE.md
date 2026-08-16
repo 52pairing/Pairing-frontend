@@ -1,5 +1,20 @@
 # STATE
 
+## 현재 작업 (2026-08-16 — ECS 런타임 의존성 오류 수정)
+
+- 작업명: 프로덕션 runner에서 `next.config.ts` 로드에 필요한 `@next/bundle-analyzer` 의존성 복구
+- 관련 Issue: #212
+- 관련 브랜치: `fix/common-ecs-runtime-dependency#212`
+- 원인: runner의 `npm ci --omit=dev`가 `devDependencies`를 제외하지만 `next start`가 `next.config.ts`의 정적 import를 런타임에 로드함
+- 변경 범위: `package.json`, `package-lock.json`
+- 진행 상황: 완료 — `@next/bundle-analyzer`를 `dependencies`로 이동하고 잠금 파일의 루트·패키지·전이 의존성 `dev` 플래그 갱신
+- 검증: `npm ls --omit=dev @next/bundle-analyzer`에서 16.3.1 확인, `npm run build`, `git diff --check` 통과
+- 실행하지 못한 검증: 로컬 Docker 엔진이 실행 중이지 않아 프로덕션 이미지 빌드·기동·HTTP 200 확인 미실행
+- 실제 ECS·ALB: 미검증
+- 참고: `npm install --package-lock-only` 감사 결과 기존 high severity 취약점 1건 보고, 자동 수정은 범위 밖이라 미실행
+
+---
+
 ## 현재 작업 (2026-08-15 — 고아 파일 삭제, 이력서 화면 문구 분기)
 
 - 작업명: 연결되지 않는 옛 1단계 마법사 파일 삭제, 이력서 화면 제목·설명을 최초 등록/수정/조회 상태별로 분리
