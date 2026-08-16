@@ -19,6 +19,9 @@ export type NegotiationStatus = "IN_PROGRESS" | "AGREED" | "FAILED";
 /** 조건 상태 */
 export type ConditionStatus = "PENDING" | "AGREED" | "REJECTED";
 
+/** 뷰어 본인의 마지노선 비교 방향 */
+export type FloorDirection = "MAX" | "MIN" | "CHOICE" | "NONE";
+
 /** 메시지/제안 발신자 유형 (AI 대리인은 *_AGENT) */
 export type SenderType =
   | "CLIENT_AGENT"
@@ -103,6 +106,11 @@ export interface NegotiationCondition {
    * 응답에 없을 수 있어(배포 시점차) optional. 없으면 type 으로 추정한다.
    */
   floorComparison?: "RANGE" | "CHOICE" | "NONE";
+  /**
+   * 뷰어 본인의 마지노선 방향. 있으면 역할 기반 추론보다 우선한다.
+   * 백엔드 배포 시점 차이를 고려해 optional/null을 허용한다.
+   */
+  floorDirection?: FloorDirection | null;
   /** 최종 절충값 (finalOffer=true 인 미합의 조건에만 채워짐). 그 외 null */
   compromiseValue?: string | null;
 }
