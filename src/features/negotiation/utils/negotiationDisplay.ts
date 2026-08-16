@@ -1,5 +1,6 @@
 import type {
   ConditionType,
+  FloorDirection,
   NegotiationCondition,
 } from "@/features/negotiation/types/negotiation";
 import {
@@ -40,28 +41,70 @@ export const opponentValue = (
 ): string | null =>
   viewerRole === "CLIENT" ? condition.freelancerValue : condition.clientValue;
 
-/** 마지노선 입력 라벨. 단가·기간은 역할에 따라 최소/최대 의미가 반대다. */
+/** 서버 방향을 우선하고, 미배포 응답은 기존 비교 방식과 역할로 폴백한다. */
+export const resolveFloorDirection = (
+  condition: NegotiationCondition,
+  viewerRole: ViewerRole,
+): FloorDirection => {
+  if (condition.floorDirection) return condition.floorDirection;
+  if (condition.floorComparison === "CHOICE") return "CHOICE";
+  if (condition.floorComparison === "NONE") return "NONE";
+  if (condition.type === "WORK_STYLE" || condition.type === "WORK_FORM") return "CHOICE";
+  if (condition.type === "SCOPE" || condition.type === "OTHER") return "NONE";
+  return viewerRole === "CLIENT" ? "MAX" : "MIN";
+};
+
+/** 마지노선 입력 라벨. 서버가 내려준 방향을 기준으로 의미를 설명한다. */
 export const floorFieldLabel = (
-  type: ConditionType,
+  condition: NegotiationCondition,
   viewerRole: ViewerRole,
 ): string => {
-  const isFreelancer = viewerRole === "FREELANCER";
-  switch (type) {
+  const direction = resolveFloorDirection(condition, viewerRole);
+  switch (condition.type) {
     case "AMOUNT":
-      return isFreelancer
+      return direction === "MIN"
         ? "최소 단가 (이 금액 미만은 거절)"
         : "최대 단가 (이 금액 초과는 거절)";
     case "PERIOD":
-      return isFreelancer ? "최소 기간" : "최대 기간";
+      return direction === "MIN" ? "최소 기간" : "최대 기간";
     case "WORK_STYLE":
       return "허용 가능한 근무 방식";
     case "WORK_FORM":
       return "허용 가능한 근무 형태";
     case "START_DATE":
-      return "희망 시작일";
+      return direction === "MAX"
+        ? "가장 늦은 시작일 (이 날짜까지 시작)"
+        : "가장 이른 시작일";
     default:
-      return conditionLabel(type);
+      return conditionLabel(condition.type);
   }
+};
+
+/** 마지노선 값 앞에 붙는 방향 표시. */
+export const floorValuePrefix = (
+  condition: NegotiationCondition,
+  viewerRole: ViewerRole,
+): string => {
+  const direction = resolveFloorDirection(condition, viewerRole);
+  if (direction === "MAX") return "최대 ";
+  if (direction === "MIN") return "최소 ";
+  return "";
+};
+
+/** 마지노선 안내 문구. NONE은 별도 기준이 없으므로 표시하지 않는다. */
+export const floorRequirementText = (
+  condition: NegotiationCondition,
+  viewerRole: ViewerRole,
+  labels: WorkConditionLabels,
+): string | null => {
+  const value = formatConditionValue(condition.type, condition.myFloor, labels);
+  if (!value) return null;
+  const direction = resolveFloorDirection(condition, viewerRole);
+  if (direction === "NONE") return null;
+  if (direction === "CHOICE") return `${value}을(를) 허용해야 합니다.`;
+  if (direction === "MIN") return `${value} 이상이어야 합니다.`;
+  if (condition.type === "START_DATE") return `늦어도 ${value}까지 시작해야 합니다.`;
+  return `${value} 이하여야 합니다.`;
 };
 
 /** Record<code,label> → 정렬 유지된 옵션 배열 */
@@ -70,7 +113,7 @@ export const toOptions = (
 ): Array<{ code: string; label: string }> =>
   Object.entries(map).map(([code, label]) => ({ code, label }));
 
-/** 숫자로 비교 가능한 조건 값만 뽑는다(AMOUNT=원, PERIOD="N …"의 앞 숫자). */
+/** 크기 비교 가능한 조건 값을 뽑는다. */
 export const numericValue = (
   type: ConditionType,
   value: string | null,
@@ -84,12 +127,16 @@ export const numericValue = (
     const amount = Number.parseInt(value, 10);
     return Number.isFinite(amount) ? amount : null;
   }
+  if (type === "START_DATE") {
+    const timestamp = Date.parse(`${value}T00:00:00Z`);
+    return Number.isFinite(timestamp) ? timestamp : null;
+  }
   return null;
 };
 
 /**
  * 수락한 조건 중 "내 마지노선을 넘는" 첫 조건을 찾는다(표시용).
- * 프리랜서 하한: 제안 < 내 마지노선 / 클라 상한: 제안 > 내 마지노선.
+ * 서버 방향이 MIN이면 제안 < 마지노선, MAX이면 제안 > 마지노선이다.
  */
 export const findFloorViolation = (
   pending: NegotiationCondition[],
@@ -101,7 +148,12 @@ export const findFloorViolation = (
     const proposed = numericValue(condition.type, condition.proposedValue);
     const floor = numericValue(condition.type, condition.myFloor);
     if (proposed == null || floor == null) continue;
-    const breaks = viewerRole === "FREELANCER" ? proposed < floor : proposed > floor;
+    const direction = resolveFloorDirection(condition, viewerRole);
+    const breaks = direction === "MIN"
+      ? proposed < floor
+      : direction === "MAX"
+        ? proposed > floor
+        : false;
     if (breaks) return condition;
   }
   return null;
@@ -118,8 +170,8 @@ export const buildBelowFloorMessage = (
   }
   const proposed = formatConditionValue(violation.type, violation.proposedValue, labels);
   const floor = formatConditionValue(violation.type, violation.myFloor, labels);
-  const isFreelancer = viewerRole === "FREELANCER";
-  const floorLabel = isFreelancer ? `최소 ${floor}` : `최대 ${floor}`;
-  const direction = isFreelancer ? "낮습니다" : "높습니다";
-  return `이 제안(${proposed})은 회원님의 마지노선(${floorLabel})보다 ${direction}. 그래도 수락하시겠어요?`;
+  const direction = resolveFloorDirection(violation, viewerRole);
+  const floorLabel = direction === "MIN" ? `최소 ${floor}` : `최대 ${floor}`;
+  const comparison = direction === "MIN" ? "낮습니다" : "높습니다";
+  return `이 제안(${proposed})은 회원님의 마지노선(${floorLabel})보다 ${comparison}. 그래도 수락하시겠어요?`;
 };

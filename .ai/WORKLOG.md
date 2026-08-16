@@ -2782,6 +2782,20 @@
 - ESLint, TypeScript 검사, `git diff --check`를 통과했습니다.
 # WORKLOG
 
+## 2026-08-16 — 협상 마지노선 방향 반영
+
+- Issue #222, 브랜치 `fix/common-negotiation#222`
+- 협상 조건 응답 타입에 `floorDirection(MAX|MIN|CHOICE|NONE)` 추가
+- 마지노선 방향은 서버 값을 우선하고 미응답 시 기존 `floorComparison`·역할 로직으로 폴백
+- 프리랜서 시작일도 MAX로 판정하여 가장 늦은 시작일 라벨과 `늦어도 {날짜}까지 시작해야 합니다` 안내 적용
+- 마지노선 위반 판정·확인 모달과 최종 절충 문구를 같은 공용 방향 판정으로 통일
+- 이미 닫힌 STOMP 세션의 `Session closed.` 종료 프레임을 정상 종료로 분류해 개발 오류 오버레이에서 제외하고, 다른 브로커 오류의 `console.error`는 유지
+- 검증: 협상 Jest 2 suites/19 tests, 변경 파일 ESLint, TypeScript, 프로덕션 빌드, `git diff --check` 통과
+- 전체 Jest: 39 suites/203 tests 통과, 기존 `FreelancerProfile.test.tsx`의 App Router mock 누락으로 1 suite/5 tests 실패
+- 실제 백엔드 응답과 로그인 협상 화면은 미검증
+
+---
+
 ## 2026-08-16 — 계약·결제·추천 후보 상태 표시 오류 수정
 
 - Issue #220, 브랜치 `fix/common-contract#220`

@@ -24,6 +24,8 @@ import {
   buildBelowFloorMessage,
   findFloorViolation,
   floorFieldLabel,
+  floorRequirementText,
+  floorValuePrefix,
   opponentValue,
   toOptions,
   type Decision,
@@ -687,7 +689,7 @@ function SetupPanel({
               className="rounded-[8px] border border-[#e2e5ea] bg-[#fafafe] px-3 py-2"
             >
               <p className="text-[10px] font-bold text-theme-secondary">
-                {floorFieldLabel(condition.type, viewerRole)}
+                {floorFieldLabel(condition, viewerRole)}
               </p>
               <p className="mt-1 text-[13px] font-bold text-theme-primary">
                 {formatConditionValue(condition.type, condition.myFloor, labels)}
@@ -708,7 +710,7 @@ function SetupPanel({
             return (
               <div key={condition.conditionId}>
                 <label className="text-[10px] font-bold text-theme-secondary">
-                  {floorFieldLabel(condition.type, viewerRole)}
+                  {floorFieldLabel(condition, viewerRole)}
                 </label>
                 <div className="mt-2">
                   <ConditionFloorField
@@ -866,14 +868,6 @@ function ConditionActionPanel({
 
   const hasRejected = rejected.length > 0;
 
-  // 단가·기간은 역할에 따라 상한/하한. 근무 방식/형태는 접두 없음.
-  const floorPrefix = (type: ConditionType): string =>
-    type === "AMOUNT" || type === "PERIOD"
-      ? viewerRole === "CLIENT"
-        ? "최대 "
-        : "최소 "
-      : "";
-
   return (
     <div className="mt-6 flex justify-end">
       <section className="w-[340px] rounded-[14px] border border-theme bg-surface p-4 shadow-sm">
@@ -889,6 +883,7 @@ function ConditionActionPanel({
             labels,
           );
           const myFloorText = formatConditionValue(condition.type, condition.myFloor, labels);
+          const floorRequirement = floorRequirementText(condition, viewerRole, labels);
           const isEditing = editOpen[condition.conditionId] === true;
           return (
             <div key={condition.conditionId} className="mt-4">
@@ -916,8 +911,7 @@ function ConditionActionPanel({
               {/* 내 마지노선 + 수정 */}
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-[10px] text-theme-muted">
-                  내 선택: {floorPrefix(condition.type)}
-                  {myFloorText || "미설정"}
+                  {floorRequirement ? `내 마지노선: ${floorRequirement}` : `내 선택: ${myFloorText || "미설정"}`}
                 </span>
                 {!isEditing ? (
                   <button
@@ -977,7 +971,7 @@ function ConditionActionPanel({
             className="mt-4 rounded-[10px] border border-[#f7c65f] bg-[#fff9e8] p-3"
           >
             <div className="flex justify-between text-[11px] font-bold text-[#d97706]">
-              <span>{floorFieldLabel(condition.type, viewerRole)}</span>
+              <span>{floorFieldLabel(condition, viewerRole)}</span>
               <span className="rounded bg-[#fff0b8] px-2 py-1">재협상 필요</span>
             </div>
             {condition.myFloor != null ? (
@@ -1085,8 +1079,7 @@ function FinalOfferPanel({
     const value = formatConditionValue(first.type, first.compromiseValue, labels);
     if (first.myFloor != null && value) {
       const floor = formatConditionValue(first.type, first.myFloor, labels);
-      const floorLabel =
-        detail.viewerRole === "FREELANCER" ? `최소 ${floor}` : `최대 ${floor}`;
+      const floorLabel = `${floorValuePrefix(first, detail.viewerRole)}${floor}`;
       confirmMessage = `이 절충안(${value})은 회원님의 마지노선(${floorLabel})을 넘습니다. 양측이 함께 양보하는 최종 제안입니다. 수락하시겠어요?`;
     }
   }
