@@ -3,8 +3,6 @@
 import { useEffect, useId, useState } from "react";
 
 import { ConfirmModal, Modal } from "@/features/common/components/Modal";
-import { PaymentMethodCard } from "@/features/payment/components/PaymentMethodCard";
-import { MOCK_PAYMENT_METHODS } from "@/features/payment/constants/mockPaymentMethods";
 import {
   getMyPaymentMethods,
   getSettlement,
@@ -38,19 +36,16 @@ export function PaymentMethodModal({
   const titleId = useId();
   const descriptionId = useId();
   const isApiPayment = payment.settlementId != null;
-  const [selectedMethodId, setSelectedMethodId] = useState(
-    MOCK_PAYMENT_METHODS[0]?.id ?? "",
-  );
   const [settlement, setSettlement] = useState<SettlementResponse | null>(null);
   const [cards, setCards] = useState<AccountPaymentMethod[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(isApiPayment);
+  const [isLoading, setIsLoading] = useState(true);
   const [isPaying, setIsPaying] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   useEffect(() => {
-    if (!open || payment.settlementId == null) return;
+    if (!open) return;
 
     let cancelled = false;
     const settlementId = payment.settlementId;
@@ -64,7 +59,13 @@ export function PaymentMethodModal({
       setSelectedCardId(null);
     });
 
-    Promise.all([getSettlement(settlementId), getMyPaymentMethods()])
+    // settlementId가 없는 호출(예: 유료 재추천)은 정산 조회 없이 등록된 카드만 보여준다.
+    // 이 경우 선택한 카드 id를 서버로 보내는 계약이 아직 없어 onPay는 인자 없이 호출된다.
+    const loadMethods = settlementId == null
+      ? getMyPaymentMethods().then((methods) => [null, methods] as const)
+      : Promise.all([getSettlement(settlementId), getMyPaymentMethods()]);
+
+    loadMethods
       .then(([settlementResponse, methods]) => {
         if (cancelled) return;
         const cards = methods.filter((method) => method.methodType === "CARD");
@@ -96,6 +97,7 @@ export function PaymentMethodModal({
 
   const confirmPayment = async () => {
     if (!isApiPayment) {
+      if (selectedCardId == null || isPaying) return;
       setIsConfirmOpen(false);
       void onPay();
       return;
@@ -135,7 +137,7 @@ export function PaymentMethodModal({
   const appliedRate = feeRate - gradeDiscount;
   const canPay = isApiPayment
     ? Boolean(settlement?.payable && selectedCardId != null && !isLoading && !isPaying)
-    : Boolean(selectedMethodId);
+    : Boolean(selectedCardId != null && !isLoading && !isPaying);
 
   return (
     <>
@@ -178,24 +180,16 @@ export function PaymentMethodModal({
 
             <div className="mt-4">
               <p className="mb-2 text-[11px] font-medium text-theme-muted">등록된 카드</p>
-              {isApiPayment ? (
-                cards.length ? (
-                  <div className="space-y-2">
-                    {cards.map((card) => (
-                      <button key={card.paymentMethodId} type="button" aria-pressed={selectedCardId === card.paymentMethodId} onClick={() => setSelectedCardId(card.paymentMethodId)} className={`w-full rounded-[11px] border px-4 py-4 text-left transition ${selectedCardId === card.paymentMethodId ? "border-brand bg-[#eef3f8]" : "border-theme bg-surface hover:bg-surface-subtle"}`}>
-                        <p className="text-[13px] font-bold text-theme-primary">{card.displayName}{card.isDefault ? " (기본)" : ""}</p>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="rounded-[11px] border border-[#fda29b] bg-danger-surface px-4 py-4 text-[12px] font-semibold text-theme-danger">등록된 카드가 없습니다.</p>
-                )
-              ) : (
+              {cards.length ? (
                 <div className="space-y-2">
-                  {MOCK_PAYMENT_METHODS.map((method) => (
-                    <PaymentMethodCard key={method.id} method={method} selected={selectedMethodId === method.id} onSelect={() => setSelectedMethodId(method.id)} />
+                  {cards.map((card) => (
+                    <button key={card.paymentMethodId} type="button" aria-pressed={selectedCardId === card.paymentMethodId} onClick={() => setSelectedCardId(card.paymentMethodId)} className={`w-full rounded-[11px] border px-4 py-4 text-left transition ${selectedCardId === card.paymentMethodId ? "border-brand bg-[#eef3f8]" : "border-theme bg-surface hover:bg-surface-subtle"}`}>
+                      <p className="text-[13px] font-bold text-theme-primary">{card.displayName}{card.isDefault ? " (기본)" : ""}</p>
+                    </button>
                   ))}
                 </div>
+              ) : (
+                <p className="rounded-[11px] border border-[#fda29b] bg-danger-surface px-4 py-4 text-[12px] font-semibold text-theme-danger">등록된 카드가 없습니다.</p>
               )}
             </div>
 
