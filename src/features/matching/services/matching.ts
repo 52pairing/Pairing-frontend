@@ -1,6 +1,7 @@
 import { apiCall } from "@/lib/api";
 import type {
   CandidateListResponse,
+  CandidateProfileResponse,
   MatchingRequestCreateRequest,
   MatchingRequestResponse,
   MatchingSettingsRequest,
@@ -23,6 +24,9 @@ export const rejectRecommendedCandidate = (candidateId: number) =>
     `${MATCHING_BASE}/candidates/${candidateId}/rejection`,
     { method: "POST" },
   );
+
+export const getCandidateProfile = (candidateId: number) =>
+  apiCall<CandidateProfileResponse>(`${MATCHING_BASE}/candidates/${candidateId}/profile`);
 
 export const createMatchingRequests = (
   request: MatchingRequestCreateRequest,

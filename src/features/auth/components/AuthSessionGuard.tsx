@@ -54,6 +54,8 @@ export function AuthSessionGuard() {
         if (cancelled) return;
         if (error instanceof ApiException && error.errorCode === "GLOBAL_011") {
           setSessionEndReason("duplicate");
+        } else if (error instanceof ApiException && error.errorCode === "GLOBAL_010") {
+          setSessionEndReason("expired");
         } else if (isProtected) {
           router.replace(`/login?returnUrl=${encodeURIComponent(pathname)}`);
         }
@@ -66,7 +68,10 @@ export function AuthSessionGuard() {
 
   const goToLogin = () => {
     setSessionEndReason(null);
-    window.location.replace("/login");
+    const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    window.location.replace(
+      isProtected ? `/login?returnUrl=${encodeURIComponent(pathname)}` : "/login",
+    );
   };
 
   return (

@@ -1,5 +1,20 @@
 # API
 
+## 추천 후보 프로필 상세 연동 (2026-08-16)
+
+- 서비스: `src/features/matching/services/matching.ts`(`getCandidateProfile`)
+- 타입: `src/features/matching/types/matching.ts`(`CandidateProfileResponse` 등)
+- 화면: 클라이언트 프로젝트 상세 > 추천 후보 > 프로필(`/client/projects/{projectId}/candidates/{candidateId}`)
+- 배경: 이 화면이 그동안 실제 API 없이 하드코딩된 더미 후보 3명(`constants/recommendedCandidates.ts`, 삭제함)에서만 조회해, 실제 후보 ID로 진입하면 항상 404였음. 사용자가 Swagger에서 아래 엔드포인트를 직접 확인해 알려줌.
+- `GET /api/v1/matchings/candidates/{candidateId}/profile`
+  - `positionId` 없이 `candidateId`만으로 조회 가능
+  - 응답에 `condition`(희망 업무 조건 전체)과 `resume`(프리랜서가 등록한 학력·경력·자격증·자기소개·포트폴리오·연락처 스냅샷)이 함께 내려옴
+  - `capturedAt`으로 이 스냅샷이 매칭(추천) 당시 저장된 시점임을 표시
+  - Swagger 예시는 배열 필드명이 `condition.ConditionSkillResponse`, `resume.ResumeEducationResponse`/`ResumeCareerResponse`/`ResumeCertificateResponse`(파스칼케이스, DTO 클래스명)로 잘못 나와 있었음. 실제 로그인 세션 응답으로 확인한 결과 진짜 필드명은 `condition.skills`, `resume.educations`/`careers`/`certificates`(카멜케이스, `/freelancers/me/condition`·`/resume`와 동일 컨벤션) — 2026-08-16 실응답 확인 후 타입·컴포넌트 수정 완료
+  - 화면에는 `fitReasons`만 중립 태그로 표시하고 `fitScore` 숫자는 표시하지 않음(기존 후보 목록과 동일 정책)
+  - `resume`에 `contactPhone`/`contactEmail`/`address`/`addressDetail`/`birthDate` 등 개인 연락처 필드가 포함돼 있으나, 매칭 요청 전 단계 화면이라 화면에는 표시하지 않음(기존 화면 문구 "연락처 정보는 매칭 및 계약이 완료된 후 확인할 수 있습니다"와 일관). **이 필드를 이 시점에 노출하는 게 백엔드 의도인지는 여전히 확인 필요**
+- 실제 로그인 세션 기반 200 응답 확인 완료(2026-08-16, `candidateId=62` 사례로 필드명·구조 검증)
+
 ## 매칭 요청 상세 프로젝트 정보 7종 추가 (2026-08-15)
 
 - `GET /api/v1/matchings/requests/{requestId}`(상세 조회) 응답에 프로젝트 상세 항목 7종이 추가됐습니다: `currentSituation`(진행 상황), `startNegotiable`(시작일 협의 가능 여부), `periodValue`/`periodUnit`(예상 기간), `totalHeadcount`(전체 모집 인원), `detailScope`(세부 업무 범위), `extraNote`(우대사항), `workLocation`(근무 장소).

@@ -193,7 +193,10 @@ export function RecommendedCandidates({
       {successMessage ? <p role="status" className="mt-4 rounded-lg border border-[#a6d8b1] bg-[#edf9f0] px-4 py-3 text-[12px] font-semibold text-[#287a3a]">{successMessage}</p> : null}
 
       {isLoading ? (
-        <div className="flex min-h-48 items-center justify-center text-[12px] font-semibold text-theme-secondary">추천 후보를 불러오고 있습니다.</div>
+        <div className="flex min-h-48 flex-col items-center justify-center gap-3 text-[12px] font-semibold text-theme-secondary">
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand border-t-transparent" aria-hidden="true" />
+          추천 후보를 불러오고 있습니다.
+        </div>
       ) : candidateList ? (
         <>
           {candidateList.preparing && candidateList.candidates.length === 0 ? (
