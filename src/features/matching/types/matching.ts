@@ -57,6 +57,18 @@ export interface MatchingRequestResponse {
   status: MatchingStatus;
   budgetAmount: number | null;
   mainTask: string | null;
+  // 아래 7개는 상세 조회(GET /matchings/requests/{requestId})에서만 값이 오고,
+  // 목록 조회(받은/보낸 요청 목록)에서는 mainTask와 같은 방식으로 null이 옵니다.
+  currentSituation: string | null;
+  startNegotiable: boolean | null;
+  periodValue: number | null;
+  periodUnit: string | null;
+  totalHeadcount: number | null;
+  // 아래 3개는 상세 조회에서도 프로젝트 등록 시 선택 입력이라 비어 있을 수 있습니다.
+  // (근무 장소는 원격 프로젝트면 없는 것이 정상)
+  detailScope: string | null;
+  extraNote: string | null;
+  workLocation: string | null;
   requestedAt: string;
   expiresAt: string;
   respondedAt: string | null;
