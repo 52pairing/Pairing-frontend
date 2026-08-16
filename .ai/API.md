@@ -543,6 +543,7 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 ## 변경 이력
 
+- 2026-08-16: 협상 조건 응답의 `floorDirection(MAX|MIN|CHOICE|NONE)` 반영. 마지노선 표시·위반 판정·최종 절충 문구에서 서버 방향을 우선 사용하고 미응답 시 기존 로직 폴백. 실제 네트워크 응답 미검증
 - 2026-08-16: 클라이언트 계약 목록을 `tab=ALL&size=100` 전체 조회+클라 필터에서 **서버 탭 필터+페이지네이션**(`GET /api/v1/contracts?tab={tab}&page&size=10`)으로 전환. 백엔드 회신으로 클라이언트 탭(`AWAITING_ME`/`AWAITING_COUNTERPART`/`CONCLUDED`) 서버 필터 지원 확인. `AWAITING_ME`는 서버가 `DRAFT`·`REJECTED`를 제외해 기존보다 좁음(의도된 동작). 브라우저 응답은 미검증
 - 2026-08-11: 공통 401 refresh·1회 재시도·세션 종료 처리, 보호 경로 및 임시 비밀번호 가드 추가, 실제 응답 미검증
 - 2026-08-11: 마이페이지 비밀번호 변경과 약관 문서 조회 API 연결, 실제 응답 미검증
@@ -828,8 +829,11 @@ Step 3 화면 진입 시 아래 목록을 각각 1회 조회합니다.
 
 - 상세 `GET /{id}`: `negotiationId, projectId, projectTitle, positionId, counterpartName, viewerRole, waitingForMe, status, totalRound, maxRound, agreedAmount, chatRoomId, aiOutAt, finalApprovalRequired, conditions[]`
   - `title` 아님 → **`projectTitle`**. `viewerRole`(CLIENT|FREELANCER) 제공 → 역추정 불필요. `finalApprovalRequired` 미사용(항상 false).
-- `conditions[]`: `conditionId, type, clientValue, freelancerValue, proposedValue, reason, agreedValue, status, roundCount, myFloor`
+- `conditions[]`: `conditionId, type, clientValue, freelancerValue, proposedValue, reason, agreedValue, status, roundCount, myFloor, floorComparison, floorDirection`
   - 조건 종류 필드명은 **`type`** (요청 바디의 `conditionType` 과 다름). 값 필드는 **전부 문자열**.
+  - (2026-08-16 추가) `floorDirection: "MAX" | "MIN" | "CHOICE" | "NONE" | null` — 뷰어 본인의 마지노선 방향. 화면의 이상/이하 문구와 마지노선 위반 판정은 이 값을 우선 사용한다.
+  - `START_DATE`는 역할과 관계없이 `MAX`이며 `늦어도 {날짜}까지 시작해야 합니다`로 표시한다.
+  - 백엔드 배포 시점 차이로 `floorDirection`이 없거나 null이면 기존 `floorComparison`과 역할 기반 판정으로 폴백한다. `floorComparison`은 하위 호환을 위해 유지한다.
 - `conditionType` 코드: `AMOUNT`(월 단가·원), `PERIOD`("4 MONTH"), `START_DATE`("2026-09-01"), `WORK_STYLE`(REMOTE/ONSITE/ANY), `WORK_FORM`(FULL_TIME/PART_TIME/ANY), `SCOPE`, `OTHER`.
 - **값 라벨은 하드코딩 금지 → meta API 사용**: `GET /api/v1/meta/work-conditions`(비로그인 가능) 의 `workStyles/workForms/periodUnits`({code,label}) 로 해결. 서비스 `getWorkConditionsMeta`, 유틸 `formatConditionValue(type, value, labels)`. (조건 "종류" 라벨 AMOUNT="단가(월)" 등은 협상 고유 개념이라 `CONDITION_LABEL` 로 관리)
 - (2026-08-13 추가) `endReason: string | null` — `frontend-matching-negotiation-guide.md` 3.12 기준으로 타입에 추가. `status === "FAILED"`일 때만 값이 있고 타결(`AGREED`)이면 `null`. 사용자가 직접 쓴 문장이 그대로 오므로 화면엔 텍스트 자식으로만 렌더링(`NegotiationResultCard`의 `summary`), `dangerouslySetInnerHTML` 금지. **실제 응답에 이 필드가 내려오는지는 미검증** — 안 내려오면 `undefined`로 와서 카드가 기존 고정 문구로 자연스럽게 폴백한다.

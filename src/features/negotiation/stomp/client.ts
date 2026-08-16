@@ -36,6 +36,18 @@ const connectListeners = new Set<() => void>();
 
 let client: Client | null = null;
 
+const NORMAL_SESSION_CLOSE_MESSAGES = new Set(["session closed", "session closed."]);
+
+/**
+ * 이미 닫힌 소켓에서 뒤늦게 도착한 종료 ERROR 프레임은 연결 실패가 아니다.
+ * 실제 브로커 오류만 error로 남겨 개발 오류 오버레이와 운영 진단을 구분한다.
+ */
+export const reportStompError = (message?: string): void => {
+  const normalized = message?.trim().toLowerCase() ?? "";
+  if (NORMAL_SESSION_CLOSE_MESSAGES.has(normalized)) return;
+  console.error("[STOMP] broker error", message || "Unknown broker error");
+};
+
 const attachAllSubscriptions = (activeClient: Client) => {
   registrations.forEach((registration) => {
     registration.subscription = activeClient.subscribe(
@@ -66,7 +78,7 @@ export const getStompClient = (): Client => {
       console.warn("[STOMP] socket closed", event?.code);
     },
     onStompError: (frame) => {
-      console.error("[STOMP] broker error", frame?.headers?.["message"]);
+      reportStompError(frame?.headers?.["message"]);
     },
   });
 

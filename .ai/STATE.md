@@ -1,5 +1,24 @@
 # STATE
 
+## 현재 작업 (2026-08-16 — 협상 마지노선 방향 반영)
+
+- 작업명: `floorDirection` 기반 협상 마지노선 표시·위반 판정 및 시작일 문구 수정
+- 기준 문서: `C:/Users/user/Downloads/frontend-floor-direction-0816.md`
+- 관련 Issue: #222
+- 관련 브랜치: `fix/common-negotiation#222`
+- 진행 상황: 완료
+  - 협상 조건 타입에 optional/null 허용 `floorDirection(MAX|MIN|CHOICE|NONE)` 추가
+  - 서버 방향을 우선하고 미응답 시 기존 `floorComparison`·역할 판정으로 폴백
+  - 시작일 MAX를 역할과 관계없이 `늦어도 {날짜}까지 시작해야 합니다`로 표시
+  - 최초 입력·재지시 라벨, 마지노선 위반 판정·확인 모달, 최종 절충 문구에 공용 방향 판정 적용
+  - 이미 닫힌 STOMP 세션의 `Session closed.` 종료 프레임은 오류 오버레이를 띄우지 않도록 제외하고 실제 브로커 오류 로깅은 유지
+- API 변경: 신규 응답 필드 사용, 요청 변경 없음
+- 검증: 협상·STOMP 관련 테스트, 변경 파일 ESLint, TypeScript, 프로덕션 빌드, `git diff --check` 통과
+- 전체 Jest: 39 suites/203 tests 통과, 1 suite/5 tests 실패 — 기존 `FreelancerProfile.test.tsx`의 `useRouter` mock 누락으로 App Router 미마운트 오류(이번 변경 파일과 무관)
+- 실제 API·브라우저: 백엔드 `floorDirection` 응답과 역할별 협상 화면은 미검증
+
+---
+
 ## 현재 작업 (2026-08-16 — 계약·결제·추천 후보 상태 표시 오류 수정)
 
 - 작업명: 계약서 PDF 다운로드 게이팅, 성공보수 결제 완료 카드, 착수금 결제 전 추천 후보 안내 수정
