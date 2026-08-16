@@ -11,6 +11,23 @@ import type {
 
 const FREELANCER_BASE = "/api/v1/freelancers/me";
 
+/**
+ * 정적 메타(/api/v1/meta/*)는 세션 동안 값이 바뀌지 않으므로 최초 조회 결과(프로미스)를
+ * 캐시해, 이력서 화면 재진입마다 반복 호출되는 것을 막는다. 실패 시 캐시를 비워 재시도 가능.
+ */
+const cacheOnce = <T>(fetcher: () => Promise<T>): (() => Promise<T>) => {
+  let cached: Promise<T> | null = null;
+  return () => {
+    if (!cached) {
+      cached = fetcher().catch((error) => {
+        cached = null;
+        throw error;
+      });
+    }
+    return cached;
+  };
+};
+
 export const getFreelancerCondition = () =>
   apiCall<FreelancerCondition>(`${FREELANCER_BASE}/condition`).then((condition) => ({
     ...condition,
@@ -62,20 +79,24 @@ export const updateFreelancerResumeDraft = (payload: unknown) =>
     body: JSON.stringify({ payload }),
   });
 
-export const getFreelancerJobCategories = () =>
-  apiCall<MetaOption[] | null>("/api/v1/meta/job-categories").then((items) => items ?? []);
+export const getFreelancerJobCategories = cacheOnce(() =>
+  apiCall<MetaOption[] | null>("/api/v1/meta/job-categories").then((items) => items ?? []),
+);
 
-export const getFreelancerJobRoles = () =>
-  apiCall<MetaOption[] | null>("/api/v1/meta/job-roles").then((items) => items ?? []);
+export const getFreelancerJobRoles = cacheOnce(() =>
+  apiCall<MetaOption[] | null>("/api/v1/meta/job-roles").then((items) => items ?? []),
+);
 
-export const getFreelancerSkills = () =>
-  apiCall<MetaOption[] | null>("/api/v1/meta/skills").then((items) => items ?? []);
+export const getFreelancerSkills = cacheOnce(() =>
+  apiCall<MetaOption[] | null>("/api/v1/meta/skills").then((items) => items ?? []),
+);
 
-export const getFreelancerWorkConditions = () =>
+export const getFreelancerWorkConditions = cacheOnce(() =>
   apiCall<WorkConditionsMeta>("/api/v1/meta/work-conditions").then((conditions) => ({
     workStyles: conditions.workStyles ?? [],
     workForms: conditions.workForms ?? [],
     payUnits: conditions.payUnits ?? [],
     periodUnits: conditions.periodUnits ?? [],
     skillLevels: conditions.skillLevels ?? [],
-  }));
+  })),
+);
