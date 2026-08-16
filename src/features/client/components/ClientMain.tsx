@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
 import { useCurrentUserState } from "@/features/auth/hooks/useCurrentUser";
 import type { CurrentUserResponse } from "@/features/auth/types";
 import { StepArrow, StepCheckIcon } from "@/features/common/components/SharedUI";
+import { getClientMyGrade } from "@/features/client/mypage/services/grade";
+import type { ClientMyGradeResponse } from "@/features/client/mypage/types/grade";
 
 interface ClientMainProps {
   initialUser?: CurrentUserResponse | null;
@@ -11,6 +15,21 @@ interface ClientMainProps {
 
 export function ClientMain({ initialUser = null }: ClientMainProps) {
   const { user, isLoading } = useCurrentUserState(initialUser);
+  const [grade, setGrade] = useState<ClientMyGradeResponse | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getClientMyGrade()
+      .then((result) => {
+        if (!cancelled) setGrade(result);
+      })
+      .catch(() => {
+        // 등급 배지는 부가 정보라 조회 실패해도 히어로 화면 자체는 그대로 보여준다.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main
@@ -23,9 +42,11 @@ export function ClientMain({ initialUser = null }: ClientMainProps) {
       {/* 상단 히어로 영역 */}
       <section className="bg-gradient-to-br from-[#183b5f] via-[#28557f] to-[#386b99]">
         <div className="mx-auto flex min-h-[400px] max-w-[1080px] flex-col justify-center px-5 py-16 sm:px-8">
-          <div className="mb-5 w-fit rounded-full bg-[#4678a6] px-4 py-1.5 text-xs font-bold text-white">
-            골드 등급
-          </div>
+          {grade ? (
+            <div className="mb-5 w-fit rounded-full bg-[#4678a6] px-4 py-1.5 text-xs font-bold text-white">
+              {grade.label} 등급
+            </div>
+          ) : null}
 
           <h1 className="text-4xl font-extrabold leading-[1.3] tracking-[-0.04em] text-white sm:text-[44px]">
             {isLoading ? (
@@ -49,19 +70,19 @@ export function ClientMain({ initialUser = null }: ClientMainProps) {
           </p>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="h-12 rounded-lg bg-[#1d466d] px-7 text-sm font-bold text-white shadow-sm transition hover:bg-[#173a5b]"
+            <Link
+              href="/client/projects/new"
+              className="flex h-12 items-center rounded-lg bg-[#1d466d] px-7 text-sm font-bold text-white shadow-sm transition hover:bg-[#173a5b]"
             >
               프로젝트 등록하기
-            </button>
+            </Link>
 
-            <button
-              type="button"
-              className="h-12 rounded-lg border border-white/10 bg-surface/10 px-7 text-sm font-semibold text-white transition hover:bg-surface/15"
+            <Link
+              href="/client/projects"
+              className="flex h-12 items-center rounded-lg border border-white/10 bg-surface/10 px-7 text-sm font-semibold text-white transition hover:bg-surface/15"
             >
               내 프로젝트 보기
-            </button>
+            </Link>
           </div>
         </div>
       </section>

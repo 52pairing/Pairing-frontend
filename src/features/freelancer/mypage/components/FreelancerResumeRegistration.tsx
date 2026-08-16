@@ -85,7 +85,7 @@ type CertificateForm = {
   score: string;
   note: string;
 };
-type LinkForm = { type: string; url: string };
+type LinkForm = { url: string };
 type Agreements = {
   profileCollectionAgreed: boolean;
   profileProvisionAgreed: boolean;
@@ -326,7 +326,7 @@ function mapApiToDraft(resume: ResumeDetailBody): ResumeDraft {
       score: certificate.score ?? "",
       note: certificate.note ?? "",
     })),
-    links: resume.links.map((link, index) => ({ type: `링크 ${index + 1}`, url: link.url })),
+    links: resume.links.map((link) => ({ url: link.url })),
     agreements: { ...resume.agreements },
   };
 }
@@ -375,8 +375,7 @@ export function FreelancerResumeRegistration() {
   const [profileImageUploading, setProfileImageUploading] = useState(false);
   const [portfolioUploading, setPortfolioUploading] = useState(false);
   const [linkError, setLinkError] = useState("");
-  const [githubInput, setGithubInput] = useState("");
-  const [notionInput, setNotionInput] = useState("");
+  const [linkInput, setLinkInput] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
@@ -472,13 +471,17 @@ export function FreelancerResumeRegistration() {
       certificates: current.certificates.map((item) => (item.id === id ? { ...item, ...patch } : item)),
     }));
 
-  const addLink = (type: string, url: string, clear: () => void) => {
+  const addLink = (url: string, clear: () => void) => {
     const normalized = url.trim();
     if (!/^https?:\/\//i.test(normalized)) {
       setLinkError("http:// 또는 https://로 시작하는 링크를 입력해 주세요.");
       return;
     }
-    update("links", [...draft.links.filter((link) => link.type !== type), { type, url: normalized }]);
+    if (draft.links.some((link) => link.url === normalized)) {
+      setLinkError("이미 추가된 링크입니다.");
+      return;
+    }
+    update("links", [...draft.links, { url: normalized }]);
     setLinkError("");
     clear();
   };
@@ -491,8 +494,7 @@ export function FreelancerResumeRegistration() {
     () =>
       skillOptions
         .filter((skill) => !conditionForm.skills.some((selected) => selected.code === skill.code))
-        .filter((skill) => skill.label.toLowerCase().includes(skillSearch.toLowerCase()))
-        .slice(0, skillSearch ? skillOptions.length : 12),
+        .filter((skill) => skill.label.toLowerCase().includes(skillSearch.toLowerCase())),
     [conditionForm.skills, skillSearch, skillOptions],
   );
   const toggleSkill = (option: MetaOption) =>
@@ -903,14 +905,14 @@ export function FreelancerResumeRegistration() {
           <div className="mt-4">
             <p className="text-[11px] font-semibold text-theme-secondary">최저 수용 금액</p>
             <p className="mt-1 text-[10px] text-theme-muted">
-              협상 시 수용 가능한 최소 금액입니다. 선택 입력이며 비우면 희망 급여를 기준으로 협상합니다.
+              협상 시 수용 가능한 최소 금액입니다. 만원 단위로 입력해 주세요. 선택 입력이며 비우면 희망 급여를 기준으로 협상합니다.
             </p>
             <input
               value={conditionForm.minPay}
               onChange={(event) => setConditionForm((current) => ({ ...current, minPay: formatNumber(event.target.value) }))}
               inputMode="numeric"
               className={`${fieldClassName} mt-2`}
-              placeholder="선택 입력"
+              placeholder="만원 단위로 입력"
             />
           </div>
 
@@ -1001,19 +1003,26 @@ export function FreelancerResumeRegistration() {
               className={`${fieldClassName} mt-2`}
               placeholder="스킬 검색"
             />
-            <div className="mt-3 flex max-h-40 flex-wrap gap-2 overflow-y-auto">
+            <select
+              value=""
+              onChange={(event) => {
+                const code = event.target.value;
+                if (!code) return;
+                const option = filteredSkills.find((skill) => skill.code === code);
+                if (option) toggleSkill(option);
+              }}
+              disabled={filteredSkills.length === 0}
+              className={`${fieldClassName} mt-3`}
+            >
+              <option value="">
+                {filteredSkills.length === 0 ? "검색 결과가 없습니다" : "스킬 선택"}
+              </option>
               {filteredSkills.map((skill) => (
-                <button
-                  key={skill.code}
-                  type="button"
-                  onClick={() => toggleSkill(skill)}
-                  aria-pressed={false}
-                  className="rounded-full border border-theme-strong px-3 py-1.5 text-[10px] font-bold"
-                >
+                <option key={skill.code} value={skill.code}>
                   {skill.label}
-                </button>
+                </option>
               ))}
-            </div>
+            </select>
             <div className="mt-4 space-y-2">
               {conditionForm.skills.map((skill) => (
                 <div
@@ -1380,36 +1389,21 @@ export function FreelancerResumeRegistration() {
         </div>
 
         <FormCard>
-          <CardTitle optional>GitHub</CardTitle>
-          <div className="mt-3 flex gap-2 mb-5">
-            <input
-              value={githubInput}
-              onChange={(event) => setGithubInput(event.target.value)}
-              className={fieldClassName}
-              placeholder="https://"
-              type="url"
-            />
-            <button
-              type="button"
-              onClick={() => addLink("GitHub", githubInput, () => setGithubInput(""))}
-              className="mt-2 shrink-0 rounded-md bg-brand px-4 text-[11px] font-bold text-brand-contrast"
-            >
-              링크 추가
-            </button>
-          </div>
-
-          <CardTitle optional>Notion</CardTitle>
+          <CardTitle optional>외부 링크</CardTitle>
+          <p className="mt-1 text-[10px] text-theme-muted">
+            GitHub, Notion, 블로그 등 원하는 링크를 자유롭게 추가해 주세요.
+          </p>
           <div className="mt-3 flex gap-2">
             <input
-              value={notionInput}
-              onChange={(event) => setNotionInput(event.target.value)}
+              value={linkInput}
+              onChange={(event) => setLinkInput(event.target.value)}
               className={fieldClassName}
               placeholder="https://"
               type="url"
             />
             <button
               type="button"
-              onClick={() => addLink("Notion", notionInput, () => setNotionInput(""))}
+              onClick={() => addLink(linkInput, () => setLinkInput(""))}
               className="mt-2 shrink-0 rounded-md bg-brand px-4 text-[11px] font-bold text-brand-contrast"
             >
               링크 추가
@@ -1419,14 +1413,13 @@ export function FreelancerResumeRegistration() {
           {draft.links.length ? (
             <ul className="mt-4 space-y-2">
               {draft.links.map((link) => (
-                <li key={link.type} className="flex items-center gap-3 rounded-md border border-theme bg-surface-subtle px-3 py-2 text-[10px]">
-                  <span className="shrink-0 font-bold text-brand">{link.type}</span>
+                <li key={link.url} className="flex items-center gap-3 rounded-md border border-theme bg-surface-subtle px-3 py-2 text-[10px]">
                   <a href={link.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-theme-secondary underline">
                     {link.url}
                   </a>
                   <button
                     type="button"
-                    onClick={() => update("links", draft.links.filter((item) => item.type !== link.type))}
+                    onClick={() => update("links", draft.links.filter((item) => item.url !== link.url))}
                     className="text-theme-danger"
                   >
                     삭제
@@ -1641,7 +1634,7 @@ function ReviewScreen({
         ))}
         <ReviewCard
           title="포트폴리오 · 링크"
-          rows={[["파일", draft.portfolioName], ...draft.links.map((link) => [link.type, link.url])]}
+          rows={[["파일", draft.portfolioName], ...draft.links.map((link, index) => [`링크 ${index + 1}`, link.url])]}
         />
       </div>
     </ProfileRegistrationShell>

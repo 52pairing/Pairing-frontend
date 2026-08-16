@@ -34,8 +34,8 @@ export function ProfileMenu({
     } catch {
       // 서버 로그아웃 실패와 관계없이 아래에서 로그인 화면으로 이동합니다.
     } finally {
-      // 로그아웃 API가 실패해도 인증 화면으로 이동해 프론트 흐름을 초기화합니다.
-      window.location.replace("/login");
+      // 로그아웃 API가 실패해도 비로그인 메인으로 이동해 프론트 흐름을 초기화합니다.
+      window.location.replace("/");
     }
   };
 
