@@ -1,5 +1,48 @@
 # WORKLOG
 
+## 2026-08-17 — 이력서 화면 렌더링·최적화 진단 후속 조치 (auth/freelancer/matching 대상)
+
+- 배경: 커밋 작성자 기준(`git log --format='%an'`)으로 담당 영역을 확인한 결과 `auth`·`freelancer`·`matching`이 본인(als-wl) 담당으로 확인되어, 이 세 영역만 대상으로 진단 에이전트를 돌려 우선순위 목록을 뽑았습니다. `negotiation`·`contract`·`chat`·`support`·`payment`·`client/projects`·`client/myprojects`는 팀원(jia40) 담당으로 확인되어 제외했습니다(이미 만졌던 negotiation 재렌더 수정 1건은 되돌림).
+- **정적 메타 API 캐싱 누락 수정**: `freelancerResume.ts`의 `getFreelancerJobCategories`/`getFreelancerJobRoles`/`getFreelancerSkills`/`getFreelancerWorkConditions`가 `client/projects/services/projectPreReview.ts`(팀원 파일)와 동일한 엔드포인트를 호출하면서도 캐싱이 안 돼 있어, 이력서 화면 재진입마다 반복 요청되던 것을 확인했습니다. 같은 `cacheOnce` 패턴을 이 파일에도 복제 적용(팀원 파일 import 대신 자체 구현 유지).
+  - 검증: 신규 `unit-tests/freelancer/mypage/freelancerResumeCache.test.ts` 2개(캐시 1회 호출 증명, 실패 시 캐시 초기화 증명) 통과. `tsc`·ESLint·`npm run build` 통과.
+- **`FreelancerResumeRegistration.tsx` 구조 리팩터링(동작 변경 없음)**: 2503줄짜리 파일에서 메인 컴포넌트 함수가 약 1500줄로 렌더링·비즈니스 로직·매핑이 혼재돼 있던 것을 4개 파일로 분리했습니다.
+  - 신규 `utils/resumeFormData.ts`(421줄): `ResumeDraft`/`EducationForm`/`ConditionForm` 등 타입, `mapApiToDraft`/`buildConditionPayload`/`buildResumePayload` 등 순수 매핑·검증 함수. 컴포넌트 내부 클로저였던 `buildPayload()`는 `buildResumePayload(draft, conditionForm, effectiveEmail)` 순수 함수로 전환.
+  - 신규 `ResumeFormControls.tsx`(252줄): `Field`/`CompactField`/`ConditionChoice`/`YearMonthSelect` 등 재사용 폼 부품.
+  - 신규 `ResumeReviewScreen.tsx`(356줄): `ReviewScreen`/`CompleteScreen`(조회·완료 화면).
+  - `FreelancerResumeRegistration.tsx`: 2503 → 1541줄. 로직은 그대로 옮기기만 하고 변경하지 않음.
+  - 검증: `tsc --noEmit` 통과, ESLint 새 경고/에러 0건(기존부터 있던 무관 경고 1건만 유지), `npm run build` 통과, 관련 Jest 8 suites/44 tests 중 39 통과·5 실패는 전부 무관한 `FreelancerProfile.test.tsx`(기존 baseline 실패, 이 변경과 무관 — 다수 기존 WORKLOG 항목에 이미 기록됨).
+- 부수 발견(미수정, 범위 밖): `skillSearch`/`setSkillSearch` 상태가 현재 어디서도 호출되지 않음 — 이전 세션에 스킬 선택 UI를 버튼 목록에서 드롭다운으로 바꾸며 검색창을 제거했는데 상태만 남은 것으로 추정. 리팩터링 범위 밖이라 그대로 둠.
+- 실제 로그인 세션 기반 브라우저 확인: 미실행(테스트 계정 없음).
+
+## 2026-08-16 — 결제 모듈 목업 데이터 제거 및 레거시 화면 정리 (#218)
+
+- `PaymentMethodModal`이 정산(`settlementId`) 기반 결제(착수금·성공보수)에서는 실제 등록 카드를 보여주면서도, `settlementId`가 없는 호출(유료 재추천)에서는 하드코딩된 가짜 카드("신한카드 1234-****-****-5678")를 보여주던 것을 확인해, 두 경로 모두 `getMyPaymentMethods()`로 실제 등록된 카드를 조회하도록 통일했습니다. 카드가 없으면 결제 버튼을 비활성화합니다.
+- `settlementId`가 없는 경로(유료 재추천)는 실제 PG 연동이 아닌 시뮬레이션이라, 선택한 카드를 서버로 전달하는 필드는 필요 없다고 확인했습니다(사용자 확인).
+- 참조가 끊긴 레거시 성공보수 결제 화면(`/client/projects/{projectId}/success-fee` 및 전용 컴포넌트 `SuccessFeePayment`/`SuccessFeePaymentModal`/`PaymentMethodCard`, 목업 데이터 `mockPaymentMethods.ts`)을 grep으로 다른 참조 없음을 확인한 뒤 삭제했습니다. 실제 성공보수 결제는 `ClientProjectDetail` 내 실 연동 모달로 이미 대체되어 있었습니다.
+- 연쇄적으로 안 쓰이게 된 타입 `PaymentMethod`, `SuccessFeePaymentSummary`도 정리했습니다.
+- 검증: 변경 파일 TypeScript, ESLint, `npm run build` 통과(삭제된 라우트 타입 재생성 확인). 기존 결제 플로우 관련 Jest 3 suites/15 tests 통과(회귀 없음).
+- 실제 화면: 로그인 세션에서 실제 등록 카드가 뜨는지는 브라우저로 직접 확인하지 못했습니다.
+
+## 2026-08-16 — 마이페이지·매칭 화면 다건 버그 수정 (#216)
+
+- 추천 후보 로딩 화면에 스피너가 없던 것을 다른 로딩 화면과 통일했습니다.
+- 로그인 세션 만료 시 안내 모달 없이 곧장 로그인 화면으로 이동하던 문제를 수정했습니다. `AuthSessionGuard`의 인증 확인 실패 처리가 "다른 기기 로그인"만 모달로 분기하고 세션 만료는 무조건 즉시 리다이렉트하고 있어, 세션 만료 모달(`SessionExpiredModal`)이 뜰 기회가 없었습니다. `GLOBAL_010`도 모달로 분기하도록 수정하고, 모달 확인 시 이동 경로에 `returnUrl`을 유지했습니다.
+- 로그아웃 이동 경로를 `/login`에서 `/`(비로그인 메인)로 변경했습니다.
+- 클라이언트 메인페이지의 "프로젝트 등록하기"/"내 프로젝트 보기" 버튼이 `onClick`/`href` 없이 장식만 있던 것을 확인해 각각 `/client/projects/new`, `/client/projects`로 연결했습니다.
+- 추천 후보 "프로필" 클릭 시 항상 404가 나던 원인을 확인했습니다. 실제 후보 상세 화면이 API 연동 없이 하드코딩된 더미 후보 3명(`constants/recommendedCandidates.ts`)에서만 조회하고 있었습니다. `GET /api/v1/matchings/candidates/{candidateId}/profile`(Swagger로 확인된 실제 엔드포인트)로 재연동하고, 더미 데이터 파일을 삭제했습니다.
+  - Swagger 예시의 배열 필드명(`condition.ConditionSkillResponse`, `resume.ResumeEducationResponse`/`ResumeCareerResponse`/`ResumeCertificateResponse`)이 실제 응답과 달라(실제는 `condition.skills`, `resume.educations`/`careers`/`certificates` 카멜케이스) 한 차례 "보유기술이 안 나온다"는 버그로 재발했고, 실제 로그인 세션 응답으로 확인 후 필드명을 고쳤습니다.
+  - 연락처(전화번호·이메일·주소·생년월일)는 응답에 포함되지만 매칭 요청 전 단계 화면이라 화면에는 표시하지 않았습니다(기존 "연락처 정보는 매칭 및 계약이 완료된 후 확인할 수 있습니다" 문구와 일관).
+- 프리랜서 이력서의 "최저 수용 금액"에 "만원 단위" 안내가 빠져 있어 희망 급여와 동일하게 추가했습니다.
+- (백엔드 요청) 보유 스킬 검색 결과를 동그란 버튼 목록에서 `<select>` 드롭다운으로 변경했습니다. 이 과정에서 구 버튼 목록 시절 남아있던 12개 노출 제한(`slice`)이 드롭다운에도 그대로 적용되어 있던 것을 발견해 제거했습니다.
+- (백엔드 요청) 이력서 외부 링크를 GitHub/Notion 고정 분야(각 1개)에서 분야 구분 없는 자유 URL 다건 입력으로 변경했습니다.
+- 클라이언트 메인 등급 배지가 실제 등급과 무관하게 "골드 등급"으로 하드코딩돼 있던 것을 확인해, 마이페이지와 동일하게 `getClientMyGrade()` 실 조회로 교체했습니다. 조회 전/실패 시에는 배지를 숨깁니다(프리랜서 메인의 동일 패턴은 이미 다른 작업에서 고쳐져 있었음을 확인).
+- 검증: 변경 파일 TypeScript, ESLint, `npm run build` 통과. 관련 Jest 일부 재실행(회귀 없음).
+- 실제 화면: 대부분 로그인 세션이 필요해 브라우저로 직접 확인하지 못했습니다.
+- 백엔드 확인 요청 3건(별도 전달 필요):
+  1. 회원 탈퇴 `GET /accounts/me/withdrawal-eligibility` 응답의 `blockers[].linkUrl`이 실제 존재하는 라우트가 아님(`/negotiations` 등 ID 없는 경로) — 클릭 시 404
+  2. 매칭 후보 프로필 API Swagger 예시의 배열 필드명 오류(문서만 수정 필요, 위 항목 참고)
+  3. 매칭 후보 프로필 응답의 연락처 정보 노출이 의도된 정책인지 확인 필요
+
 ## 2026-08-16 — ECS 프로덕션 런타임 의존성 오류 수정 (#212)
 
 - `next start`가 런타임에 로드하는 `next.config.ts`의 정적 import를 보장하기 위해 `@next/bundle-analyzer`를 `devDependencies`에서 `dependencies`로 이동

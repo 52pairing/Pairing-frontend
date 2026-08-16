@@ -1,5 +1,32 @@
 # STATE
 
+## 현재 작업 (2026-08-17 — auth/freelancer/matching 렌더링·최적화 진단 후속)
+
+- 작업명: 담당 영역(auth/freelancer/matching) 한정 진단 후 정적 메타 캐싱 누락 수정 + `FreelancerResumeRegistration.tsx` 4개 파일 구조 분리
+- 관련 Issue: #224
+- 관련 브랜치: `refactor/freelancer-resume-cleanup#224`
+- 진행 상황: 코드 변경 완료, `git add`까지 완료. 커밋·push·PR 전 상태
+- 변경 파일: `freelancerResume.ts`(캐싱), `FreelancerResumeRegistration.tsx`(축소), 신규 `utils/resumeFormData.ts`·`ResumeFormControls.tsx`·`ResumeReviewScreen.tsx`·`freelancerResumeCache.test.ts`
+- 검증: `tsc --noEmit`·ESLint·`npm run build` 통과, 관련 Jest 통과(무관 baseline 실패 5건 제외)
+- 실제 로그인 세션 기반 브라우저 확인: 미실행
+- 남은 작업: commit → push → PR
+- 상세 내용: `.ai/WORKLOG.md` 참고
+
+---
+
+## 현재 작업 (2026-08-16 — 마이페이지·매칭·결제 화면 다건 버그 수정)
+
+- 작업명: 세션 만료 모달·로그아웃 경로·클라이언트 메인 미연결 버튼·등급 배지·추천 후보 프로필 404·이력서 UX 3건·결제 모듈 목업 데이터 제거 등 다건 수정
+- 관련 Issue: #216, #218
+- 관련 브랜치: `fix/common-mypage#216`, `fix/common-payment-mockdata#218`
+- 진행 상황: 완료 — 두 브랜치 모두 커밋·push·PR 리뷰·`develop` 병합까지 완료
+- 검증: 각 변경 파일 TypeScript·ESLint·`npm run build` 통과, 관련 Jest 일부 재실행(회귀 없음)
+- 실제 로그인 세션 기반 브라우저 확인: 대부분 미실행(테스트 계정 없음)
+- 상세 내용: `.ai/WORKLOG.md` 참고
+- 남은 작업: 백엔드 확인 요청 3건 전달 필요
+  1. 회원 탈퇴 `blockers[].linkUrl`이 실제 라우트와 안 맞음(`/negotiations` 등)
+  2. 매칭 후보 프로필 API Swagger 예시 배열 필드명 오류(문서만 수정)
+  3. 매칭 후보 프로필 응답의 연락처 정보 노출 정책 확인
 ## 현재 작업 (2026-08-16 — 협상 마지노선 방향 반영)
 
 - 작업명: `floorDirection` 기반 협상 마지노선 표시·위반 판정 및 시작일 문구 수정
