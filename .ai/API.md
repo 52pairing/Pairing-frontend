@@ -1,5 +1,16 @@
 # API
 
+## 매칭 요청 상세 프로젝트 정보 7종 추가 (2026-08-15)
+
+- `GET /api/v1/matchings/requests/{requestId}`(상세 조회) 응답에 프로젝트 상세 항목 7종이 추가됐습니다: `currentSituation`(진행 상황), `startNegotiable`(시작일 협의 가능 여부), `periodValue`/`periodUnit`(예상 기간), `totalHeadcount`(전체 모집 인원), `detailScope`(세부 업무 범위), `extraNote`(우대사항), `workLocation`(근무 장소).
+- 받은/보낸 요청 목록(`GET /matchings/requests`, `/requests/received`)에서는 기존 `mainTask`와 같은 방식으로 이 7종이 모두 `null`로 옵니다. 상세 조회에서만 값이 채워집니다.
+- `detailScope`/`extraNote`/`workLocation` 3개는 프로젝트 등록 시 선택 입력이라 상세 조회에서도 비어(`null`) 있을 수 있습니다. `workLocation`은 원격 프로젝트면 없는 것이 정상이라 화면에서는 근무 방식이 재택이 아닐 때만 표시합니다.
+- 후보 카드(`GET /matchings/positions/{positionId}/candidates`)의 `payAmount`/`payUnit`이 추천 시점 값으로 고정되어 프로필 상세와의 단가 불일치가 해소됨(프론트는 API 응답을 그대로 표시하므로 코드 변경 없음). 평점·리뷰수·등급·이름은 계속 최신 값입니다.
+- 프론트 반영: [`FreelancerProjectDetail.tsx`](../src/features/freelancer/myprojects/components/FreelancerProjectDetail.tsx), [`ClientMatchingRequestDetail.tsx`](../src/features/matching/components/ClientMatchingRequestDetail.tsx)에 7종 표시 추가, 수락/거절 응답(목록 모양)으로 상세 전용 값이 덮이지 않도록 이전 값 보존 로직(`withPreservedDetailFields`) 추가.
+- 실제 로그인 세션 기반 응답: 미검증(테스트 계정 없음).
+
+---
+
 ## 계약·프로젝트 버그 수정 (2026-08-15)
 
 - 프리랜서 내 계약의 `서명 대기` 탭은 목록·탭 건수 조회에 `tab=SIGNING`을 사용

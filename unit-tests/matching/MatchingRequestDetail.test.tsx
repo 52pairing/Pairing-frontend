@@ -30,14 +30,22 @@ const detail: MatchingRequestResponse = {
   status: "REQUEST_PENDING", budgetAmount: 6000000, mainTask: "상품 화면과 주문 기능을 개발합니다.",
   requestedAt: "2026-08-10T10:00:00", expiresAt: "2026-08-13T10:00:00", respondedAt: null,
   rejectReason: null, currentRound: null, maxRound: null, newProposalCount: null, negotiationId: null,
+  currentSituation: "MVP 개발 중입니다.", startNegotiable: false, periodValue: 4, periodUnit: "MONTH",
+  totalHeadcount: 3, detailScope: "상품 상세, 장바구니, 주문 화면을 담당합니다.", extraNote: "React 경험 우대",
+  workLocation: null,
 };
+
+const DETAIL_ONLY_NULL_FIELDS = {
+  mainTask: null, currentSituation: null, startNegotiable: null, periodValue: null, periodUnit: null,
+  totalHeadcount: null, detailScope: null, extraNote: null, workLocation: null,
+} as const;
 
 describe("MatchingRequestDetail", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedDetail.mockResolvedValue(detail);
-    mockedAccept.mockResolvedValue({ ...detail, status: "NEGOTIATING", negotiationId: 88, mainTask: null });
-    mockedReject.mockResolvedValue({ ...detail, status: "REJECTED", rejectReason: "DIRECT_REJECT", mainTask: null });
+    mockedAccept.mockResolvedValue({ ...detail, status: "NEGOTIATING", negotiationId: 88, ...DETAIL_ONLY_NULL_FIELDS });
+    mockedReject.mockResolvedValue({ ...detail, status: "REJECTED", rejectReason: "DIRECT_REJECT", ...DETAIL_ONLY_NULL_FIELDS });
   });
 
   it("클라이언트 상세에서 requestId로 조회하고 상대 이름과 mainTask를 표시한다", async () => {

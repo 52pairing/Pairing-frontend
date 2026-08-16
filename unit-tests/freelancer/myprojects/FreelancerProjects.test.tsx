@@ -34,6 +34,8 @@ const request: MatchingRequestResponse = {
   status: "REQUEST_PENDING", budgetAmount: 6000000, mainTask: null, requestedAt: "2026-08-10T10:00:00",
   expiresAt: "2099-08-13T10:00:00", respondedAt: null, rejectReason: null, currentRound: null, maxRound: null,
   newProposalCount: null, negotiationId: null,
+  currentSituation: null, startNegotiable: null, periodValue: null, periodUnit: null, totalHeadcount: null,
+  detailScope: null, extraNote: null, workLocation: null,
 };
 
 const pageResponse = (page: number): PageResponse<MatchingRequestResponse> => ({ content: [{ ...request, requestId: 31 + page, projectTitle: page ? "두 번째 프로젝트" : request.projectTitle }], page, size: 10, totalElements: 11, totalPages: 2, first: page === 0, last: page === 1 });
