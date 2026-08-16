@@ -11,6 +11,7 @@ import type {
   ContractSignature,
 } from "@/features/contract/types/contractDetail";
 import { formatContractDate, formatKrw } from "@/features/contract/utils/format";
+import { areBothPartiesSigned } from "@/features/contract/utils/signatures";
 import { ApiException } from "@/lib/api";
 
 interface ContractOverviewProps {
@@ -217,12 +218,6 @@ function getActionTitle(contract: ContractDetailResponse, mySignature?: Contract
   if (contract.status === "SIGN_PENDING" && mySignature?.status === "PENDING") return "위 계약 내용을 확인하고 서명해 주세요.";
   if (contract.status === "SIGN_PENDING") return "내 서명이 완료되었습니다. 상대방의 서명을 기다리고 있습니다.";
   return "계약 체결이 완료되었습니다.";
-}
-
-function areBothPartiesSigned(signatures: ContractSignature[]) {
-  return (["CLIENT", "FREELANCER"] as const).every((partyRole) =>
-    signatures.some((signature) => signature.partyRole === partyRole && signature.status === "SIGNED"),
-  );
 }
 
 function getContractErrorMessage(error: unknown, isPdf = false) {

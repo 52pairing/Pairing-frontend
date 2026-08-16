@@ -8,15 +8,16 @@ import { freelancerContract } from "./fixtures";
 
 describe("FreelancerContractCard", () => {
   test.each([
-    ["SIGN_PENDING", true, false, "sign"],
-    ["SIGN_PENDING", false, false, "none"],
-    ["SIGNED", false, false, "upfrontFee"],
-    ["SIGNED", false, true, "none"],
-    ["COMPLETION_PENDING", false, true, "successFee"],
-    ["COMPLETED", false, true, "review"],
-  ] as const)("%s 상태의 액션을 판정한다", (status, signatureRequired, depositPaid, expected) => {
+    ["SIGN_PENDING", true, false, null, "sign"],
+    ["SIGN_PENDING", false, false, null, "none"],
+    ["SIGNED", false, false, null, "upfrontFee"],
+    ["SIGNED", false, true, null, "none"],
+    ["COMPLETION_PENDING", false, true, 51, "successFee"],
+    ["COMPLETION_PENDING", false, true, null, "none"],
+    ["COMPLETED", false, true, null, "review"],
+  ] as const)("%s 상태의 액션을 판정한다", (status, signatureRequired, depositPaid, payableSettlementId, expected) => {
     expect(
-      getContractAction({ ...freelancerContract, status, signatureRequired, depositPaid }),
+      getContractAction({ ...freelancerContract, status, signatureRequired, depositPaid, payableSettlementId }),
     ).toBe(expected);
   });
 
@@ -40,5 +41,16 @@ describe("FreelancerContractCard", () => {
     expect(screen.getByText("작성 중")).toBeInTheDocument();
     expect(screen.getByText("계약 상세")).toHaveAttribute("aria-disabled", "true");
     expect(screen.queryByRole("link", { name: "계약서 확인 및 서명" })).not.toBeInTheDocument();
+  });
+
+  test("성공보수 결제 후에는 결제 버튼을 숨기고 클라이언트 결제 대기를 안내한다", () => {
+    render(
+      <FreelancerContractCard
+        contract={{ ...freelancerContract, status: "COMPLETION_PENDING", payableSettlementId: null }}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "성공보수 수수료 결제" })).not.toBeInTheDocument();
+    expect(screen.getByText("성공보수 수수료 결제가 완료되었습니다. 클라이언트 결제가 끝나면 계약이 종료됩니다.")).toBeInTheDocument();
   });
 });
