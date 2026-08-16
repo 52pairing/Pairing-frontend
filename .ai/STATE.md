@@ -1,5 +1,22 @@
 # STATE
 
+## 현재 작업 (2026-08-16 — 계약·결제·추천 후보 상태 표시 오류 수정)
+
+- 작업명: 계약서 PDF 다운로드 게이팅, 성공보수 결제 완료 카드, 착수금 결제 전 추천 후보 안내 수정
+- 기준 문서: `C:/Users/user/Downloads/frontend-contract-pdf-gate-2026-08-16.md`
+- 관련 Issue: #220
+- 관련 브랜치: `fix/common-contract#220`
+- 진행 상황: 완료
+  - 계약 PDF 다운로드는 클라이언트·프리랜서 양측 서명 완료 시에만 버튼과 실행을 허용하고, 서명 화면의 PDF 미리보기는 유지
+  - 성공보수 결제 액션은 `payableSettlementId`가 있을 때만 표시하고 결제 완료 후에는 클라이언트 결제 대기 문구 표시
+  - `DEPOSIT_PENDING`·`PAYMENT_FAILED` 프로젝트는 추천 후보 API를 호출하지 않고 착수금 결제 안내만 표시
+- API 변경: 없음 — 기존 `signatures`, `payableSettlementId`, `paymentStatus` 응답 사용
+- 검증: 변경 파일 ESLint 통과, 관련 Jest 5 suites/32 tests 통과, 프로덕션 빌드 통과, `git diff --check` 통과
+- 검증 중 조치: 삭제된 라우트를 참조하던 재생성 가능한 `.next/dev/types` 캐시를 제거한 뒤 빌드 재실행
+- 실제 API·브라우저: 로그인 테스트 계정이 없어 미검증
+
+---
+
 ## 현재 작업 (2026-08-16 — ECS 런타임 의존성 오류 수정)
 
 - 작업명: 프로덕션 runner에서 `next.config.ts` 로드에 필요한 `@next/bundle-analyzer` 의존성 복구

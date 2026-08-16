@@ -2739,6 +2739,19 @@
 - ESLint, TypeScript 검사, `git diff --check`를 통과했습니다.
 # WORKLOG
 
+## 2026-08-16 — 계약·결제·추천 후보 상태 표시 오류 수정
+
+- Issue #220, 브랜치 `fix/common-contract#220`
+- 계약 양측 서명 판정을 공용 유틸로 분리하고 계약 상세·서명 화면의 PDF 다운로드 조건을 동일하게 적용
+- 서명 전에도 필요한 PDF iframe 미리보기 요청과 렌더링은 유지
+- 프리랜서 성공보수 결제 버튼을 `payableSettlementId` 기준으로 노출하고 결제 완료 후 클라이언트 결제 대기 안내 표시
+- 클라이언트 프로젝트의 `paymentStatus`를 추천 후보 컴포넌트에 전달하고 `DEPOSIT_PENDING`·`PAYMENT_FAILED`에서는 후보 조회와 스피너 대신 결제 안내 표시
+- API 변경 없음
+- 검증: 변경 파일 ESLint, 관련 Jest 5 suites/32 tests, 프로덕션 빌드, `git diff --check` 통과
+- 실제 로그인 세션 기반 API·브라우저 확인은 미실행
+
+---
+
 ## 2026-08-13 역할별 메인페이지 개선 및 비로그인 리뷰 API 연동
 
 - 클라이언트·프리랜서 메인의 고정 이름을 `GET /api/v1/auth/me`의 로그인 사용자 이름으로 교체

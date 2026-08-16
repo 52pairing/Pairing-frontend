@@ -54,6 +54,7 @@ const candidateList: CandidateListResponse = {
 
 const defaultProps = {
   projectId: 7,
+  paymentStatus: "DEPOSIT_PAID",
   positions: [
     {
       positionId: 11,
@@ -155,4 +156,15 @@ describe("RecommendedCandidates", () => {
     expect(screen.getByText("재추천 진행 중")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "추천 후보를 찾고 있어요" })).toBeDisabled();
   });
+
+  it.each(["DEPOSIT_PENDING", "PAYMENT_FAILED"])(
+    "%s 상태에서는 결제 안내만 표시하고 후보를 조회하지 않는다",
+    async (paymentStatus) => {
+      render(<RecommendedCandidates {...defaultProps} paymentStatus={paymentStatus} />);
+
+      expect(await screen.findByText("추천 후보는 착수금 결제 후 이용할 수 있습니다.")).toBeInTheDocument();
+      expect(screen.queryByText(/새 추천 후보를 만들고 있습니다/)).not.toBeInTheDocument();
+      expect(mockedGetCandidates).not.toHaveBeenCalled();
+    },
+  );
 });

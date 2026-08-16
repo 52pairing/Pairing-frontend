@@ -17,6 +17,7 @@ import type {
   ContractDetailResponse,
   ContractPartyRole,
 } from "@/features/contract/types/contractDetail";
+import { areBothPartiesSigned } from "@/features/contract/utils/signatures";
 import { ApiException } from "@/lib/api";
 
 interface ContractDocumentProps {
@@ -143,7 +144,7 @@ export function ContractDocument({ role }: ContractDocumentProps) {
 
   const downloadPdf = async () => {
     const current = signedContract ?? contract;
-    if (!current || current.status === "DRAFT") return;
+    if (!current || !areBothPartiesSigned(current.signatures)) return;
     try {
       const blob = await downloadContractPdf(current.contractId);
       const url = URL.createObjectURL(blob);
@@ -185,7 +186,9 @@ export function ContractDocument({ role }: ContractDocumentProps) {
               <h2 className="text-[15px] font-bold">프리랜서 용역 계약서</h2>
               <p className="mt-1 text-[11px] text-theme-muted">계약 번호 {contract.contractNo}</p>
             </div>
-            <button type="button" onClick={() => void downloadPdf()} className="h-9 rounded-[8px] border border-theme px-4 text-[11px] font-semibold text-theme-secondary hover:bg-surface-subtle">PDF 다운로드</button>
+            {areBothPartiesSigned((signedContract ?? contract).signatures) ? (
+              <button type="button" onClick={() => void downloadPdf()} className="h-9 rounded-[8px] border border-theme px-4 text-[11px] font-semibold text-theme-secondary hover:bg-surface-subtle">PDF 다운로드</button>
+            ) : null}
           </div>
           {pdfPreviewUrl ? (
             <iframe title="프리랜서 용역 계약서 PDF 미리보기" src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`} className="h-[76vh] min-h-[720px] w-full bg-surface" />

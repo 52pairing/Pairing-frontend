@@ -25,6 +25,7 @@ import { ApiException } from "@/lib/api";
 interface RecommendedCandidatesProps {
   projectId: number;
   positions: ProjectDetailPosition[];
+  paymentStatus: string | null;
   jobRoleLabels: Record<string, string>;
   skillLabels: Record<string, string>;
 }
@@ -54,15 +55,17 @@ const getErrorMessage = (error: unknown) => {
 export function RecommendedCandidates({
   projectId,
   positions,
+  paymentStatus,
   jobRoleLabels,
   skillLabels,
 }: RecommendedCandidatesProps) {
+  const beforeDeposit = paymentStatus === "DEPOSIT_PENDING" || paymentStatus === "PAYMENT_FAILED";
   const user = useCurrentUser();
   const [activePositionId, setActivePositionId] = useState(positions[0]?.positionId ?? 0);
   const [candidateList, setCandidateList] = useState<CandidateListResponse | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [rejectCandidate, setRejectCandidate] = useState<CandidateResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(positions.length > 0);
+  const [isLoading, setIsLoading] = useState(positions.length > 0 && !beforeDeposit);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRerecommending, setIsRerecommending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -90,6 +93,10 @@ export function RecommendedCandidates({
   }, []);
 
   useEffect(() => {
+    if (beforeDeposit) {
+      requestSequence.current += 1;
+      return;
+    }
     let cancelled = false;
     Promise.resolve().then(() => {
       if (!cancelled) void loadCandidates(activePositionId);
@@ -97,7 +104,7 @@ export function RecommendedCandidates({
     return () => {
       cancelled = true;
     };
-  }, [activePositionId, loadCandidates]);
+  }, [activePositionId, beforeDeposit, loadCandidates]);
 
   const handleMatchingNotification = useCallback((notification: MatchingNotification) => {
     if (notification.type !== "MATCHING_RECOMMENDED" || !notification.linkUrl.includes(`/positions/${activePositionId}/`)) return;
@@ -192,7 +199,11 @@ export function RecommendedCandidates({
       {errorMessage ? <p role="alert" className="mt-4 rounded-lg border border-[#fda29b] bg-danger-surface px-4 py-3 text-[12px] font-semibold text-theme-danger">{errorMessage}</p> : null}
       {successMessage ? <p role="status" className="mt-4 rounded-lg border border-[#a6d8b1] bg-[#edf9f0] px-4 py-3 text-[12px] font-semibold text-[#287a3a]">{successMessage}</p> : null}
 
-      {isLoading ? (
+      {beforeDeposit ? (
+        <div className="mt-5 flex min-h-48 items-center justify-center rounded-xl border border-theme bg-surface px-5 text-center">
+          <p className="text-[12px] font-semibold text-theme-secondary">추천 후보는 착수금 결제 후 이용할 수 있습니다.</p>
+        </div>
+      ) : isLoading ? (
         <div className="flex min-h-48 flex-col items-center justify-center gap-3 text-[12px] font-semibold text-theme-secondary">
           <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand border-t-transparent" aria-hidden="true" />
           추천 후보를 불러오고 있습니다.

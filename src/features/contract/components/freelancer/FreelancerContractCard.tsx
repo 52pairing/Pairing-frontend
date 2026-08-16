@@ -66,7 +66,7 @@ export function FreelancerContractCard({ contract, onAction }: FreelancerContrac
 export function getContractAction(contract: ContractListItem): ContractAction {
   if (contract.status === "SIGN_PENDING" && contract.signatureRequired) return "sign";
   if (contract.status === "SIGNED" && !contract.depositPaid) return "upfrontFee";
-  if (contract.status === "COMPLETION_PENDING") return "successFee";
+  if (contract.status === "COMPLETION_PENDING" && contract.payableSettlementId != null) return "successFee";
   if (contract.status === "COMPLETED") return "review";
   return "none";
 }
@@ -78,7 +78,7 @@ function getContractPresentation(contract: ContractListItem) {
   if (contract.status === "SIGN_PENDING") return { label: "서명 대기", tone: "orange" as const, notice: contract.signatureRequired ? "계약서를 확인하고 서명을 진행해 주세요." : "상대방의 서명을 기다리고 있습니다.", action };
   if (contract.status === "SIGNED") return { label: "계약 체결 완료", tone: "blue" as const, notice: contract.depositPaid ? "계약 체결이 완료되었습니다." : "착수금 수수료를 결제하면 프로젝트가 시작됩니다.", action };
   if (contract.status === "IN_PROGRESS") return { label: "진행 중", tone: "blue" as const, notice: "계약에 따라 프로젝트가 진행 중입니다.", action };
-  if (contract.status === "COMPLETION_PENDING") return { label: "정산 대기", tone: "purple" as const, notice: "검수가 완료되었습니다. 성공보수 수수료를 결제해 주세요.", action };
+  if (contract.status === "COMPLETION_PENDING") return { label: "정산 대기", tone: "purple" as const, notice: contract.payableSettlementId != null ? "검수가 완료되었습니다. 성공보수 수수료를 결제해 주세요." : "성공보수 수수료 결제가 완료되었습니다. 클라이언트 결제가 끝나면 계약이 종료됩니다.", action };
   if (contract.status === "COMPLETED") return { label: "완료", tone: "green" as const, notice: "프로젝트와 계약 정산이 완료되었습니다.", action };
   if (contract.status === "TERMINATED") return { label: "중도 종료", tone: "red" as const, notice: "계약이 정상 완료 전에 종료되었습니다.", action };
   if (contract.status === "REJECTED") return { label: "계약 거절", tone: "red" as const, notice: "계약이 거절되었습니다.", action };
