@@ -18,6 +18,8 @@ import { ApiException } from "@/lib/api";
 interface CandidateProfileProps {
   projectId: number;
   candidateId: number;
+  /** 서버 컴포넌트에서 미리 조회한 값(있으면 클라이언트 재조회 생략, 없으면 기존처럼 클라이언트에서 조회) */
+  initialProfile?: CandidateProfileResponse | null;
 }
 
 const PAY_UNIT_LABEL: Record<PayUnit, string> = {
@@ -57,8 +59,12 @@ interface MetaLabels {
   skillLevel: Record<string, string>;
 }
 
-export function CandidateProfile({ projectId, candidateId }: CandidateProfileProps) {
-  const [candidate, setCandidate] = useState<CandidateProfileResponse | null>(null);
+export function CandidateProfile({
+  projectId,
+  candidateId,
+  initialProfile = null,
+}: CandidateProfileProps) {
+  const [candidate, setCandidate] = useState<CandidateProfileResponse | null>(initialProfile);
   const [labels, setLabels] = useState<MetaLabels | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -69,8 +75,9 @@ export function CandidateProfile({ projectId, candidateId }: CandidateProfilePro
       setIsLoading(true);
       setErrorMessage("");
       try {
+        // 서버에서 이미 가져온 값이 있으면 재조회를 생략하고, 실패했을 때만(null) 클라이언트에서 조회한다.
         const [profile, jobCategories, jobRoles, skills, workConditions] = await Promise.all([
-          getCandidateProfile(candidateId),
+          initialProfile ? Promise.resolve(initialProfile) : getCandidateProfile(candidateId),
           getProjectJobCategories(),
           getProjectJobRoles(),
           getProjectSkills(),
@@ -104,7 +111,7 @@ export function CandidateProfile({ projectId, candidateId }: CandidateProfilePro
     return () => {
       cancelled = true;
     };
-  }, [candidateId]);
+  }, [candidateId, initialProfile]);
 
   return (
     <main className="min-h-screen bg-surface-subtle px-4 py-6 text-theme-primary sm:px-5">

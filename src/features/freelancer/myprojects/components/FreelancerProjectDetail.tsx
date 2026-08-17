@@ -32,11 +32,18 @@ function withPreservedDetailFields(current: MatchingRequestResponse, result: Mat
   };
 }
 
-export function FreelancerProjectDetail() {
+interface FreelancerProjectDetailProps {
+  /** 서버 컴포넌트에서 미리 조회한 값(있으면 클라이언트 재조회 생략, 없으면 기존처럼 클라이언트에서 조회) */
+  initialProject?: MatchingRequestResponse | null;
+}
+
+export function FreelancerProjectDetail({
+  initialProject = null,
+}: FreelancerProjectDetailProps) {
   const params = useParams<{ projectId: string }>();
   const router = useRouter();
   const requestId = Number(params.projectId);
-  const [project, setProject] = useState<MatchingRequestResponse | null>(null);
+  const [project, setProject] = useState<MatchingRequestResponse | null>(initialProject);
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [error, setError] = useState("");
@@ -50,12 +57,12 @@ export function FreelancerProjectDetail() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.resolve().then(() => { if (!cancelled) void load(); });
+    if (!initialProject) Promise.resolve().then(() => { if (!cancelled) void load(); });
     void Promise.all([getProjectJobRoles(), getProjectSkills()])
       .then(([roles, skills]) => setLabels(Object.fromEntries([...roles, ...skills].map(({ code, label }) => [code, label]))))
       .catch(() => setLabels({}));
     return () => { cancelled = true; };
-  }, [load]);
+  }, [load, initialProject]);
 
   if (!project) return <main className="min-h-screen bg-surface-subtle px-4 py-6 text-center text-[12px] text-theme-muted">{error || "프로젝트 제안을 불러오고 있습니다."}</main>;
 
