@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useToast } from "@/features/common/hooks/useToast";
 import { FreelancerMyPageLayout } from "@/features/freelancer/mypage/components/FreelancerMyPageLayout";
@@ -42,15 +42,26 @@ const EMPTY_PAGE: SettlementPageResponse = {
   last: true,
 };
 
-export function FreelancerPaymentHistory() {
+interface FreelancerPaymentHistoryProps {
+  /** 서버 컴포넌트에서 미리 조회한 값(있으면 클라이언트 재조회 생략, 없으면 기존처럼 클라이언트에서 조회) */
+  initialSummary?: SettlementSummaryResponse | null;
+  /** 기본 필터(전체)·첫 페이지 기준으로 미리 조회한 값 */
+  initialSettlements?: SettlementPageResponse | null;
+}
+
+export function FreelancerPaymentHistory({
+  initialSummary = null,
+  initialSettlements = null,
+}: FreelancerPaymentHistoryProps) {
   const { error: showErrorToast } = useToast();
   const [activeFilter, setActiveFilter] = useState<PaymentFilter>("전체");
-  const [summary, setSummary] = useState<SettlementSummaryResponse | null>(null);
-  const [settlements, setSettlements] = useState<SettlementPageResponse>(EMPTY_PAGE);
-  const [isSummaryLoading, setIsSummaryLoading] = useState(true);
-  const [isListLoading, setIsListLoading] = useState(true);
+  const [summary, setSummary] = useState<SettlementSummaryResponse | null>(initialSummary);
+  const [settlements, setSettlements] = useState<SettlementPageResponse>(initialSettlements ?? EMPTY_PAGE);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(!initialSummary);
+  const [isListLoading, setIsListLoading] = useState(!initialSettlements);
   const [summaryError, setSummaryError] = useState(false);
   const [listError, setListError] = useState(false);
+  const isFirstSettlementsRun = useRef(true);
 
   const loadSummary = useCallback(async () => {
     setIsSummaryLoading(true);
@@ -84,20 +95,26 @@ export function FreelancerPaymentHistory() {
   }, [showErrorToast]);
 
   useEffect(() => {
+    if (initialSummary) return;
     let cancelled = false;
     Promise.resolve().then(() => {
       if (!cancelled) void loadSummary();
     });
     return () => { cancelled = true; };
-  }, [loadSummary]);
+  }, [loadSummary, initialSummary]);
 
   useEffect(() => {
+    // 마운트 시 서버에서 이미 기본 필터(전체) 첫 페이지를 가져왔으면 그 최초 1회만 재조회를 건너뛴다.
+    if (isFirstSettlementsRun.current) {
+      isFirstSettlementsRun.current = false;
+      if (initialSettlements) return;
+    }
     let cancelled = false;
     Promise.resolve().then(() => {
       if (!cancelled) void loadSettlements(activeFilter, 0);
     });
     return () => { cancelled = true; };
-  }, [activeFilter, loadSettlements]);
+  }, [activeFilter, loadSettlements, initialSettlements]);
 
   return (
     <FreelancerMyPageLayout activeMenu="payments">
