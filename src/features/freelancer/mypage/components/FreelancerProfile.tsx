@@ -20,19 +20,31 @@ import { FreelancerMyPageLayout } from "./FreelancerMyPageLayout";
 
 const EMPTY_VALUE = "확인 필요";
 
-export function FreelancerProfile() {
+interface FreelancerProfileProps {
+  /** 서버 컴포넌트에서 미리 조회한 값(있으면 클라이언트 재조회 생략, 없으면 기존처럼 클라이언트에서 조회) */
+  initialProfile?: FreelancerMyPageResponse | null;
+  initialGrade?: MyGradeResponse | null;
+  initialGradeCriteria?: GradeCriteriaResponse[] | null;
+}
+
+export function FreelancerProfile({
+  initialProfile = null,
+  initialGrade = null,
+  initialGradeCriteria = null,
+}: FreelancerProfileProps) {
   const router = useRouter();
   const user = useCurrentUser();
-  const [profile, setProfile] = useState<FreelancerMyPageResponse | null>(null);
-  const [myGrade, setMyGrade] = useState<MyGradeResponse | null>(null);
+  const [profile, setProfile] = useState<FreelancerMyPageResponse | null>(initialProfile);
+  const [myGrade, setMyGrade] = useState<MyGradeResponse | null>(initialGrade);
   const [gradeCriteria, setGradeCriteria] = useState<GradeCriteriaResponse[]>(
-    [],
+    initialGradeCriteria ?? [],
   );
   const [gradeError, setGradeError] = useState("");
   const [verificationOpen, setVerificationOpen] = useState(false);
   const initial = (profile?.name ?? user?.name)?.trim().charAt(0) || "프";
 
   useEffect(() => {
+    if (initialProfile) return;
     let cancelled = false;
     getFreelancerProfile()
       .then((value) => {
@@ -42,9 +54,10 @@ export function FreelancerProfile() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialProfile]);
 
   useEffect(() => {
+    if (initialGrade && initialGradeCriteria) return;
     let cancelled = false;
     Promise.all([getMyGrade(), getFreelancerGradeCriteria()])
       .then(([grade, criteria]) => {
@@ -63,7 +76,7 @@ export function FreelancerProfile() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialGrade, initialGradeCriteria]);
 
   return (
     <FreelancerMyPageLayout activeMenu="profile">
