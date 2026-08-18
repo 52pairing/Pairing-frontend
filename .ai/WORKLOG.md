@@ -1,5 +1,36 @@
 # WORKLOG
 
+## 2026-08-18 — 매칭 후보 상세보기 SSR 프리페치 제거
+
+- 배경: 사용자가 "후보 상세보기 클릭 시 백엔드가 느려진 느낌"이라고 신고. 조사 결과 [`page.tsx`](../src/app/client/projects/[projectId]/candidates/[candidateId]/page.tsx)에서 `getServerCandidateProfile()`로 상세 페이지 진입마다 Next.js 서버가 백엔드 프로필 API 응답을 먼저 기다린 뒤에야 HTML을 보내는 구조였음(클릭 → 화면 전환 자체가 이 백엔드 왕복만큼 지연). 아래 "헤더 깜빡임·매칭 로딩 스피너·후보 프로필 등급 깜빡임 수정" 항목에서 고친 `isLoading` 분리는 "화면이 뜬 뒤 스피너 시간"만 줄였을 뿐, 이 클릭~화면전환 지연은 그대로 남아 있었음
+- 사용자 결정: 이 SSR 프리페치 자체를 제거하고 예전처럼 클라이언트 전용 조회로 되돌림
+- 수정 내용:
+  - [`page.tsx`](../src/app/client/projects/[projectId]/candidates/[candidateId]/page.tsx): `getServerCandidateProfile` 호출·`initialProfile` prop 전달 제거
+  - [`serverCandidateProfile.ts`](../src/features/matching/services/serverCandidateProfile.ts) 삭제(다른 참조 없음을 확인 후 삭제)
+  - [`CandidateProfile.tsx`](../src/features/matching/components/CandidateProfile.tsx): `initialProfile` prop 제거, 항상 클라이언트에서 `getCandidateProfile` 조회. 단, 위 항목에서 추가한 "프로필 조회와 메타 라벨 조회를 독립된 흐름으로 분리"한 구조는 유지(라벨 4개를 기다리지 않고 프로필 자체 응답이 오면 바로 표시)
+  - `unit-tests/matching/CandidateProfile.test.tsx`: `initialProfile` 관련 테스트를 일반 조회 성공/실패 테스트로 교체
+- 검증: `tsc --noEmit` 통과, `CandidateProfile.test.tsx` 2건 통과
+- 실행하지 못한 검증: 실제 로그인 세션으로 상세보기 클릭 시 체감 속도 브라우저 확인(로그인 필요, 테스트 계정 없음)
+- git add/commit/push: 진행하지 않음(사용자 명시 요청 시 진행)
+
+---
+
+## 2026-08-18 — 헤더 깜빡임·매칭 로딩 스피너·후보 프로필 등급 깜빡임 수정
+
+- 배경: 사용자 신고 3건 — (1) 프로젝트 상세 → 추천 후보 프로필 상세 화면에서 새로고침할 때마다 개발자 직급(등급) 표시가 깜박임, (2) 유료 재추천 로딩 화면("AI가 최적의 후보를 찾고 있습니다")이 정적인 아이콘만 있고 로딩 스피너가 없음, (3) 비로그인 상태로 메인페이지(`/`) 새로고침 시 헤더가 깜박임(예전엔 이러지 않았다는 신고)
+- **헤더 깜빡임 원인**: [Header.tsx](../src/features/common/components/header/Header.tsx)가 `isLoading && !user`일 때 무조건 `HeaderSkeleton`을 보여주도록 되어 있었음(#152 이후 jia40의 #198 리팩터링에서 추가된 분기). 이 분기는 보호된 레이아웃(`/client`, `/freelancer`)에서 "액세스 토큰만 만료 + 리프레시 유효" 같은 드문 경우에 잘못된 역할 헤더가 잠깐 떴다가 바뀌는 것을 막기 위한 의도였지만, `role="guest"`로 명시된 공개 페이지(메인 `/`, `/chat`, `/support` 등)에서는 대부분이 실제 비로그인 방문이라 매번 스켈레톤이 떴다가 게스트 헤더로 바뀌는 깜빡임이 발생하고 있었음
+  - 수정: `role !== "guest"`일 때만 스켈레톤을 보여주도록 조건 추가. `role="guest"` 페이지는 스켈레톤 없이 즉시 게스트 헤더를 보여주고, 드물게 실제 로그인 세션이 확인되면 그 자리에서 자연스럽게 실제 역할 헤더로 교체됨(보호 레이아웃의 기존 스켈레톤 동작은 그대로 유지)
+- **매칭 로딩 스피너 추가 및 공통 컴포넌트로 통일**: [CandidateRerollStatusScreens.tsx](../src/features/matching/components/CandidateRerollStatusScreens.tsx)의 `CandidateRerollLoading`이 아이콘 자리에 정적 글리프("ϟ")만 표시하던 것을 수정. 처음엔 아이콘을 별도 회전 링으로 교체했으나, 사용자 피드백에 따라 번개 아이콘 자체를 그대로 유지한 채 `StatusLayout`에 `spin` prop을 추가해 아이콘이 직접 회전하도록 변경(이 한 곳만 예외적으로 자체 `animate-spin` 유지, 사용자가 명시적으로 요청).
+  - 이어서 사용자가 알려준 공통 스피너 컴포넌트 [`Spinner`](../src/features/common/components/Loading.tsx)(jia40 작성, `common/components`)로 담당 영역(matching) 전체의 자체 제작 `animate-spin` span을 교체: [RecommendedCandidates.tsx](../src/features/matching/components/RecommendedCandidates.tsx)의 "추천 후보를 불러오고 있습니다"/"새 추천 후보를 만들고 있습니다"(전체 화면·배너 2곳)/"재추천 진행 중" 배지, [CandidateProfile.tsx](../src/features/matching/components/CandidateProfile.tsx)의 "프로필을 불러오고 있습니다", [CandidateRerollStatusScreens.tsx](../src/features/matching/components/CandidateRerollStatusScreens.tsx)의 `LoadingRow`(포지션별 추천 중 표시)까지 총 6곳
+  - `grep -r animate-spin src`로 담당 영역(matching) 밖에는 자체 스피너가 없음을 확인(공통 컴포넌트 원본과 위 번개 아이콘 예외 제외)
+  - 텍스트 내용은 변경 없음, 화면 표시부 접근성(sr-only 라벨 vs 화면에 보이는 텍스트 중복 방지)은 기존 `LoadingState` 패턴과 동일하게 맞춤
+- **후보 프로필 등급 깜빡임**: [CandidateProfile.tsx](../src/features/matching/components/CandidateProfile.tsx)에서 `initialProfile`(SSR로 이미 조회된 후보 정보)이 있어도 `isLoading`이 무조건 `true`로 시작해, 이미 있는 데이터를 두고도 새로고침마다 로딩 스피너가 떴다가 사라지는 구조였음. `isLoading` 초기값을 `initialProfile === null` 기준으로 바꾸고, 직군·직무·스킬 등 메타 라벨 조회를 프로필 표시와 분리해 라벨이 늦게 와도 화면을 막지 않도록 수정(라벨은 기존처럼 `?? code` 폴백으로 대체 표시). 등급 배지(`GRADE_LABEL`)는 별도 API 조회 없이 로컬 매핑이라 이 수정으로 SSR 데이터가 있으면 새로고침 즉시, 깜빡임 없이 표시됨
+  - **확인 필요**: 이 파일의 수정은 본 세션에서 작업자가 직접 적용하기 전에 이미 작업 트리에 반영되어 있는 상태로 발견되었습니다(같은 저장소에 대한 다른 동시 세션 또는 훅에 의한 변경 가능성). 코드 내용은 검증(타입체크·ESLint·기존 Jest 2건) 통과로 확인했으나, 누가/어떻게 적용했는지는 확인하지 못했습니다. 팀 확인 필요.
+- 검증: 변경 파일 `tsc --noEmit` 통과, 변경 파일 ESLint 통과, 관련 Jest(`RecommendedCandidates.test.tsx` 8건, `CandidateProfile.test.tsx` 2건) 통과
+- 실제 화면 확인: 로컬에 이미 떠 있던 서버가 이번 세션 이전에 빌드된 production(`next start`) 프로세스라 최신 변경이 반영되지 않아 브라우저 검증은 하지 못함. 헤더 수정은 SSR 초기 렌더 로직(코드 경로) 분석으로 근거를 확인함
+- git add/commit/push: 진행하지 않음(사용자 명시 요청 시 진행)
+
+---
 ## 2026-08-18 — 클라이언트 메인 등급 배지 레이아웃 시프트 수정
 
 - 클라이언트 메인 진입 시 사용자 정보와 내 등급을 서버에서 병렬 조회하고, 두 값을 `ClientMain`의 초기값으로 전달해 첫 렌더부터 사용자명과 실제 등급 배지가 함께 표시되도록 수정했습니다.
