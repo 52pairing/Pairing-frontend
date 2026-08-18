@@ -1,0 +1,71 @@
+{"kind":"deck","id":"pr/pbskqt","name":"Deck"}
+{"kind":"layout","layoutId":"68411bbd-74b5-44f0-9722-465dec19a9ec","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"0b4df0c9-aee2-4f55-ab08-e15a6a112545","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/ar3mvy","slide":1,"title":"STATE & DATA","textShapes":22}
+{"kind":"textbox","id":"sh/onmpwzm1","slide":1,"name":"eyebrow-1","text":"STATE & DATA","textPreview":"STATE & DATA","textChars":12,"textLines":1,"bbox":[58,32,500,24]}
+{"kind":"textbox","id":"sh/nmdonulg","slide":1,"name":"title-1","text":"한 번만 조회하고, 낡은 응답은 버린다","textPreview":"한 번만 조회하고, 낡은 응답은 버린다","textChars":21,"textLines":1,"bbox":[58,67,1164,55]}
+{"kind":"textbox","id":"sh/m147up4v","slide":1,"name":"subtitle-1","text":"중복 /auth/me 호출과 사용자명 깜빡임을 하나의 세션 데이터 흐름으로 해결","textPreview":"중복 /auth/me 호출과 사용자명 깜빡임을 하나의 세션 데이터 흐름으로 해결","textChars":44,"textLines":1,"bbox":[58,130,1164,30]}
+{"kind":"shape","id":"sh/xsf6t43i","slide":1,"name":"rule-1","bbox":[58,177,1164,2]}
+{"kind":"textbox","id":"sh/wr6p0zmx","slide":1,"name":"footer-1","text":"3-1. 프론트엔드 기능 구현 과정의 문제 해결","textPreview":"3-1. 프론트엔드 기능 구현 과정의 문제 해결","textChars":26,"textLines":1,"bbox":[58,678,480,18]}
+{"kind":"textbox","id":"sh/vqxorels","slide":1,"name":"page-1","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1184,676,38,18]}
+{"kind":"shape","id":"sh/ap47y947","slide":1,"name":"s1-arrow-line-1","bbox":[374,339,72,3]}
+{"kind":"textbox","id":"sh/5wfqxo3u","slide":1,"name":"s1-arrow-1","text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[426,309,35,52]}
+{"kind":"shape","id":"sh/kv6p4jm9","slide":1,"name":"s1-arrow-line-2","bbox":[815,339,72,3]}
+{"kind":"textbox","id":"sh/ad4v258n","slide":1,"name":"s1-arrow-2","text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[867,309,35,52]}
+{"kind":"textbox","id":"sh/vedcba98","slide":1,"name":"s1-step1","text":"01  문제","textPreview":"01  문제","textChars":6,"textLines":1,"bbox":[58,210,180,28]}
+{"kind":"textbox","id":"sh/wfmd4fqt","slide":1,"name":"s1-step2","text":"02  공유","textPreview":"02  공유","textChars":6,"textLines":1,"bbox":[448,210,180,28]}
+{"kind":"textbox","id":"sh/xgvudkry","slide":1,"name":"s1-step3","text":"03  무효화","textPreview":"03  무효화","textChars":7,"textLines":1,"bbox":[889,210,200,28]}
+{"kind":"shape","id":"sh/ih4v658j","slide":1,"name":"s1-problem","bbox":[58,254,316,275]}
+{"kind":"textbox","id":"sh/j2dcfa94","slide":1,"name":"s1-problem-title","text":"보호 페이지 1회 진입","textPreview":"보호 페이지 1회 진입","textChars":12,"textLines":1,"bbox":[82,279,270,28]}
+{"kind":"textbox","id":"sh/k36d8fqp","slide":1,"name":"s1-problem-main","text":"4×  /auth/me","textPreview":"4×  /auth/me","textChars":12,"textLines":1,"bbox":[82,326,270,48]}
+{"kind":"textbox","id":"sh/54fuhkra","slide":1,"name":"s1-problem-body","text":"세션 가드 · 역할 가드\n헤더 · 본문이 각각 조회\n\n요청 중복 + 이름 깜빡임","textPreview":"세션 가드 · 역할 가드 | 헤더 · 본문이 각각 조회 |  | 요청 중복 + 이름 깜빡임","textChars":44,"textLines":4,"bbox":[82,396,264,104]}
+{"kind":"shape","id":"sh/ylkbul8f","slide":1,"name":"s1-share","bbox":[448,254,367,275]}
+{"kind":"textbox","id":"sh/zmtc3q90","slide":1,"name":"s1-share-label","text":"SINGLE SOURCE OF TRUTH","textPreview":"SINGLE SOURCE OF TRUTH","textChars":22,"textLines":1,"bbox":[474,279,310,22]}
+{"kind":"textbox","id":"sh/3qpsbmps","slide":1,"name":"s1-share-main","text":"진행 중 요청 + 5초 캐시","textPreview":"진행 중 요청 + 5초 캐시","textChars":15,"textLines":1,"bbox":[474,326,315,42]}
+{"kind":"shape","id":"sh/2pgr2ho7","slide":1,"name":"s1-share-rule","bbox":[474,389,315,1]}
+{"kind":"textbox","id":"sh/psradw7y","slide":1,"name":"s1-share-body","text":"가드가 확인한 사용자를\n하위 컴포넌트의 동기 초기값으로 재사용\n\n중복 호출 ↓   깜빡임 ↓","textPreview":"가드가 확인한 사용자를 | 하위 컴포넌트의 동기 초기값으로 재사용 |  | 중복 호출 ↓   깜빡임 ↓","textChars":51,"textLines":4,"bbox":[474,410,315,92]}
+{"kind":"shape","id":"sh/ory94r6d","slide":1,"name":"s1-generation","bbox":[889,254,333,275]}
+{"kind":"textbox","id":"sh/fmp872pg","slide":1,"name":"s1-gen-label","text":"GENERATION GUARD","textPreview":"GENERATION GUARD","textChars":16,"textLines":1,"bbox":[915,279,280,22]}
+{"kind":"textbox","id":"sh/ulgryxov","slide":1,"name":"s1-gen-main","text":"로그인 · 로그아웃 · 탈퇴\n→ cacheGeneration +1","textPreview":"로그인 · 로그아웃 · 탈퇴 | → cacheGeneration +1","textChars":36,"textLines":2,"bbox":[915,326,282,72]}
+{"kind":"textbox","id":"sh/ho7a9c7m","slide":1,"name":"s1-gen-body","text":"이전 요청 generation ≠ 현재\n→ 늦은 응답의 cache write 무시","textPreview":"이전 요청 generation ≠ 현재 | → 늦은 응답의 cache write 무시","textChars":45,"textLines":2,"bbox":[915,430,282,64]}
+{"kind":"shape","id":"sh/gny90761","slide":1,"name":"s1-takeaway","bbox":[58,565,1164,78]}
+{"kind":"textbox","id":"sh/zi9sj6p0","slide":1,"name":"s1-take-label","text":"핵심 판단","textPreview":"핵심 판단","textChars":5,"textLines":1,"bbox":[82,587,108,22]}
+{"kind":"textbox","id":"sh/yh0ra1of","slide":1,"name":"s1-take-text","text":"캐시는 보관 시간보다 무효화 시점과 늦은 응답의 폐기 기준이 중요하다.","textPreview":"캐시는 보관 시간보다 무효화 시점과 늦은 응답의 폐기 기준이 중요하다.","textChars":39,"textLines":1,"bbox":[200,581,760,36]}
+{"kind":"shape","id":"sh/wraxozil","slide":1,"name":"s1-status","bbox":[978,579,220,42]}
+{"kind":"textbox","id":"sh/xcjyh4j6","slide":1,"name":"s1-status-text","text":"경쟁 순서 추가 검증","textPreview":"경쟁 순서 추가 검증","textChars":11,"textLines":1,"bbox":[990,590,196,20]}
+{"kind":"notes","id":"nt/ar3mvy","slide":1,"text":"[Sources]\n- User-provided project summary and local project work records, 2026-08-18.\n[/Sources]"}
+{"kind":"slide","id":"sl/02sczg","slide":2,"title":"API CONTRACT","textShapes":24}
+{"kind":"textbox","id":"sh/rqxw3i1g","slide":2,"name":"eyebrow-2","text":"API CONTRACT","textPreview":"API CONTRACT","textChars":12,"textLines":1,"bbox":[58,32,500,24]}
+{"kind":"textbox","id":"sh/sr6xcni1","slide":2,"name":"title-2","text":"API 응답을 그대로 믿지 않고, 화면이 안전하게 해석한다","textPreview":"API 응답을 그대로 믿지 않고, 화면이 안전하게 해석한다","textChars":32,"textLines":1,"bbox":[58,67,1164,55]}
+{"kind":"textbox","id":"sh/dsfe58jm","slide":2,"name":"subtitle-2","text":"nullable·스펙 변경·서버 상태 차이를 UI 경계에서 흡수","textPreview":"nullable·스펙 변경·서버 상태 차이를 UI 경계에서 흡수","textChars":35,"textLines":1,"bbox":[58,130,1164,30]}
+{"kind":"shape","id":"sh/etofed07","slide":2,"name":"rule-2","bbox":[58,177,1164,2]}
+{"kind":"textbox","id":"sh/fuxw7i1s","slide":2,"name":"footer-2","text":"3-1. 프론트엔드 기능 구현 과정의 문제 해결","textPreview":"3-1. 프론트엔드 기능 구현 과정의 문제 해결","textChars":26,"textLines":1,"bbox":[58,678,480,18]}
+{"kind":"textbox","id":"sh/0v6xgnid","slide":2,"name":"page-2","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1184,676,38,18]}
+{"kind":"shape","id":"sh/1wfe9sji","slide":2,"name":"s2-arrow-line","bbox":[560,393,105,3]}
+{"kind":"textbox","id":"sh/2xofix03","slide":2,"name":"s2-arrow","text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[641,362,38,55]}
+{"kind":"textbox","id":"sh/nyhwb2ho","slide":2,"name":"s2-left-label","text":"RAW API RESPONSE","textPreview":"RAW API RESPONSE","textChars":16,"textLines":1,"bbox":[58,210,310,22]}
+{"kind":"textbox","id":"sh/r6pwfuxo","slide":2,"name":"s2-left-title","text":"실제 응답의 불확실성","textPreview":"실제 응답의 불확실성","textChars":11,"textLines":1,"bbox":[58,244,470,36]}
+{"kind":"shape","id":"sh/q5gf6pg3","slide":2,"name":"s2-left-panel","bbox":[58,302,500,306]}
+{"kind":"textbox","id":"sh/d87eh4fu","slide":2,"name":"s2-key-0","text":"companyName","textPreview":"companyName","textChars":11,"textLines":1,"bbox":[82,326,150,24]}
+{"kind":"textbox","id":"sh/c7yx8zy9","slide":2,"name":"s2-val-0","text":"필수 문자열 가정 → 실제 null","textPreview":"필수 문자열 가정 → 실제 null","textChars":19,"textLines":1,"bbox":[235,326,295,24]}
+{"kind":"shape","id":"sh/32pwbuxs","slide":2,"name":"s2-row-rule-0","bbox":[82,360,448,1]}
+{"kind":"textbox","id":"sh/21wf2pg7","slide":2,"name":"s2-key-1","text":"detail fields","textPreview":"detail fields","textChars":13,"textLines":1,"bbox":[82,378,150,24]}
+{"kind":"textbox","id":"sh/p47edkfi","slide":2,"name":"s2-val-1","text":"목록 응답에서 null → 기존 값 소실","textPreview":"목록 응답에서 null → 기존 값 소실","textChars":22,"textLines":1,"bbox":[235,378,295,24]}
+{"kind":"shape","id":"sh/43yx4zyx","slide":2,"name":"s2-row-rule-1","bbox":[82,412,448,1]}
+{"kind":"textbox","id":"sh/ny9gnexw","slide":2,"name":"s2-key-2","text":"rating / count","textPreview":"rating / count","textChars":14,"textLines":1,"bbox":[82,430,150,24]}
+{"kind":"textbox","id":"sh/mx0fe9gb","slide":2,"name":"s2-val-2","text":"null을 오류 상태로 처리","textPreview":"null을 오류 상태로 처리","textChars":15,"textLines":1,"bbox":[235,430,295,24]}
+{"kind":"shape","id":"sh/i54r2h4v","slide":2,"name":"s2-row-rule-2","bbox":[82,464,448,1]}
+{"kind":"textbox","id":"sh/j6x8vmlg","slide":2,"name":"s2-key-3","text":"amount","textPreview":"amount","textChars":6,"textLines":1,"bbox":[82,482,150,24]}
+{"kind":"textbox","id":"sh/k7694rm1","slide":2,"name":"s2-val-3","text":"변환 실패 시 NaN 노출 가능","textPreview":"변환 실패 시 NaN 노출 가능","textChars":17,"textLines":1,"bbox":[235,482,295,24]}
+{"kind":"shape","id":"sh/58fqxc36","slide":2,"name":"s2-row-rule-3","bbox":[82,516,448,1]}
+{"kind":"textbox","id":"sh/69or6h4r","slide":2,"name":"s2-key-4","text":"contract status","textPreview":"contract status","textChars":15,"textLines":1,"bbox":[82,534,150,24]}
+{"kind":"textbox","id":"sh/7ax8zmlc","slide":2,"name":"s2-val-4","text":"서버 기준 ≠ 프론트 임시 필터","textPreview":"서버 기준 ≠ 프론트 임시 필터","textChars":17,"textLines":1,"bbox":[235,534,295,24]}
+{"kind":"textbox","id":"sh/sv69srmx","slide":2,"name":"s2-right-label","text":"UI ADAPTER BOUNDARY","textPreview":"UI ADAPTER BOUNDARY","textChars":19,"textLines":1,"bbox":[682,210,320,22]}
+{"kind":"textbox","id":"sh/twfa1w3i","slide":2,"name":"s2-right-title","text":"화면용 안전 모델로 변환","textPreview":"화면용 안전 모델로 변환","textChars":13,"textLines":1,"bbox":[682,244,540,36]}
+{"kind":"shape","id":"sh/mdk7ux4n","slide":2,"name":"s2-right-panel","bbox":[682,302,540,210]}
+{"kind":"textbox","id":"sh/ned8n2l8","slide":2,"name":"s2-transform","text":"nullable 타입 반영\n기본값 · 보존값 · 표시 형식 결정\n서버 필터 기준 확인 후 화면 상태 매핑","textPreview":"nullable 타입 반영 | 기본값 · 보존값 · 표시 형식 결정 | 서버 필터 기준 확인 후 화면 상태 매핑","textChars":58,"textLines":3,"bbox":[712,333,470,116]}
+{"kind":"textbox","id":"sh/psjut0nq","slide":2,"name":"s2-policy","text":"확인되지 않은 필드는 추측하지 않고\n백엔드 응답을 확인한 뒤 반영","textPreview":"확인되지 않은 필드는 추측하지 않고 | 백엔드 응답을 확인한 뒤 반영","textChars":36,"textLines":2,"bbox":[712,459,460,42]}
+{"kind":"shape","id":"sh/orat0v65","slide":2,"name":"s2-contract","bbox":[682,536,540,72]}
+{"kind":"textbox","id":"sh/3q1crq5k","slide":2,"name":"s2-contract-label","text":"TYPE = CONTRACT","textPreview":"TYPE = CONTRACT","textChars":15,"textLines":1,"bbox":[708,552,170,18]}
+{"kind":"textbox","id":"sh/2psbyloz","slide":2,"name":"s2-contract-text","text":"타입은 문서 복사가 아니라, 불확실성을 안전하게 처리하는 계약이다.","textPreview":"타입은 문서 복사가 아니라, 불확실성을 안전하게 처리하는 계약이다.","textChars":37,"textLines":1,"bbox":[708,574,488,25]}
+{"kind":"notes","id":"nt/02sczg","slide":2,"text":"[Sources]\n- User-provided project summary and local project work records, 2026-08-18.\n[/Sources]"}
