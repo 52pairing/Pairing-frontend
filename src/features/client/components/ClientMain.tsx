@@ -11,14 +11,20 @@ import type { ClientMyGradeResponse } from "@/features/client/mypage/types/grade
 
 interface ClientMainProps {
   initialUser?: CurrentUserResponse | null;
+  initialGrade?: ClientMyGradeResponse | null;
 }
 
-export function ClientMain({ initialUser = null }: ClientMainProps) {
+export function ClientMain({
+  initialUser = null,
+  initialGrade = null,
+}: ClientMainProps) {
   const { user, isLoading } = useCurrentUserState(initialUser);
-  const [grade, setGrade] = useState<ClientMyGradeResponse | null>(null);
+  const [grade, setGrade] = useState<ClientMyGradeResponse | null>(initialGrade);
 
   useEffect(() => {
     let cancelled = false;
+    if (initialGrade) return;
+
     getClientMyGrade()
       .then((result) => {
         if (!cancelled) setGrade(result);
@@ -29,7 +35,7 @@ export function ClientMain({ initialUser = null }: ClientMainProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialGrade]);
 
   return (
     <main
@@ -42,11 +48,12 @@ export function ClientMain({ initialUser = null }: ClientMainProps) {
       {/* 상단 히어로 영역 */}
       <section className="bg-gradient-to-br from-[#183b5f] via-[#28557f] to-[#386b99]">
         <div className="mx-auto flex min-h-[400px] max-w-[1080px] flex-col justify-center px-5 py-16 sm:px-8">
-          {grade ? (
-            <div className="mb-5 w-fit rounded-full bg-[#4678a6] px-4 py-1.5 text-xs font-bold text-white">
-              {grade.label} 등급
-            </div>
-          ) : null}
+          <div
+            aria-hidden={grade ? undefined : true}
+            className={`mb-5 w-fit rounded-full bg-[#4678a6] px-4 py-1.5 text-xs font-bold text-white ${grade ? "" : "invisible"}`}
+          >
+            {grade ? `${grade.label} 등급` : "등급 확인 중"}
+          </div>
 
           <h1 className="text-4xl font-extrabold leading-[1.3] tracking-[-0.04em] text-white sm:text-[44px]">
             {isLoading ? (
