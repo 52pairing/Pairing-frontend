@@ -35,6 +35,7 @@
   -
 
 **기록**
+- 🎤 결제 정책 변경(양측 성공보수 결제 후 종료)이 만든 새 대기 상태를 프론트 UX에 반영: 결제 완료 직후의 막힌 화면에 대기 이유를 설명하고, 이후 다시 찾을 수 있도록 마이페이지·계약 관리에 리뷰 진입 경로를 복구함. 근거: `ClientReviewManagement.tsx`, `SuccessFeeComplete.tsx`, `ClientContractCard.tsx` (2026-08-17)
 -
 
 ## 1-2. 문제 정의

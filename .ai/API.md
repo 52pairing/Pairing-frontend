@@ -1,5 +1,18 @@
 # API
 
+## 클라이언트 리뷰 작성 진입 경로 (2026-08-17)
+
+- `GET /api/v1/reviews/pending`: 클라이언트 마이페이지 리뷰 관리에서 작성 가능한 리뷰 목록 조회
+- 응답에는 `projectId`가 없으므로 `GET /api/v1/contracts?tab=COMPLETED&page=0&size=100` 결과를 `contractId`로 연결해 리뷰 라우트의 `projectId`를 확인
+- 리뷰 링크: `/client/projects/{projectId}/review?contractId={contractId}`
+- 완료 계약 카드도 계약 목록 응답의 `projectId`·`contractId`를 사용해 동일한 리뷰 링크 표시
+- 성공보수 결제 완료 화면은 프로젝트별 계약 목록에서 `COMPLETION_PENDING` 건수를 세어 상대방 결제 대기 안내를 표시하고, `COMPLETED` 계약이 있을 때만 리뷰 섹션을 표시
+- 매핑 실패 항목은 숨기지 않고 비활성 안내로 표시
+- API 요청·응답 변경 없음
+- 실제 로그인 세션 기반 응답 및 화면: 미검증
+
+---
+
 ## 추천 후보 프로필 상세 연동 (2026-08-16)
 
 - 서비스: `src/features/matching/services/matching.ts`(`getCandidateProfile`)
