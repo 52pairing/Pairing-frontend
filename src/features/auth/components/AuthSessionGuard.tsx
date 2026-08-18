@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { DuplicateLoginModal } from "@/features/auth/components/OtherDeviceLoginModal";
 import { SessionExpiredModal } from "@/features/auth/components/LoginSessionExpiredModal";
 import { getCurrentUser } from "@/features/auth/services/currentUser";
+import { buildLoginRedirectPath } from "@/features/auth/utils/safeReturnUrl";
 import {
   AUTH_SESSION_END_EVENT,
   ApiException,
@@ -57,7 +58,7 @@ export function AuthSessionGuard() {
         } else if (error instanceof ApiException && error.errorCode === "GLOBAL_010") {
           setSessionEndReason("expired");
         } else if (isProtected) {
-          router.replace(`/login?returnUrl=${encodeURIComponent(pathname)}`);
+          router.replace(buildLoginRedirectPath(pathname));
         }
       });
 
@@ -69,9 +70,7 @@ export function AuthSessionGuard() {
   const goToLogin = () => {
     setSessionEndReason(null);
     const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-    window.location.replace(
-      isProtected ? `/login?returnUrl=${encodeURIComponent(pathname)}` : "/login",
-    );
+    window.location.replace(isProtected ? buildLoginRedirectPath(pathname) : "/login");
   };
 
   return (

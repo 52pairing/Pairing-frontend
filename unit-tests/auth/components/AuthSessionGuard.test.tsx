@@ -84,3 +84,22 @@ it("다른 기기 로그인 이벤트를 받으면 확인 모달을 띄우고, �
     `/login?returnUrl=${encodeURIComponent("/freelancer/mypage")}`,
   );
 });
+
+it("보안 민감 경로에서 세션 종료 확인 시 returnUrl 없이 로그인 페이지로 이동한다", async () => {
+  pathname = "/freelancer/mypage/payment-methods";
+  mockedGetCurrentUser.mockResolvedValue(baseUser);
+  const user = userEvent.setup();
+
+  render(<AuthSessionGuard />);
+  await waitFor(() => expect(mockedGetCurrentUser).toHaveBeenCalled());
+
+  act(() => {
+    window.dispatchEvent(
+      new CustomEvent(AUTH_SESSION_END_EVENT, { detail: "expired" }),
+    );
+  });
+
+  await user.click(await screen.findByRole("button", { name: "세션만료-확인" }));
+
+  expect(locationReplace).toHaveBeenCalledWith("/login");
+});

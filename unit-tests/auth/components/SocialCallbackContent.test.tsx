@@ -56,6 +56,22 @@ it("정상 로그인이면 현재 사용자 캐시를 초기화하고 원래 페
   });
 });
 
+it("보안 민감 경로가 returnUrl로 저장돼 있으면 기본 경로로 이동한다", async () => {
+  searchParamsMap = { code: "auth-code", state: "s1" };
+  mockedGetAttempt.mockReturnValue({
+    provider: "kakao",
+    returnUrl: "/freelancer/mypage/payment-methods",
+  });
+  mockedCompleteSocialLogin.mockResolvedValue({
+    status: "LOGIN",
+    login: { accountId: 1, role: "FREELANCER", name: "김프리", tempPassword: false },
+  });
+
+  render(<SocialCallbackContent />);
+
+  await waitFor(() => expect(routerReplace).toHaveBeenCalledWith("/freelancer"));
+});
+
 it("추가 정보가 필요하면 가입 대기 정보를 저장하고 소셜 회원가입 화면으로 이동한다", async () => {
   searchParamsMap = { code: "auth-code", state: "s1" };
   mockedGetAttempt.mockReturnValue({ provider: "google", returnUrl: "/freelancer" });

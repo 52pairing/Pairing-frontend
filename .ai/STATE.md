@@ -9,6 +9,14 @@
 - 작업 범위: 협상 상태가 `AGREED`일 때 계약서 작성으로 계약을 마무리하라는 안내와 역할별 계약관리 목록(`/client/contracts`, `/freelancer/contracts`)으로 바로 이동하는 버튼 노출, 기존 채팅 동선 유지
 - 검증: 관련 Jest 1 suite/4 tests, 변경 파일 ESLint, 전체 TypeScript, 프로덕션 빌드, `git diff --check` 통과
 - 실제 브라우저·API: 로그인 테스트 세션이 없어 미검증
+## 현재 작업 (2026-08-18 — 세션 만료 재로그인 시 보안 민감 경로 복귀 차단)
+
+- 작업명: 세션 만료·401 후 재로그인 시 결제/서명/비밀번호/탈퇴 등 보안 민감 경로로 그대로 복귀하지 않도록 `returnUrl` 처리에 차단 목록 적용
+- 관련 Issue: #252
+- 관련 브랜치: `fix/common-session-header-css#252`
+- 진행 상황: 완료 — 상세 내용은 `.ai/WORKLOG.md` 최상단 참고
+- 검증: `tsc --noEmit`·ESLint·`npm run build` 통과, 신규+기존 Jest 통과(무관 baseline 실패 1건 제외)
+- 남은 작업: 실제 로그인 세션 기반 브라우저 확인 미실행(테스트 계정 없음). commit/push/PR은 사용자 명시 요청 시
 
 ---
 

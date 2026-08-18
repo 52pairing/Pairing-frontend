@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { getCurrentUser } from "@/features/auth/services/currentUser";
 import type { LoginRole } from "@/features/auth/types";
+import { buildLoginRedirectPath } from "@/features/auth/utils/safeReturnUrl";
 import { ApiException } from "@/lib/api";
 
 interface RoleGuardProps {
@@ -88,7 +89,7 @@ export function RoleGuard({ children }: RoleGuardProps) {
   }
 
   if (outcome === "login") {
-    redirect(`/login?returnUrl=${encodeURIComponent(pathname)}`);
+    redirect(buildLoginRedirectPath(pathname));
   }
 
   if (outcome === "error") {

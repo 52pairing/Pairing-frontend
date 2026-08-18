@@ -69,3 +69,14 @@ it("401이면 로그인 페이지로 리다이렉트한다", async () => {
     ),
   );
 });
+
+it("보안 민감 경로에서 401이면 returnUrl 없이 로그인 페이지로 리다이렉트한다", async () => {
+  pathname = "/client/mypage/cancel";
+  mockedGetCurrentUser.mockRejectedValue(
+    new ApiException("AU_401", "인증이 필요합니다.", 401),
+  );
+
+  render(<RoleGuard>회원 탈퇴 화면</RoleGuard>);
+
+  await waitFor(() => expect(redirectMock).toHaveBeenCalledWith("/login"));
+});
