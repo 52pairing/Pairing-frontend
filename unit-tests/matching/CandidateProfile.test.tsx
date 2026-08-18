@@ -100,17 +100,16 @@ beforeEach(() => {
 
 afterEach(() => jest.clearAllMocks());
 
-it("initialProfile이 있으면 재조회 없이 바로 표시한다", async () => {
-  render(
-    <CandidateProfile projectId={7} candidateId={3} initialProfile={candidate} />,
-  );
+it("조회에 성공하면 프로필을 표시한다", async () => {
+  mockedGetCandidateProfile.mockResolvedValue(candidate);
+
+  render(<CandidateProfile projectId={7} candidateId={3} />);
 
   expect(await screen.findByText("김프리")).toBeInTheDocument();
   expect(screen.getByText("React 경험 3년 이상")).toBeInTheDocument();
-  expect(mockedGetCandidateProfile).not.toHaveBeenCalled();
 });
 
-it("initialProfile이 없으면 조회해서 표시하고, 실패하면 오류 메시지를 보여준다", async () => {
+it("조회에 실패하면 오류 메시지를 보여준다", async () => {
   mockedGetCandidateProfile.mockRejectedValue(
     new ApiException("MT_020", "프로필을 찾을 수 없습니다.", 404),
   );
