@@ -61,6 +61,22 @@ it("외부 URL이 returnUrl로 오면 기본 경로로 대체한다", async () =
   expect(mockedGetAuthorizeUrl).toHaveBeenCalledWith("kakao", "/freelancer");
 });
 
+it("보안 민감 경로가 returnUrl로 오면 기본 경로로 대체한다", async () => {
+  mockedGetAuthorizeUrl.mockResolvedValue({
+    authorizeUrl: "https://kauth.kakao.com/authorize",
+    state: "s1",
+  });
+
+  const { result } = renderHook(() =>
+    useSocialLoginStart("/freelancer/mypage/payment-methods"),
+  );
+  await act(async () => {
+    await result.current.start("kakao");
+  });
+
+  expect(mockedGetAuthorizeUrl).toHaveBeenCalledWith("kakao", "/freelancer");
+});
+
 it("이미 시작 중이면 중복 호출을 무시한다", async () => {
   let resolveAuthorize!: (value: { authorizeUrl: string; state: string }) => void;
   mockedGetAuthorizeUrl.mockReturnValue(

@@ -1,5 +1,21 @@
 # WORKLOG
 
+## 2026-08-18 — 세션 만료 재로그인 시 보안 민감 경로 복귀 차단
+
+- 배경: 사용자가 "세션 만료 시 로그인 창 갔다가 원래 창으로 돌아오는데, 보안이 중요한 페이지는 거기로 가면 안 될 것 같다"고 지적. 실제 코드 확인 결과 [AuthSessionGuard.tsx](../src/features/auth/components/AuthSessionGuard.tsx), [RoleGuard.tsx](../src/features/auth/components/RoleGuard.tsx)가 `returnUrl` 쿼리에 현재 경로를 그대로 담아 `/login`으로 보내고, [login/page.tsx](../src/app/login/page.tsx)가 검증 없이 `router.push(returnUrl)`로 그대로 복귀시키는 구조였음(소셜 로그인 흐름의 [useSocialLoginStart.ts](../src/features/auth/hooks/useSocialLoginStart.ts)·[SocialCallbackContent.tsx](../src/features/auth/components/SocialCallbackContent.tsx)도 동일한 패턴)
+- 수정 내용:
+  - 신규 [safeReturnUrl.ts](../src/features/auth/utils/safeReturnUrl.ts): 결제수단·결제내역·비밀번호 변경·회원 탈퇴·계정 설정·사업자정보·결제완료 콜백·계약서 서명 경로를 보안 민감 경로로 정규식 목록화. `buildLoginRedirectPath`(로그인 이동 시 민감 경로면 returnUrl 자체를 붙이지 않음), `resolveSafeReturnUrl`(로그인 완료 후 목적지 계산 시 외부 주소·민감 경로면 fallback으로 대체)
+  - `AuthSessionGuard.tsx`(2곳)·`RoleGuard.tsx`(1곳): 로그인 이동 URL 생성에 `buildLoginRedirectPath` 적용
+  - `login/page.tsx`: 로그인 성공 후 이동에 `resolveSafeReturnUrl` 적용(민감 경로면 역할 홈으로)
+  - `useSocialLoginStart.ts`: 기존 "외부 주소만" 걸러내던 인라인 검증을 `resolveSafeReturnUrl`로 교체(민감 경로도 함께 차단)
+  - `SocialCallbackContent.tsx`: 소셜 로그인 완료 후 이동에도 동일 적용
+- API 변경: 없음
+- 검증: `tsc --noEmit` 통과, 변경 파일 ESLint 통과, `npm run build` 통과, 신규 `safeReturnUrl.test.ts`(민감 경로 판정 17건 포함) + 기존 `AuthSessionGuard`·`RoleGuard`·`useSocialLoginStart`·`SocialCallbackContent` 테스트에 민감 경로 케이스 추가, 전체 Jest 95 suites 중 94 통과(나머지 1 suite/5 tests는 기존부터 실패하던 팀원 파트 `FreelancerProfile.test.tsx`의 `useRouter` 미마운트 오류로 이번 변경과 무관)
+- 실행하지 못한 검증: 실제 로그인 세션으로 세션 만료 → 재로그인 → 복귀 목적지 브라우저 확인(테스트 계정 없음)
+- 남은 작업: 민감 경로 목록은 라우트 구조 기준으로 만든 것이라 향후 새 결제·서명·계정삭제 화면 추가 시 목록 갱신 필요. `git add`/commit/push/PR은 사용자 명시 요청 시 진행
+
+---
+
 ## 2026-08-18 — 매칭 후보 상세보기 SSR 프리페치 제거
 
 - 배경: 사용자가 "후보 상세보기 클릭 시 백엔드가 느려진 느낌"이라고 신고. 조사 결과 [`page.tsx`](../src/app/client/projects/[projectId]/candidates/[candidateId]/page.tsx)에서 `getServerCandidateProfile()`로 상세 페이지 진입마다 Next.js 서버가 백엔드 프로필 API 응답을 먼저 기다린 뒤에야 HTML을 보내는 구조였음(클릭 → 화면 전환 자체가 이 백엔드 왕복만큼 지연). 아래 "헤더 깜빡임·매칭 로딩 스피너·후보 프로필 등급 깜빡임 수정" 항목에서 고친 `isLoading` 분리는 "화면이 뜬 뒤 스피너 시간"만 줄였을 뿐, 이 클릭~화면전환 지연은 그대로 남아 있었음
