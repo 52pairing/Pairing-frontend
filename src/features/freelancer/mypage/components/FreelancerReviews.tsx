@@ -1,33 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getPendingReviews, getReceivedReviews, getReviewSummary, getWrittenReviews } from "@/features/review/services/reviews";
 import type { PendingReview, ReviewPage, ReviewSummary, WrittenReview } from "@/features/review/types/review";
 import { FreelancerMyPageLayout } from "./FreelancerMyPageLayout";
 
 type ReviewTab = "received" | "written";
 
-export function FreelancerReviews() {
+interface FreelancerReviewsProps {
+  /** 서버 컴포넌트에서 미리 조회한 값(있으면 클라이언트 재조회 생략, 없으면 기존처럼 클라이언트에서 조회) */
+  initialPendingReviews?: PendingReview[] | null;
+  initialSummary?: ReviewSummary | null;
+  /** 기본 탭(받은 리뷰)·첫 페이지 기준으로 미리 조회한 값 */
+  initialPage?: ReviewPage<WrittenReview> | null;
+}
+
+export function FreelancerReviews({
+  initialPendingReviews = null,
+  initialSummary = null,
+  initialPage = null,
+}: FreelancerReviewsProps) {
   const [tab, setTab] = useState<ReviewTab>("received");
-  const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([]);
-  const [summary, setSummary] = useState<ReviewSummary | null>(null);
-  const [page, setPage] = useState<ReviewPage<WrittenReview> | null>(null);
+  const [pendingReviews, setPendingReviews] = useState<PendingReview[]>(initialPendingReviews ?? []);
+  const [summary, setSummary] = useState<ReviewSummary | null>(initialSummary);
+  const [page, setPage] = useState<ReviewPage<WrittenReview> | null>(initialPage);
   const [pageNumber, setPageNumber] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialPage);
   const [error, setError] = useState("");
+  const isFirstPageRun = useRef(true);
 
   useEffect(() => {
-    getPendingReviews().then(setPendingReviews).catch(() => null);
-    getReviewSummary().then(setSummary).catch(() => null);
-  }, []);
+    if (!initialPendingReviews) getPendingReviews().then(setPendingReviews).catch(() => null);
+    if (!initialSummary) getReviewSummary().then(setSummary).catch(() => null);
+  }, [initialPendingReviews, initialSummary]);
 
   useEffect(() => {
+    // 마운트 시 서버에서 이미 기본 탭(받은 리뷰) 첫 페이지를 가져왔으면 그 최초 1회만 재조회를 건너뛴다.
+    if (isFirstPageRun.current) {
+      isFirstPageRun.current = false;
+      if (initialPage) return;
+    }
     let active = true;
     const request = tab === "received" ? getReceivedReviews(pageNumber) : getWrittenReviews(pageNumber);
     request.then((response) => { if (active) setPage(response); }).catch((loadError) => { if (active) setError(loadError instanceof Error ? loadError.message : "리뷰를 불러오지 못했습니다."); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [tab, pageNumber]);
+  }, [tab, pageNumber, initialPage]);
 
   const changeTab = (next: ReviewTab) => { setTab(next); setPageNumber(0); setPage(null); setError(""); setLoading(true); };
 

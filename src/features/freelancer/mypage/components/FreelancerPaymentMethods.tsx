@@ -11,6 +11,7 @@ import { getBanks, getCardCompanies } from "@/features/auth/services/signupMeta"
 import { ApiException } from "@/lib/api";
 import { useToast } from "@/features/common/hooks/useToast";
 import { getMyPaymentMethods, updateMyBankAccount, updateMyCard } from "@/features/payment/services/settlementPayment";
+import type { AccountPaymentMethod } from "@/features/payment/types/payment";
 import { FreelancerMyPageLayout } from "./FreelancerMyPageLayout";
 
 type EditTarget = "card" | "account" | null;
@@ -19,25 +20,35 @@ type PaymentState = { cardBrand: string; cardCompany: string; cardLast4: string;
 const EMPTY_PAYMENT: PaymentState = { cardBrand: "등록된 카드 없음", cardCompany: "", cardLast4: "", cardHolder: "", bankName: "등록된 계좌 없음", accountLast4: "", accountHolder: "" };
 const inputClassName = "h-11 w-full rounded-md border border-theme bg-surface px-4 text-[12px] font-semibold outline-none placeholder:text-theme-muted hover:border-brand focus:border-brand";
 
-export function FreelancerPaymentMethods() {
+const toPaymentState = (methods: AccountPaymentMethod[]): PaymentState => {
+  const card = methods.find((method) => method.methodType === "CARD");
+  const account = methods.find((method) => method.methodType === "BANK_ACCOUNT");
+  return { ...EMPTY_PAYMENT, cardBrand: card?.cardBrand ?? EMPTY_PAYMENT.cardBrand, cardCompany: card?.cardCompany ?? EMPTY_PAYMENT.cardCompany, cardLast4: card?.cardLast4 ?? EMPTY_PAYMENT.cardLast4, cardHolder: card?.cardHolder ?? EMPTY_PAYMENT.cardHolder, bankName: account?.bankName ?? EMPTY_PAYMENT.bankName, accountLast4: account?.accountLast4 ?? EMPTY_PAYMENT.accountLast4, accountHolder: account?.accountHolder ?? EMPTY_PAYMENT.accountHolder };
+};
+
+interface FreelancerPaymentMethodsProps {
+  /** 서버 컴포넌트에서 미리 조회한 값(있으면 클라이언트 재조회 생략, 없으면 기존처럼 클라이언트에서 조회) */
+  initialMethods?: AccountPaymentMethod[] | null;
+}
+
+export function FreelancerPaymentMethods({ initialMethods = null }: FreelancerPaymentMethodsProps) {
   const toast = useToast();
   const user = useCurrentUser();
   const [verified, setVerified] = useState(false);
   const [verificationOpen, setVerificationOpen] = useState(false);
   const [pendingEditTarget, setPendingEditTarget] = useState<EditTarget>(null);
-  const [payment, setPayment] = useState(EMPTY_PAYMENT);
+  const [payment, setPayment] = useState(initialMethods ? toPaymentState(initialMethods) : EMPTY_PAYMENT);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
 
   useEffect(() => {
+    if (initialMethods) return;
     let cancelled = false;
     getMyPaymentMethods().then((methods) => {
       if (cancelled) return;
-      const card = methods.find((method) => method.methodType === "CARD");
-      const account = methods.find((method) => method.methodType === "BANK_ACCOUNT");
-      setPayment((current) => ({ ...current, cardBrand: card?.cardBrand ?? current.cardBrand, cardCompany: card?.cardCompany ?? current.cardCompany, cardLast4: card?.cardLast4 ?? current.cardLast4, cardHolder: card?.cardHolder ?? current.cardHolder, bankName: account?.bankName ?? current.bankName, accountLast4: account?.accountLast4 ?? current.accountLast4, accountHolder: account?.accountHolder ?? current.accountHolder }));
+      setPayment((current) => ({ ...current, ...toPaymentState(methods) }));
     }).catch(() => toast.error("결제수단을 불러오지 못했습니다."));
     return () => { cancelled = true; };
-  }, [toast]);
+  }, [toast, initialMethods]);
 
   const requestEdit = (target: Exclude<EditTarget, null>) => {
     if (verified) {
