@@ -2,6 +2,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRef } from "react";
 
 import { useDuplicateCheck } from "@/features/auth/hooks/useDuplicateCheck";
 import { checkPhoneDuplicate } from "@/features/auth/services/signupDuplicateCheck";
@@ -31,6 +32,7 @@ export const PhoneNumberField = ({
     (phone) => checkPhoneDuplicate(phone, role),
     checked ? value : undefined,
   );
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const isFormatValid = value.length === PHONE_LENGTH;
 
@@ -45,11 +47,33 @@ export const PhoneNumberField = ({
         {label} <span className="text-[#356DF3]">*</span>
       </label>
       <input
+        ref={inputRef}
         type="text"
         inputMode="numeric"
         value={value}
         onChange={(e) => {
-          onChange(formatPhoneNumber(e.target.value));
+          const input = e.target;
+          const cursor = input.selectionStart ?? input.value.length;
+          const digitsBeforeCursor = input.value
+            .slice(0, cursor)
+            .replace(/\D/g, "").length;
+          const formatted = formatPhoneNumber(input.value);
+
+          // 자동 하이픈이 추가·제거되며 캐럿이 끝으로 밀려나 번호가 좌우로 튀는 것을
+          // 막기 위해, 입력하던 숫자 기준 위치로 캐럿을 직접 복원한다.
+          input.value = formatted;
+          let digitsSeen = 0;
+          let newPosition = formatted.length;
+          for (let i = 0; i < formatted.length; i++) {
+            if (digitsSeen === digitsBeforeCursor) {
+              newPosition = i;
+              break;
+            }
+            if (/\d/.test(formatted[i])) digitsSeen++;
+          }
+          input.setSelectionRange(newPosition, newPosition);
+
+          onChange(formatted);
           onCheckedChange(false);
           duplicateCheck.reset();
         }}
