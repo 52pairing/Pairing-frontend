@@ -1,5 +1,23 @@
 # STATE
 
+## 현재 작업 (2026-08-17 — 클라이언트 리뷰 작성 진입 경로 및 결제 대기 안내 수정)
+
+- 작업명: 클라이언트 마이페이지·계약 카드 리뷰 진입 경로 추가 및 성공보수 결제 대기 안내
+- 기준 문서: `C:/Users/user/Documents/카카오톡 받은 파일/frontend-client-review-entry-2026-08-17.md`
+- 관련 Issue: 생성 전
+- 관련 브랜치: 현재 작업 브랜치
+- 진행 상황: 완료
+  - 마이페이지 리뷰 관리에서 작성 대기 리뷰와 완료 계약을 함께 조회해 `contractId → projectId` 매핑 후 리뷰 작성 링크 표시
+  - 매핑하지 못한 작성 대기 리뷰는 숨기지 않고 계약 정보 확인 불가 비활성 항목으로 표시
+  - 클라이언트 완료 계약 카드에 `projectId`·`contractId`를 포함한 리뷰 작성 버튼 추가
+  - 성공보수 결제 완료 화면에서 `COMPLETION_PENDING` 계약이 있으면 프리랜서 결제 대기 안내 표시
+- API 변경: 없음 — 기존 리뷰 작성 대기·완료 계약 목록 API 사용
+- 검증: 변경 파일 ESLint, 전체 TypeScript, 프로덕션 빌드, `git diff --check` 통과
+- 검증 중 조치: 최초 빌드는 샌드박스의 Google Fonts 네트워크 차단으로 실패했으나 네트워크 허용 후 재실행 통과
+- 실제 API·브라우저: 로그인 테스트 계정이 없어 미검증
+
+---
+
 ## 현재 작업 (2026-08-17 — auth/freelancer/matching 렌더링·최적화 진단 후속)
 
 - 작업명: 담당 영역(auth/freelancer/matching) 한정 진단 후 정적 메타 캐싱 누락 수정 + `FreelancerResumeRegistration.tsx` 4개 파일 구조 분리

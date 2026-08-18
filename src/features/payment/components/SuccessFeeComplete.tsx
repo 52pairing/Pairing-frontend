@@ -32,6 +32,7 @@ export function SuccessFeeComplete({ role }: SuccessFeeCompleteProps) {
   const [project, setProject] = useState<ClientProjectDetailResponse | null>(null);
   const [settlements, setSettlements] = useState<SettlementResponse[]>([]);
   const [contracts, setContracts] = useState<ClientContractListItem[]>([]);
+  const [settlementPendingCount, setSettlementPendingCount] = useState(0);
   const [jobRoleLabels, setJobRoleLabels] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(role === "client");
   const [errorMessage, setErrorMessage] = useState("");
@@ -60,7 +61,9 @@ export function SuccessFeeComplete({ role }: SuccessFeeCompleteProps) {
 
       setProject(projectDetail);
       setSettlements(settlementPage.content);
-      setContracts(contractPage.content.filter((contract) => contract.status === "COMPLETED"));
+      const allContracts = contractPage.content;
+      setContracts(allContracts.filter((contract) => contract.status === "COMPLETED"));
+      setSettlementPendingCount(allContracts.filter((contract) => contract.status === "COMPLETION_PENDING").length);
       setJobRoleLabels(Object.fromEntries(jobRoles.map((item) => [item.code, item.label])));
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "프로젝트 완료 정보를 불러오지 못했습니다.");
@@ -124,7 +127,7 @@ export function SuccessFeeComplete({ role }: SuccessFeeCompleteProps) {
 
         <section className="mt-4 rounded-xl border border-theme bg-surface px-6 py-6">
           <h2 className="text-[13px] font-bold">계약 프리랜서</h2>
-          {contracts.length === 0 ? <p className="py-8 text-center text-[11px] text-theme-muted">완료된 계약이 없습니다.</p> : <div className="mt-4 space-y-3">{contracts.map((contract) => <article key={contract.contractId} className="flex flex-wrap items-center justify-between gap-4 rounded-[10px] border border-theme px-4 py-3"><div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-[13px] font-bold text-white">{contract.counterpartName.slice(0, 1)}</span><div className="min-w-0"><div className="flex items-center gap-2"><h3 className="truncate text-[12px] font-bold">{contract.counterpartName}</h3><span className="rounded-full bg-success-surface px-2 py-0.5 text-[9px] font-bold text-theme-success">종료</span></div><p className="mt-1 text-[10px] text-theme-secondary">{jobRoleLabels[contract.jobRole] ?? contract.jobRole} · 월 {contract.payAmount.toLocaleString("ko-KR")}원</p></div></div></article>)}</div>}
+          {contracts.length === 0 ? <p className="py-8 text-center text-[11px] text-theme-muted">{settlementPendingCount > 0 ? `프리랜서 ${settlementPendingCount}명의 성공보수 결제가 완료되면 프로젝트가 종료되고 리뷰를 작성할 수 있습니다.` : "완료된 계약이 없습니다."}</p> : <div className="mt-4 space-y-3">{contracts.map((contract) => <article key={contract.contractId} className="flex flex-wrap items-center justify-between gap-4 rounded-[10px] border border-theme px-4 py-3"><div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-[13px] font-bold text-white">{contract.counterpartName.slice(0, 1)}</span><div className="min-w-0"><div className="flex items-center gap-2"><h3 className="truncate text-[12px] font-bold">{contract.counterpartName}</h3><span className="rounded-full bg-success-surface px-2 py-0.5 text-[9px] font-bold text-theme-success">종료</span></div><p className="mt-1 text-[10px] text-theme-secondary">{jobRoleLabels[contract.jobRole] ?? contract.jobRole} · 월 {contract.payAmount.toLocaleString("ko-KR")}원</p></div></div></article>)}</div>}
         </section>
 
         {contracts.length ? (

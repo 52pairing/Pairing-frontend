@@ -1,5 +1,15 @@
 # WORKLOG
 
+## 2026-08-17 — 클라이언트 리뷰 작성 진입 경로 및 결제 대기 안내 수정
+
+- 클라이언트 마이페이지 리뷰 관리에서 `GET /reviews/pending`과 완료 계약 목록을 병렬 조회하고 `contractId → projectId`를 매핑해 작성 가능한 리뷰 링크를 추가했습니다. 매핑에 실패한 항목은 조용히 숨기지 않고 비활성 안내로 표시합니다.
+- `COMPLETED` 상태의 클라이언트 계약 카드에 리뷰 작성 버튼을 추가하고 기존 상세보기 버튼과 한 액션 영역으로 묶었습니다. 링크에는 리뷰 폼 제출에 필요한 `contractId` 쿼리를 포함합니다.
+- 성공보수 결제 완료 화면에서 완료 계약이 없고 `COMPLETION_PENDING` 계약이 있으면 프리랜서의 성공보수 결제를 기다려야 한다는 안내를 표시합니다. 리뷰 섹션은 기존대로 완료 계약이 있을 때만 노출합니다.
+- API·타입 변경은 없으며 기존 리뷰·계약 API를 사용했습니다.
+- 검증: 변경 파일 ESLint, 전체 TypeScript, 프로덕션 빌드, `git diff --check` 통과. 최초 빌드는 샌드박스의 Google Fonts 네트워크 차단으로 실패했으나 네트워크 허용 후 재실행해 통과했습니다.
+- 실제 로그인 세션 기반 API·브라우저 확인: 테스트 계정이 없어 미검증.
+
+
 ## 2026-08-17 — 이력서 화면 렌더링·최적화 진단 후속 조치 (auth/freelancer/matching 대상)
 
 - 배경: 커밋 작성자 기준(`git log --format='%an'`)으로 담당 영역을 확인한 결과 `auth`·`freelancer`·`matching`이 본인(als-wl) 담당으로 확인되어, 이 세 영역만 대상으로 진단 에이전트를 돌려 우선순위 목록을 뽑았습니다. `negotiation`·`contract`·`chat`·`support`·`payment`·`client/projects`·`client/myprojects`는 팀원(jia40) 담당으로 확인되어 제외했습니다(이미 만졌던 negotiation 재렌더 수정 1건은 되돌림).

@@ -22,11 +22,16 @@ export function ClientContractCard({ contract, jobRoleLabel, detailHref }: Clien
           <span className="text-theme-muted">{contract.contractNo}</span>
         </div>
       </div>
-      {contract.status === "DRAFT" ? (
-        <span aria-disabled="true" className="flex h-[36px] shrink-0 cursor-not-allowed items-center rounded-[8px] bg-surface-muted px-4 text-[12px] font-bold text-theme-muted">계약 상세보기</span>
-      ) : (
-        <Link href={detailHref} className="flex h-[36px] shrink-0 items-center rounded-[8px] bg-brand px-4 text-[12px] font-bold text-white transition hover:bg-brand-hover">계약 상세보기</Link>
-      )}
+      <div className="flex shrink-0 items-center gap-2">
+        {contract.status === "COMPLETED" ? (
+          <Link href={`/client/projects/${contract.projectId}/review?contractId=${contract.contractId}`} className="flex h-[36px] items-center rounded-[8px] border border-brand px-4 text-[12px] font-bold text-brand transition hover:bg-surface-subtle">리뷰 작성</Link>
+        ) : null}
+        {contract.status === "DRAFT" ? (
+          <span aria-disabled="true" className="flex h-[36px] cursor-not-allowed items-center rounded-[8px] bg-surface-muted px-4 text-[12px] font-bold text-theme-muted">계약 상세보기</span>
+        ) : (
+          <Link href={detailHref} className="flex h-[36px] items-center rounded-[8px] bg-brand px-4 text-[12px] font-bold text-white transition hover:bg-brand-hover">계약 상세보기</Link>
+        )}
+      </div>
     </article>
   );
 }
