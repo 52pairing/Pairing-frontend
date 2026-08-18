@@ -8,6 +8,7 @@ import {
   clearPendingSocialSignup,
   saveSocialLoginAttempt,
 } from "@/features/auth/utils/socialAuthFlow";
+import { resolveSafeReturnUrl } from "@/features/auth/utils/safeReturnUrl";
 import { ApiException } from "@/lib/api";
 
 const DEFAULT_RETURN_URL = "/freelancer";
@@ -25,11 +26,8 @@ export const useSocialLoginStart = (returnUrl?: string | null) => {
     setLoadingProvider(provider);
     setError("");
 
-    // 외부 주소가 returnUrl로 전달되지 않도록 앱 내부 경로만 허용합니다.
-    const safeReturnUrl =
-      returnUrl?.startsWith("/") && !returnUrl.startsWith("//")
-        ? returnUrl
-        : DEFAULT_RETURN_URL;
+    // 외부 주소나 보안 민감 경로가 returnUrl로 전달되지 않도록 걸러냅니다.
+    const safeReturnUrl = resolveSafeReturnUrl(returnUrl, DEFAULT_RETURN_URL);
 
     try {
       const result = await getSocialAuthorizeUrl(provider, safeReturnUrl);

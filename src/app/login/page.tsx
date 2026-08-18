@@ -7,6 +7,7 @@ import { UnlockAccountModal } from "@/features/auth/components/UnlockAccountModa
 import { useSocialLoginStart } from "@/features/auth/hooks/useSocialLoginStart";
 import { login } from "@/features/auth/services/login";
 import { LoginRole } from "@/features/auth/types";
+import { resolveSafeReturnUrl } from "@/features/auth/utils/safeReturnUrl";
 import { useToast } from "@/features/common/hooks/useToast";
 import { ApiException } from "@/lib/api";
 import Image from "next/image";
@@ -82,7 +83,7 @@ function LoginPageContent() {
         return;
       }
 
-      router.push(returnUrl || ROLE_HOME_PATH[role]);
+      router.push(resolveSafeReturnUrl(returnUrl, ROLE_HOME_PATH[role]));
     } catch (error) {
       if (error instanceof ApiException) {
         if (error.errorCode === "AU_002") {

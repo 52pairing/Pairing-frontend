@@ -11,6 +11,7 @@ import {
   getSocialLoginAttempt,
   savePendingSocialSignup,
 } from "@/features/auth/utils/socialAuthFlow";
+import { resolveSafeReturnUrl } from "@/features/auth/utils/safeReturnUrl";
 import { ApiException } from "@/lib/api";
 
 const DEFAULT_RETURN_URL = "/freelancer";
@@ -49,7 +50,7 @@ export function SocialCallbackContent() {
             "@/features/negotiation/stomp/client"
           );
           await reactivateStomp();
-          router.replace(attempt.returnUrl || DEFAULT_RETURN_URL);
+          router.replace(resolveSafeReturnUrl(attempt.returnUrl, DEFAULT_RETURN_URL));
           return;
         }
 
