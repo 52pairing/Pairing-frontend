@@ -122,8 +122,27 @@ export const getMyNegotiations = async (
 };
 
 /**
+ * 정적 메타(/api/v1/meta/*)는 세션 동안 값이 바뀌지 않으므로 최초 조회 결과(프로미스)를
+ * 캐시해, 협상방·프리랜서 프로젝트 목록 등 여러 화면이 각자 반복 호출하는 것을 막는다.
+ * 실패 시 캐시를 비워 재시도 가능(freelancerResume.ts와 동일 패턴).
+ */
+const cacheOnce = <T>(fetcher: () => Promise<T>): (() => Promise<T>) => {
+  let cached: Promise<T> | null = null;
+  return () => {
+    if (!cached) {
+      cached = fetcher().catch((error) => {
+        cached = null;
+        throw error;
+      });
+    }
+    return cached;
+  };
+};
+
+/**
  * 근무조건 메타 (조건 값 라벨용). 비로그인 호출 가능.
  * 라벨을 하드코딩하지 않고 이 응답으로 해결한다(백엔드 지침).
  */
-export const getWorkConditionsMeta = () =>
-  apiCall<WorkConditionsMeta>("/api/v1/meta/work-conditions");
+export const getWorkConditionsMeta = cacheOnce(() =>
+  apiCall<WorkConditionsMeta>("/api/v1/meta/work-conditions"),
+);
