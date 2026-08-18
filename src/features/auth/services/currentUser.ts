@@ -12,6 +12,15 @@ let cacheGeneration = 0;
 export const getCachedCurrentUser = () =>
   cachedUser && Date.now() - cachedAt < CURRENT_USER_CACHE_MS ? cachedUser : null;
 
+// 서버 렌더가 조회한 사용자(initialUser)를 클라이언트 모듈 캐시에 시드합니다.
+// 하드 진입 시 가드·헤더가 같은 정보를 /auth/me로 다시 조회하지 않도록 하기 위함입니다.
+// 이미 유효한 캐시가 있으면(더 최신일 수 있으므로) 덮지 않습니다.
+export const seedCurrentUser = (user: CurrentUserResponse) => {
+  if (getCachedCurrentUser()) return;
+  cachedUser = user;
+  cachedAt = Date.now();
+};
+
 // 로그아웃·회원 탈퇴 직후 이전 로그인 사용자가 잠시 다시 노출되지 않도록
 // 클라이언트 메모리에 보관한 사용자와 진행 중 요청을 초기화합니다.
 export const clearCurrentUserCache = () => {

@@ -1,5 +1,55 @@
 # STATE
 
+## 현재 작업 (2026-08-18 — RoleGuard 전역 렌더 차단 개선 가이드라인 수립)
+
+- 작업명: `/client/**`·`/freelancer/**` 진입 시 RoleGuard의 클라이언트 렌더 차단으로 생기는 직렬 스피너 워터폴 제거 설계 (진단·가이드라인만, **코드 미변경**)
+- 관련 Issue: 생성 전
+- 관련 브랜치: 현재 작업 브랜치 (변경 없음)
+- 배경(진단): [layout.tsx](../src/app/layout.tsx)의 [RoleGuard](../src/features/auth/components/RoleGuard.tsx)가 루트에서 모든 children을 감싸고, `outcome` 확정 전까지 children을 렌더하지 않음 → 페이지 마운트(데이터 fetch 시작)가 클라 `getCurrentUser()` 완료 이후로 밀림. 결과: `hydrate → getCurrentUser(스피너1) → allowed → 페이지 fetch(스피너2)` 직렬 2단. [client/layout.tsx](../src/app/client/layout.tsx)·[freelancer/layout.tsx](../src/app/freelancer/layout.tsx)이 이미 `getServerCurrentUser()`로 유저를 조회하는데 그 결과를 재사용하지 못하고 클라에서 재조회함.
+- 목표: 서버가 아는 유저로 첫 렌더부터 페이지를 그리고, 클라 가드는 "차단"이 아니라 "세션 유지 안전망"으로 축소.
+
+- 반드시 지킬 제약(어기면 회귀):
+  - C1. `user===null`(미상)일 때 서버에서 무조건 로그인으로 튕기면 안 됨 — [serverCurrentUser.ts](../src/features/auth/services/serverCurrentUser.ts)는 `no-store`라 refresh 불가. 액세스 토큰만 만료된 유저는 클라 `apiCall`의 GLOBAL_009→refresh로 살아나야 함
+  - C2. 역할 불일치(forbidden) 판정은 "유저 성공 조회 + 역할 실제 불일치"일 때만. null을 forbidden으로 오판 금지
+  - C3. [AuthSessionGuard](../src/features/auth/components/AuthSessionGuard.tsx)는 역할 불일치 시 **사용자 홈으로 조용히 replace**, RoleGuard는 **`/forbidden`으로 이동** — 목적지 상이. → **[확정 2026-08-18] `/forbidden` 페이지 경유 + 수동 "내 홈으로" 버튼으로 통일** (RoleGuard 현재 동작 유지, AuthSessionGuard의 역할 크로스 redirect를 `/forbidden`으로 변경, 자동 이동 없음). 근거: 1계정=1역할 고정이라 불일치 경로는 드물고, 명확한 안내 한 화면이 조용한 튕김보다 낫고 우리 코드의 잘못된 링크 버그도 드러남
+  - C4. 서버 레이아웃은 하드 진입/초기 로드에만 재실행(소프트 내비 캐시) → 서버=진입 게이트, 클라=세션 만료 감시로 역할 분담
+
+- 권장 아키텍처(하이브리드):
+  - 서버(레이아웃): 유저+역할 일치 → 렌더 / 유저+역할 불일치 → `redirect` / null → redirect 없이 렌더(클라 위임)
+  - 클라(RoleGuard): pending 스피너 분기([RoleGuard.tsx:121-128](../src/features/auth/components/RoleGuard.tsx)) 제거해 렌더 비차단화, 확정 forbidden/login만 redirect(소프트 내비 안전망)
+
+- 단계(권장 순서):
+  - Phase 0: C3 정책 결정(역할 불일치 목적지 통일) — **완료(2026-08-18): `/forbidden` 경유 + 수동 홈, 자동 이동 없음**
+  - Phase 1: 레이아웃에 서버 게이트 추가 + `getServerCurrentUser`를 React `cache()`로 감싸 요청당 `/auth/me` 1회로(레이아웃+페이지 중복 조회도 동시 해결)
+    - **확정 설계(2026-08-18)**:
+      - Phase 1a(바로 진행): (1) `getServerCurrentUser`를 React `cache()` 래핑 → 요청 단위 dedupe. (2) [client/layout.tsx](../src/app/client/layout.tsx)·[freelancer/layout.tsx](../src/app/freelancer/layout.tsx)에 **역할 불일치 서버 게이트만** 추가: `const user = await getServerCurrentUser(); if (user && user.role !== "CLIENT") redirect("/forbidden");` — `user===null`(미상)은 redirect 없이 렌더(C1). returnUrl 불필요·결정적이라 C2 충족
+      - Phase 1b(로그인 게이트): **A안 확정 — 클라이언트 유지, 미들웨어 미도입**. 로그아웃 유저 하드진입은 서버는 렌더하고 클라(RoleGuard/AuthSessionGuard)가 401 감지 후 `usePathname` 기반 `returnUrl` 붙여 login 이동. 트레이드오프: 로그아웃 하드진입 시 페이지 셸 순간 노출(오늘의 스피너와 유사 수준, 드문 경로). 미들웨어(B안)는 새 구조+백엔드 리프레시 쿠키 이름 확인이 필요해 보류 — 깜빡임이 실제 문제화되면 별도 팀 안건으로
+    - 제약 재확인: 서버 게이트는 pathname 접근 불가 → 로그인 returnUrl은 서버에서 못 만듦(A안 채택 근거). 인증은 httpOnly 쿠키라 JS에서 쿠키 이름 미참조(전체 `cookie` 헤더만 전달)
+    - Phase 1 스코프 밖(현행 유지): `tempPassword → /login/findpassword/reset` 리다이렉트는 클라 AuthSessionGuard에 그대로 둠(서버 게이트로 옮기지 않음)
+  - Phase 2: RoleGuard 비차단화
+    - **확정 설계(2026-08-18): 2-core + 2-enhance 함께 진행**
+    - 2-core(필수): [RoleGuard.tsx:121-128](../src/features/auth/components/RoleGuard.tsx)의 pending 스피너 분기를 **children 렌더로 교체** → 확인 중에도 페이지를 그림(차단 해제). Phase 1로 서버가 하드 진입 역할 불일치를 이미 걸렀으므로 클라 재확인은 "allowed" 확정→깜빡임 없이 통과. forbidden/login/error 확정 시에만 개입(redirect/에러 UI 유지). 효과: 직렬 스피너 2단→1단, 페이지 데이터 fetch가 권한 확인을 안 기다리고 즉시 시작. 남는 리스크: 소프트 내비로 잘못된 역할 링크 진입 시 순간 렌더 후 `/forbidden`(드묾, 2-enhance로 제거됨)
+    - 2-enhance(추천 포함): 서버 `initialUser`를 [currentUser.ts](../src/features/auth/services/currentUser.ts) **모듈 캐시(`cachedUser`)에 시드**. 근거: 현재 `initialUser`는 [useCurrentUser.ts:19](../src/features/auth/hooks/useCurrentUser.ts)의 로컬 state로만 들어가고 공유 모듈 캐시엔 없어 RoleGuard/Header가 `/auth/me`를 재조회함(하드 진입마다 클라 중복 라운드트립). 시드하면 (1) RoleGuard가 `getCachedCurrentUser()`로 **동기 판단**→소프트 내비 잔여 깜빡임 제거, (2) 클라 `/auth/me` 중복 조회 제거(5초 창). 시드 위치: `initialUser`를 가진 `client/freelancer` 레이아웃에서 작은 클라 시더 컴포넌트로 마운트 시 1회
+    - 2-enhance 안전장치: `initialUser===null`(로그아웃/서버 조회 실패)이면 시드 안 함(로그인됨으로 오시드 금지). 캐시 기존 규칙(5초 TTL, `cacheGeneration` 로그아웃 무효화) 존중
+    - 두 항목은 독립적 — 2-core만으로도 직렬 스피너 해소, 2-enhance는 중복 fetch·잔여 깜빡임까지 제거
+  - Phase 3(선택): RoleGuard·AuthSessionGuard 역할 처리 중복 수렴(참조/테스트 확인 후, 삭제 전 참조 확인 원칙 준수)
+
+- 엣지 케이스 검증 체크리스트: 비로그인 하드 진입 / 액세스 토큰만 만료+리프레시 유효 진입(C1 핵심) / CLIENT가 `/freelancer/**` 진입(콘텐츠 순간 노출 없음) / 소프트 내비 역할 홈 이동 / 세션 만료 모달(GLOBAL_010·011) / `/chat`·`/notifications`(RoleGuard 비대상) / `/auth/me` 요청당 1회 감소
+- 검증 방법: `tsc --noEmit` + ESLint(메모리 규칙: 로컬 브라우저 대신), before/after 스피너 단계 수·TTFB는 프로덕션 빌드 3회 중앙값(성능최적화 노트 #5와 연결)
+- 리스크·롤백: 최대 리스크는 C1(refresh 회귀)·C2(null 오판). Phase 독립적이라 Phase 1만 넣고 A/B 관찰 후 진행하는 점진 적용 권장. 롤백은 레이아웃 redirect 분기 제거 + RoleGuard 원복
+- 진행 상황: Phase 0·1·2 설계 확정. **Phase 1·2 구현 완료(2026-08-18)** — 아래 "구현 기록" 참고. Phase 3은 후속 보류
+- 구현 기록:
+  - Phase 1a 완료: [serverCurrentUser.ts](../src/features/auth/services/serverCurrentUser.ts) `getServerCurrentUser`를 React `cache()`로 래핑(요청당 `/auth/me` 1회 dedupe), [client/layout.tsx](../src/app/client/layout.tsx)·[freelancer/layout.tsx](../src/app/freelancer/layout.tsx)에 역할 불일치 서버 게이트 추가(`user && role!==X → redirect("/forbidden")`, null은 렌더)
+  - Phase 1b: A안이라 코드 변경 없음(클라 RoleGuard·AuthSessionGuard 로그인/refresh 흐름 유지)
+  - Phase 2-core 완료: [RoleGuard.tsx](../src/features/auth/components/RoleGuard.tsx)의 pending 스피너("접근 권한을 확인하고 있습니다")를 제거하고 `return children`로 비차단화. forbidden/login redirect·error UI는 유지
+  - Phase 2-enhance 완료: [currentUser.ts](../src/features/auth/services/currentUser.ts)에 `seedCurrentUser` 추가(이미 유효 캐시 있으면 미덮음), [useCurrentUser.ts](../src/features/auth/hooks/useCurrentUser.ts)의 `useCurrentUserState`가 `initialUser` 있으면 모듈 캐시에 1회 시드(null은 미시드). → 하드 진입 시 가드·헤더의 `/auth/me` 재조회 제거
+  - 테스트: `unit-tests/auth/hooks/useCurrentUser.test.ts` mock에 `seedCurrentUser` 추가 + 시드 호출/미호출 검증 2건 보강
+  - 검증: `tsc --noEmit` 0, ESLint(변경 7파일) 0, auth 유닛테스트 40 suites/168 tests 전체 통과(RoleGuard·AuthSessionGuard·useCurrentUser·serverCurrentUser 포함)
+- 남은 작업: 실제 로그인 세션 기반 브라우저 확인 미실행(no localhost verify 규칙). commit/push/PR은 사용자 명시 요청 시. Phase 3(가드 중복 수렴)은 안정화 후 별도 안건
+- 관련 문서: 전체 렌더링·최적화 진단은 [.ai/성능최적화-발표노트.md](성능최적화-발표노트.md) #5(이중 로딩 플래시)와 연결
+
+---
+
 ## 현재 작업 (2026-08-18 — freelancer/matching/negotiation 핵심 테스트 코드 작성)
 
 - 작업명: auth에 이어 담당 영역(freelancer/matching/negotiation) 전체에서 "중요한 것만" 골라 Jest 테스트 작성

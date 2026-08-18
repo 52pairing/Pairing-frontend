@@ -114,16 +114,9 @@ export function RoleGuard({ children }: RoleGuardProps) {
     );
   }
 
-  if (outcome === "allowed") {
-    return children;
-  }
-
-  return (
-    <div
-      role="status"
-        className="flex min-h-screen items-center justify-center px-4 text-sm text-theme-secondary"
-    >
-      접근 권한을 확인하고 있습니다.
-    </div>
-  );
+  // 확인 중(pending)이어도 children을 가리지 않는다.
+  // 서버 레이아웃이 하드 진입의 역할 불일치를 이미 걸렀으므로(RoleGuard 개선 Phase 1),
+  // 여기서 렌더를 막지 않고 페이지를 즉시 그린다. 확정된 forbidden/login/error일 때만 위에서 개입한다.
+  // (allowed·pending 모두 children을 렌더)
+  return children;
 }

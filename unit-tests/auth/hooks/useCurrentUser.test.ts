@@ -7,16 +7,19 @@ import {
 import {
   getCachedCurrentUser,
   getCurrentUser,
+  seedCurrentUser,
 } from "@/features/auth/services/currentUser";
 import type { CurrentUserResponse } from "@/features/auth/types";
 
 jest.mock("@/features/auth/services/currentUser", () => ({
   getCachedCurrentUser: jest.fn(),
   getCurrentUser: jest.fn(),
+  seedCurrentUser: jest.fn(),
 }));
 
 const mockedGetCached = jest.mocked(getCachedCurrentUser);
 const mockedGetCurrentUser = jest.mocked(getCurrentUser);
+const mockedSeedCurrentUser = jest.mocked(seedCurrentUser);
 
 const user: CurrentUserResponse = {
   accountId: 1,
@@ -29,16 +32,18 @@ const user: CurrentUserResponse = {
 
 afterEach(() => jest.clearAllMocks());
 
-it("initialUser가 주어지면 즉시 사용하고 로딩 상태가 아니다", () => {
+it("initialUser가 주어지면 즉시 사용하고 로딩 상태가 아니며 모듈 캐시에 시드한다", () => {
   mockedGetCurrentUser.mockResolvedValue(user);
 
   const { result } = renderHook(() => useCurrentUserState(user));
 
   expect(result.current.user).toEqual(user);
   expect(result.current.isLoading).toBe(false);
+  // 서버가 넘긴 사용자를 공유 캐시에 시드해 가드의 /auth/me 재조회를 없앤다
+  expect(mockedSeedCurrentUser).toHaveBeenCalledWith(user);
 });
 
-it("initialUser와 캐시가 모두 없으면 로딩 상태로 시작해 조회 후 값을 채운다", async () => {
+it("initialUser와 캐시가 모두 없으면 로딩 상태로 시작해 조회 후 값을 채우고 시드하지 않는다", async () => {
   mockedGetCached.mockReturnValue(null);
   mockedGetCurrentUser.mockResolvedValue(user);
 
@@ -47,6 +52,8 @@ it("initialUser와 캐시가 모두 없으면 로딩 상태로 시작해 조회 
   expect(result.current.isLoading).toBe(true);
   await waitFor(() => expect(result.current.isLoading).toBe(false));
   expect(result.current.user).toEqual(user);
+  // initialUser가 없으면(비로그인일 수 있으므로) 캐시에 시드하지 않는다
+  expect(mockedSeedCurrentUser).not.toHaveBeenCalled();
 });
 
 it("캐시된 사용자가 있으면 초기부터 로딩 상태가 아니다", () => {
