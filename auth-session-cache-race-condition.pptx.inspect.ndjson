@@ -1,0 +1,39 @@
+{"kind":"deck","id":"pr/dzqbqs","name":"Deck"}
+{"kind":"layout","layoutId":"fd67e62b-29df-44fb-b436-2bc545e2b607","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"465d9955-1f5e-4233-9b85-218c9689a0fa","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/ih8w9q","slide":1,"title":"STATE & DATA INTEGRITY","textShapes":25}
+{"kind":"textbox","id":"sh/kjqtwb2l","slide":1,"name":"eyebrow","text":"STATE & DATA INTEGRITY","textPreview":"STATE & DATA INTEGRITY","textChars":22,"textLines":1,"bbox":[54,34,420,24]}
+{"kind":"textbox","id":"sh/zihcnq10","slide":1,"name":"title","text":"한 번만 조회하고, 낡은 응답은 버린다","textPreview":"한 번만 조회하고, 낡은 응답은 버린다","textChars":21,"textLines":1,"bbox":[54,68,1172,58]}
+{"kind":"textbox","id":"sh/yh8bulkf","slide":1,"name":"subtitle","text":"인증 세션 공유로 중복 호출과 UI 깜빡임을 줄이고, generation으로 캐시 역전 경쟁 상태를 차단","textPreview":"인증 세션 공유로 중복 호출과 UI 깜빡임을 줄이고, generation으로 캐시 역전 경쟁 상태를 차단","textChars":58,"textLines":1,"bbox":[54,133,1172,32]}
+{"kind":"shape","id":"sh/xwzulgja","slide":1,"name":"header-rule","bbox":[54,178,1172,2]}
+{"kind":"shape","id":"sh/cvqtsb2p","slide":1,"name":"arrow-1-line","bbox":[382,333,58,3]}
+{"kind":"textbox","id":"sh/buhcj614","slide":1,"name":"arrow-1","text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[423,304,30,54]}
+{"kind":"shape","id":"sh/atobq1kj","slide":1,"name":"arrow-2-line","bbox":[822,333,58,3]}
+{"kind":"textbox","id":"sh/psfuhwjy","slide":1,"name":"arrow-2","text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[863,304,30,54]}
+{"kind":"textbox","id":"sh/or6tor2d","slide":1,"name":"stage-1-no","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[54,210,45,28]}
+{"kind":"textbox","id":"sh/uhk7mtgj","slide":1,"name":"stage-1-title","text":"발견한 문제","textPreview":"발견한 문제","textChars":6,"textLines":1,"bbox":[103,207,260,34]}
+{"kind":"shape","id":"sh/vit8vyh4","slide":1,"name":"stage-1-panel","bbox":[54,256,328,258]}
+{"kind":"textbox","id":"sh/wj2po3yp","slide":1,"name":"stage-1-callout","text":"보호 페이지 1회 진입","textPreview":"보호 페이지 1회 진입","textChars":12,"textLines":1,"bbox":[76,276,284,29]}
+{"kind":"textbox","id":"sh/hkbqx8fu","slide":1,"name":"stage-1-big","text":"4×  /auth/me","textPreview":"4×  /auth/me","textChars":12,"textLines":1,"bbox":[76,320,284,52]}
+{"kind":"textbox","id":"sh/md07itg7","slide":1,"name":"stage-1-body","text":"세션 가드 · 역할 가드 · 헤더 · 본문이 각각 조회\n→ 요청 중복\n→ ‘역할 기본값 → 실제 이름’ 깜빡임","textPreview":"세션 가드 · 역할 가드 · 헤더 · 본문이 각각 조회 | → 요청 중복 | → ‘역할 기본값 → 실제 이름’ 깜빡임","textChars":61,"textLines":3,"bbox":[76,386,284,102]}
+{"kind":"textbox","id":"sh/7e9orehs","slide":1,"name":"stage-2-no","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[442,210,45,28]}
+{"kind":"textbox","id":"sh/8fipkjyd","slide":1,"name":"stage-2-title","text":"공유 세션으로 통합","textPreview":"공유 세션으로 통합","textChars":10,"textLines":1,"bbox":[491,207,330,34]}
+{"kind":"shape","id":"sh/9gb6tozy","slide":1,"name":"stage-2-panel","bbox":[442,256,380,258]}
+{"kind":"textbox","id":"sh/yp07e9gb","slide":1,"name":"stage-2-label","text":"SINGLE SOURCE OF TRUTH","textPreview":"SINGLE SOURCE OF TRUTH","textChars":22,"textLines":1,"bbox":[466,278,300,22]}
+{"kind":"textbox","id":"sh/za9onehw","slide":1,"name":"stage-2-main","text":"진행 중 요청 + 5초 캐시 공유","textPreview":"진행 중 요청 + 5초 캐시 공유","textChars":18,"textLines":1,"bbox":[466,314,330,60]}
+{"kind":"shape","id":"sh/nu54vaxo","slide":1,"name":"stage-2-rule","bbox":[466,386,306,1]}
+{"kind":"textbox","id":"sh/2tw3m5w3","slide":1,"name":"stage-2-body","text":"가드가 확인한 사용자를 하위 컴포넌트의 동기 초기값으로 재사용\n\n중복 호출 ↓   이름 깜빡임 ↓","textPreview":"가드가 확인한 사용자를 하위 컴포넌트의 동기 초기값으로 재사용 |  | 중복 호출 ↓   이름 깜빡임 ↓","textChars":54,"textLines":3,"bbox":[466,404,320,84]}
+{"kind":"textbox","id":"sh/pgnmxkfu","slide":1,"name":"stage-3-no","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[882,210,45,28]}
+{"kind":"textbox","id":"sh/ove5ofe9","slide":1,"name":"stage-3-title","text":"낡은 응답 차단","textPreview":"낡은 응답 차단","textChars":8,"textLines":1,"bbox":[931,207,270,34]}
+{"kind":"shape","id":"sh/bip4zuxk","slide":1,"name":"stage-3-panel","bbox":[882,256,344,258]}
+{"kind":"textbox","id":"sh/ahgnqpwz","slide":1,"name":"stage-3-label","text":"GENERATION GUARD","textPreview":"GENERATION GUARD","textChars":16,"textLines":1,"bbox":[906,278,280,22]}
+{"kind":"textbox","id":"sh/xk7m1kvq","slide":1,"name":"stage-3-main","text":"invalidate() → generation +1","textPreview":"invalidate() → generation +1","textChars":28,"textLines":1,"bbox":[906,316,294,54]}
+{"kind":"textbox","id":"sh/cjy5sfe5","slide":1,"name":"stage-3-code","text":"response.generation\n≠ current.generation\n→ cache write 무시","textPreview":"response.generation | ≠ current.generation | → cache write 무시","textChars":57,"textLines":3,"bbox":[906,388,280,86]}
+{"kind":"shape","id":"sh/rml4nqxg","slide":1,"name":"takeaway-band","bbox":[54,548,1172,102]}
+{"kind":"textbox","id":"sh/qlc3elwv","slide":1,"name":"takeaway-label","text":"핵심 판단","textPreview":"핵심 판단","textChars":5,"textLines":1,"bbox":[76,568,110,24]}
+{"kind":"textbox","id":"sh/wra1orut","slide":1,"name":"takeaway","text":"캐시는 ‘얼마나 오래 둘지’보다 ‘언제 무효화하고, 늦은 응답을 어떻게 폐기할지’가 더 중요하다.","textPreview":"캐시는 ‘얼마나 오래 둘지’보다 ‘언제 무효화하고, 늦은 응답을 어떻게 폐기할지’가 더 중요하다.","textChars":54,"textLines":1,"bbox":[190,563,755,36]}
+{"kind":"shape","id":"sh/hsj2xwve","slide":1,"name":"status-box","bbox":[978,562,224,52]}
+{"kind":"textbox","id":"sh/u58jmhcn","slide":1,"name":"status","text":"추가 수정 · 검증 필요","textPreview":"추가 수정 · 검증 필요","textChars":13,"textLines":1,"bbox":[990,576,200,23]}
+{"kind":"textbox","id":"sh/vq10vmd8","slide":1,"name":"footer","text":"AUTH SESSION CACHE  ·  FRONTEND RELIABILITY","textPreview":"AUTH SESSION CACHE  ·  FRONTEND RELIABILITY","textChars":43,"textLines":1,"bbox":[54,678,520,18]}
+{"kind":"textbox","id":"sh/83q1k7uh","slide":1,"name":"page","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1188,676,38,18]}
+{"kind":"notes","id":"nt/ih8w9q","slide":1,"text":"[Sources]\n- User-provided project summary in this conversation (2026-08-18).\n[/Sources]"}

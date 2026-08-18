@@ -1,5 +1,22 @@
 # STATE
 
+## 현재 작업 (2026-08-18 — freelancer/matching/negotiation 핵심 테스트 코드 작성)
+
+- 작업명: auth에 이어 담당 영역(freelancer/matching/negotiation) 전체에서 "중요한 것만" 골라 Jest 테스트 작성
+- 관련 Issue: 확인 필요 (신규 요청, 기존 Issue 미연결)
+- 관련 브랜치: 현재 작업 브랜치 (커밋 전)
+- 진행 상황: 완료
+  - freelancer(`unit-tests/freelancer/`): 서비스 3개(`grade.ts`, `freelancerFiles.ts`, `freelancerProfile.ts` — null 필드 기본값 처리·요청 형태 검증), `FreelancerPaymentMethods.tsx`(결제수단 인증 게이트·AU_006 재인증 분기), `ProjectRejectModals.tsx`(거절 사유 제출 성공/실패)
+  - matching(`unit-tests/matching/`): `matching.ts` 서비스 나머지 함수 전체(URL/method/body), `useMatchingNotifications.ts`(구독·해제·JSON 파싱 실패 무시), `CandidateProfile.tsx`(initialProfile 재조회 생략, 실패 시 오류 메시지)
+  - negotiation(`unit-tests/negotiation/`): `conditionFormat.ts` 유틸 전체(금액/기간/날짜 변환, 라벨 매핑), `negotiation.ts` 서비스 전체(`getMyNegotiations`의 배열/페이지 응답 분기 포함), `NegotiationCancelModal.tsx`(역할별 경고 문구), `NegotiationResultCard.tsx`(타결/결렬, XSS 방지 텍스트 렌더링)
+- 의도적으로 제외(범위·복잡도 대비 시간 우선순위로 미착수): `FreelancerBasicProfileEdit.tsx`, `CandidateRerollRequest.tsx`와 그 하위(`CandidateRerollActions`·`CandidateRerollPaymentSummaryModal`·`CandidateRerollStatusScreens`·`MatchingCandidateNotificationTarget`·`MatchingNotificationRedirect`·`serverCandidateProfile`·`serverMatchingRequestDetail`), `NegotiationRoom.tsx`(전체), `ProjectNegotiation.tsx`, `CandidateCard.tsx`, `useNegotiationEvents.ts`
+- 검증: 신규 테스트 12개 파일 통과(정확한 총 건수는 각 파일 참고), `tsc --noEmit` 통과, ESLint 통과, 전체 프로젝트 Jest 94 suites 중 93 통과(나머지 5건은 팀원 파트 `FreelancerProfile.test.tsx`의 기존 `useRouter` 미마운트 실패, 이번 작업과 무관)
+- 실행하지 못한 검증: 실제 브라우저 확인(로그인 세션 없음)
+- 참고: 작업 중 그레이프 도구 출력이 정방향 슬래시 경로를 역슬래시로 잘못 표시하는 현상을 발견(파일 실제 내용은 정상, 표시상 문제만 확인)
+- 남은 작업: 위 미착수 항목은 필요 시 후속 요청. `git add`/commit/push/PR은 사용자 명시 요청 시 진행
+
+---
+
 ## 현재 작업 (2026-08-17 — 클라이언트 리뷰 작성 진입 경로 및 결제 대기 안내 수정)
 
 - 작업명: 클라이언트 마이페이지·계약 카드 리뷰 진입 경로 추가 및 성공보수 결제 대기 안내

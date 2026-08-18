@@ -1,0 +1,71 @@
+{"kind":"deck","id":"pr/cvax3c","name":"Deck"}
+{"kind":"layout","layoutId":"b8b8f0a9-bc66-418e-9138-0cc5b691a73b","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"ba4fd39a-d045-48cd-ad4f-7dc3931d5154","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/rde8t4","slide":1,"title":"STATE & DATA","textShapes":22}
+{"kind":"textbox","id":"sh/bud0zahw","slide":1,"name":"eyebrow-1","text":"STATE & DATA","textPreview":"STATE & DATA","textChars":12,"textLines":1,"bbox":[58,32,500,24]}
+{"kind":"textbox","id":"sh/cvmhsfih","slide":1,"name":"title-1","text":"사용자 정보를 네 번 불러오자, 화면이 느리고 깜빡였다","textPreview":"사용자 정보를 네 번 불러오자, 화면이 느리고 깜빡였다","textChars":30,"textLines":1,"bbox":[58,67,1164,55]}
+{"kind":"textbox","id":"sh/dwvi1kz2","slide":1,"name":"subtitle-1","text":"같은 정보를 한 번만 조회하고 모든 화면이 공유하도록 구조를 바꿨다","textPreview":"같은 정보를 한 번만 조회하고 모든 화면이 공유하도록 구조를 바꿨다","textChars":37,"textLines":1,"bbox":[58,130,1164,30]}
+{"kind":"shape","id":"sh/2pkzm50f","slide":1,"name":"rule-1","bbox":[58,177,1164,2]}
+{"kind":"textbox","id":"sh/3qt0vah0","slide":1,"name":"footer-1","text":"3-1. 프론트엔드 기능 구현 과정의 문제 해결","textPreview":"3-1. 프론트엔드 기능 구현 과정의 문제 해결","textChars":26,"textLines":1,"bbox":[58,678,480,18]}
+{"kind":"textbox","id":"sh/or2hovil","slide":1,"name":"page-1","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1184,676,38,18]}
+{"kind":"shape","id":"sh/psbix0zq","slide":1,"name":"s1-arrow-line-1","bbox":[374,339,72,3]}
+{"kind":"textbox","id":"sh/e1kzil03","slide":1,"name":"s1-arrow-1","text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[426,309,35,52]}
+{"kind":"shape","id":"sh/f2t0rqho","slide":1,"name":"s1-arrow-line-2","bbox":[815,339,72,3]}
+{"kind":"textbox","id":"sh/765gbehc","slide":1,"name":"s1-arrow-2","text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[867,309,35,52]}
+{"kind":"textbox","id":"sh/65wzi90r","slide":1,"name":"s1-step1","text":"01  기존 문제","textPreview":"01  기존 문제","textChars":9,"textLines":1,"bbox":[58,210,180,28]}
+{"kind":"textbox","id":"sh/t8nydoz2","slide":1,"name":"s1-step2","text":"02  개선 방법","textPreview":"02  개선 방법","textChars":9,"textLines":1,"bbox":[448,210,180,28]}
+{"kind":"textbox","id":"sh/87ehkjih","slide":1,"name":"s1-step3","text":"03  예외 방어","textPreview":"03  예외 방어","textChars":9,"textLines":1,"bbox":[889,210,200,28]}
+{"kind":"shape","id":"sh/vapgfeh8","slide":1,"name":"s1-problem","bbox":[58,254,316,275]}
+{"kind":"textbox","id":"sh/u9wzm90n","slide":1,"name":"s1-problem-title","text":"한 화면에서 같은 요청 4번","textPreview":"한 화면에서 같은 요청 4번","textChars":15,"textLines":1,"bbox":[82,279,270,28]}
+{"kind":"textbox","id":"sh/hw7yhoze","slide":1,"name":"s1-problem-main","text":"4×  사용자 조회","textPreview":"4×  사용자 조회","textChars":10,"textLines":1,"bbox":[82,326,270,48]}
+{"kind":"textbox","id":"sh/gbyhojit","slide":1,"name":"s1-problem-body","text":"접근 권한 확인 · 역할 확인\n헤더 · 본문이 각자 서버에 요청\n\n결과: 서버 호출 중복 +\n‘프리랜서’가 실제 이름으로 바뀌며 깜빡임","textPreview":"접근 권한 확인 · 역할 확인 | 헤더 · 본문이 각자 서버에 요청 |  | 결과: 서버 호출 중복 + | ‘프리랜서’가 실제 이름으로 바뀌며 깜빡임","textChars":75,"textLines":5,"bbox":[82,392,264,118]}
+{"kind":"shape","id":"sh/belg3u14","slide":1,"name":"s1-share","bbox":[448,254,367,275]}
+{"kind":"textbox","id":"sh/adcfap0j","slide":1,"name":"s1-share-label","text":"한 번 조회한 결과를 함께 사용","textPreview":"한 번 조회한 결과를 함께 사용","textChars":17,"textLines":1,"bbox":[474,279,310,22]}
+{"kind":"textbox","id":"sh/etkjixk7","slide":1,"name":"s1-share-main","text":"요청 1번 → 모든 화면에 전달","textPreview":"요청 1번 → 모든 화면에 전달","textChars":17,"textLines":1,"bbox":[474,326,315,42]}
+{"kind":"shape","id":"sh/zutkb21c","slide":1,"name":"s1-share-rule","bbox":[474,389,315,1]}
+{"kind":"textbox","id":"sh/0v21k72x","slide":1,"name":"s1-share-body","text":"이미 진행 중인 요청이 있으면 새 요청을 만들지 않고 기다림\n완료된 결과는 5초 동안 재사용\n\n결과: 중복 호출 제거 + 첫 화면부터 실제 이름 표시","textPreview":"이미 진행 중인 요청이 있으면 새 요청을 만들지 않고 기다림 | 완료된 결과는 5초 동안 재사용 |  | 결과: 중복 호출 제거 + 첫 화면부터 실제 이름 표시","textChars":83,"textLines":4,"bbox":[474,403,315,108]}
+{"kind":"shape","id":"sh/1wb2dsji","slide":1,"name":"s1-generation","bbox":[889,254,333,275]}
+{"kind":"textbox","id":"sh/q50jedkv","slide":1,"name":"s1-gen-label","text":"늦게 도착한 응답은 폐기","textPreview":"늦게 도착한 응답은 폐기","textChars":13,"textLines":1,"bbox":[915,279,280,22]}
+{"kind":"textbox","id":"sh/rq9k7i1g","slide":1,"name":"s1-gen-main","text":"로그아웃 직전의 요청이\n로그아웃 후 도착한다면?","textPreview":"로그아웃 직전의 요청이 | 로그아웃 후 도착한다면?","textChars":26,"textLines":2,"bbox":[915,326,282,72]}
+{"kind":"textbox","id":"sh/cri1gn21","slide":1,"name":"s1-gen-body","text":"로그인 상태가 바뀔 때마다 ‘요청 버전’을 올림\n이전 버전의 응답은 저장하지 않음\n\n→ 이전 사용자가 다시 나타나는 문제 방지","textPreview":"로그인 상태가 바뀔 때마다 ‘요청 버전’을 올림 | 이전 버전의 응답은 저장하지 않음 |  | → 이전 사용자가 다시 나타나는 문제 방지","textChars":70,"textLines":4,"bbox":[915,414,282,92]}
+{"kind":"shape","id":"sh/dsr29sjm","slide":1,"name":"s1-takeaway","bbox":[58,565,1164,78]}
+{"kind":"textbox","id":"sh/210jadkz","slide":1,"name":"s1-take-label","text":"핵심 판단","textPreview":"핵심 판단","textChars":5,"textLines":1,"bbox":[82,587,108,22]}
+{"kind":"textbox","id":"sh/32903i1k","slide":1,"name":"s1-take-text","text":"공유 캐시에는 저장 시간뿐 아니라, ‘언제 버릴지’에 대한 규칙도 필요하다.","textPreview":"공유 캐시에는 저장 시간뿐 아니라, ‘언제 버릴지’에 대한 규칙도 필요하다.","textChars":42,"textLines":1,"bbox":[200,581,760,36]}
+{"kind":"shape","id":"sh/lgfm9g32","slide":1,"name":"s1-status","bbox":[978,579,220,42]}
+{"kind":"textbox","id":"sh/kf65gbmh","slide":1,"name":"s1-status-text","text":"핵심 구현 완료 · 추가 검증","textPreview":"핵심 구현 완료 · 추가 검증","textChars":16,"textLines":1,"bbox":[990,590,196,20]}
+{"kind":"notes","id":"nt/rde8t4","slide":1,"text":"[Sources]\n- User-provided project summary and local project work records, 2026-08-18.\n[/Sources]"}
+{"kind":"slide","id":"sl/rbb5nz","slide":2,"title":"API RESPONSE","textShapes":24}
+{"kind":"textbox","id":"sh/5svex8rm","slide":2,"name":"eyebrow-2","text":"API RESPONSE","textPreview":"API RESPONSE","textChars":12,"textLines":1,"bbox":[58,32,500,24]}
+{"kind":"textbox","id":"sh/ipkv2dsb","slide":2,"name":"title-2","text":"서버가 빈 값을 보내도 화면이 깨지지 않게 만들었다","textPreview":"서버가 빈 값을 보내도 화면이 깨지지 않게 만들었다","textChars":28,"textLines":1,"bbox":[58,67,1164,55]}
+{"kind":"textbox","id":"sh/jqtwvy9g","slide":2,"name":"subtitle-2","text":"API 응답과 화면이 필요한 데이터가 다를 때, 중간 변환 단계에서 차이를 처리했다","textPreview":"API 응답과 화면이 필요한 데이터가 다를 때, 중간 변환 단계에서 차이를 처리했다","textChars":46,"textLines":1,"bbox":[58,130,1164,30]}
+{"kind":"shape","id":"sh/wn2d03a5","slide":2,"name":"rule-2","bbox":[58,177,1164,2]}
+{"kind":"textbox","id":"sh/xobet8rq","slide":2,"name":"footer-2","text":"3-1. 프론트엔드 기능 구현 과정의 문제 해결","textPreview":"3-1. 프론트엔드 기능 구현 과정의 문제 해결","textChars":26,"textLines":1,"bbox":[58,678,480,18]}
+{"kind":"textbox","id":"sh/a1kvytsz","slide":2,"name":"page-2","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1184,676,38,18]}
+{"kind":"shape","id":"sh/v2twry9k","slide":2,"name":"s2-arrow-line","bbox":[560,393,105,3]}
+{"kind":"textbox","id":"sh/8zidwjat","slide":2,"name":"s2-arrow","text":"›","textPreview":"›","textChars":1,"textLines":1,"bbox":[641,362,38,55]}
+{"kind":"textbox","id":"sh/90bupobe","slide":2,"name":"s2-left-label","text":"문제가 발생한 실제 사례","textPreview":"문제가 발생한 실제 사례","textChars":13,"textLines":1,"bbox":[58,210,310,22]}
+{"kind":"textbox","id":"sh/18r614na","slide":2,"name":"s2-left-title","text":"화면이 예상한 값 ≠ 서버가 준 값","textPreview":"화면이 예상한 값 ≠ 서버가 준 값","textChars":19,"textLines":1,"bbox":[58,244,490,36]}
+{"kind":"shape","id":"sh/g7y58z6p","slide":2,"name":"s2-left-panel","bbox":[58,302,500,306]}
+{"kind":"textbox","id":"sh/f6poze54","slide":2,"name":"s2-key-0","text":"회사명","textPreview":"회사명","textChars":3,"textLines":1,"bbox":[82,326,150,24]}
+{"kind":"textbox","id":"sh/e5gn69oj","slide":2,"name":"s2-val-0","text":"문자열로 예상했지만 null이 도착","textPreview":"문자열로 예상했지만 null이 도착","textChars":19,"textLines":1,"bbox":[235,326,295,24]}
+{"kind":"shape","id":"sh/tk76x47e","slide":2,"name":"s2-row-rule-0","bbox":[82,360,448,1]}
+{"kind":"textbox","id":"sh/sjy54z6t","slide":2,"name":"s2-key-1","text":"상세 정보","textPreview":"상세 정보","textChars":5,"textLines":1,"bbox":[82,378,150,24]}
+{"kind":"textbox","id":"sh/ripovup8","slide":2,"name":"s2-val-1","text":"목록 응답의 null이 기존 값을 덮어씀","textPreview":"목록 응답의 null이 기존 값을 덮어씀","textChars":22,"textLines":1,"bbox":[235,378,295,24]}
+{"kind":"shape","id":"sh/6hgn2pon","slide":2,"name":"s2-row-rule-1","bbox":[82,412,448,1]}
+{"kind":"textbox","id":"sh/5g76tk72","slide":2,"name":"s2-key-2","text":"평점 · 개수","textPreview":"평점 · 개수","textChars":7,"textLines":1,"bbox":[82,430,150,24]}
+{"kind":"textbox","id":"sh/4fe50f6h","slide":2,"name":"s2-val-2","text":"값이 없는 정상 상태를 오류로 판단","textPreview":"값이 없는 정상 상태를 오류로 판단","textChars":19,"textLines":1,"bbox":[235,430,295,24]}
+{"kind":"shape","id":"sh/wzi5gzed","slide":2,"name":"s2-row-rule-2","bbox":[82,464,448,1]}
+{"kind":"textbox","id":"sh/xkr6pkfy","slide":2,"name":"s2-key-3","text":"금액","textPreview":"금액","textChars":2,"textLines":1,"bbox":[82,482,150,24]}
+{"kind":"textbox","id":"sh/ax0nepw7","slide":2,"name":"s2-val-3","text":"문자열 변환 실패 시 NaN 노출","textPreview":"문자열 변환 실패 시 NaN 노출","textChars":18,"textLines":1,"bbox":[235,482,295,24]}
+{"kind":"shape","id":"sh/vy9onuxs","slide":2,"name":"s2-row-rule-3","bbox":[82,516,448,1]}
+{"kind":"textbox","id":"sh/8vi5cfeh","slide":2,"name":"s2-key-4","text":"계약 상태","textPreview":"계약 상태","textChars":5,"textLines":1,"bbox":[82,534,150,24]}
+{"kind":"textbox","id":"sh/9wr6lkf2","slide":2,"name":"s2-val-4","text":"서버 기준과 화면 필터 기준이 다름","textPreview":"서버 기준과 화면 필터 기준이 다름","textChars":19,"textLines":1,"bbox":[235,534,295,24]}
+{"kind":"textbox","id":"sh/mtgna5wb","slide":2,"name":"s2-right-label","text":"해결 방법","textPreview":"해결 방법","textChars":5,"textLines":1,"bbox":[682,210,320,22]}
+{"kind":"textbox","id":"sh/nu9ojaxw","slide":2,"name":"s2-right-title","text":"API와 화면 사이에 변환 단계를 둠","textPreview":"API와 화면 사이에 변환 단계를 둠","textChars":20,"textLines":1,"bbox":[682,244,540,36]}
+{"kind":"shape","id":"sh/sr2pojel","slide":2,"name":"s2-right-panel","bbox":[682,302,540,210]}
+{"kind":"textbox","id":"sh/tsb6xov6","slide":2,"name":"s2-transform","text":"① null이 올 수 있음을 타입에 표시\n② 값이 없을 때 보여줄 문구 결정\n③ 목록의 null은 기존 상세값을 보존\n④ 숫자 변환에 실패하면 안전한 값 표시","textPreview":"① null이 올 수 있음을 타입에 표시 | ② 값이 없을 때 보여줄 문구 결정 | ③ 목록의 null은 기존 상세값을 보존 | ④ 숫자 변환에 실패하면 안전한 값 표시","textChars":88,"textLines":4,"bbox":[712,326,470,130]}
+{"kind":"textbox","id":"sh/3mx8nih8","slide":2,"name":"s2-policy","text":"서버 상태 기준이 불명확하면 임의로 추측하지 않고\n백엔드 확인 후 화면 필터에 반영","textPreview":"서버 상태 기준이 불명확하면 임의로 추측하지 않고 | 백엔드 확인 후 화면 필터에 반영","textChars":46,"textLines":2,"bbox":[712,466,460,42]}
+{"kind":"shape","id":"sh/2loredgn","slide":2,"name":"s2-contract","bbox":[682,536,540,72]}
+{"kind":"textbox","id":"sh/pofqp8ze","slide":2,"name":"s2-contract-label","text":"결과","textPreview":"결과","textChars":2,"textLines":1,"bbox":[708,552,170,18]}
+{"kind":"textbox","id":"sh/4n69gnyt","slide":2,"name":"s2-contract-text","text":"빈 값이나 응답 변경이 있어도 화면 전체가 깨지지 않고, 의미 있는 상태로 표시된다.","textPreview":"빈 값이나 응답 변경이 있어도 화면 전체가 깨지지 않고, 의미 있는 상태로 표시된다.","textChars":47,"textLines":1,"bbox":[708,574,488,25]}
+{"kind":"notes","id":"nt/rbb5nz","slide":2,"text":"[Sources]\n- User-provided project summary and local project work records, 2026-08-18.\n[/Sources]"}
