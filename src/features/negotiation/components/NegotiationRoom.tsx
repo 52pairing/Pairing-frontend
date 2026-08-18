@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -426,19 +427,32 @@ export function NegotiationRoom() {
           isSubmitting={isSubmitting}
           chatActionSlot={
             detail.status === "AGREED" ? (
-              detail.chatRoomId != null ? (
-                <button
-                  type="button"
-                  onClick={() => router.push("/chat")}
-                  className="cursor-pointer rounded-[9px] bg-[#142f50] px-5 py-2.5 text-[12px] font-bold text-white transition hover:bg-[#102641]"
-                >
-                  채팅으로 이어가기
-                </button>
-              ) : (
-                <p className="text-[12px] text-theme-secondary">
-                  계약 체결 후 대화를 시작할 수 있어요.
+              <div className="flex flex-col items-center">
+                <p className="text-[12px] font-semibold text-theme-secondary">
+                  합의한 조건을 바탕으로 계약서를 작성해 계약을 마무리해 주세요.
                 </p>
-              )
+                <div className="mt-3 flex flex-col items-center gap-3 sm:flex-row">
+                  <Link
+                    href={detail.viewerRole === "CLIENT" ? "/client/contracts" : "/freelancer/contracts"}
+                    className="rounded-[9px] bg-brand px-5 py-2.5 text-[12px] font-bold text-white transition hover:bg-brand-hover"
+                  >
+                    계약관리로 가기
+                  </Link>
+                  {detail.chatRoomId != null ? (
+                    <button
+                      type="button"
+                      onClick={() => router.push("/chat")}
+                      className="cursor-pointer rounded-[9px] bg-[#142f50] px-5 py-2.5 text-[12px] font-bold text-white transition hover:bg-[#102641]"
+                    >
+                      채팅으로 이어가기
+                    </button>
+                  ) : (
+                    <p className="text-[12px] text-theme-secondary">
+                      계약 체결 후 대화를 시작할 수 있어요.
+                    </p>
+                  )}
+                </div>
+              </div>
             ) : null
           }
         />

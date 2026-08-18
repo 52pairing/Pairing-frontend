@@ -1,5 +1,14 @@
 # WORKLOG
 
+## 2026-08-18 — 협상 타결 후 계약관리 이동 동선 추가
+
+- 협상 상태가 `AGREED`일 때 완료 카드에 `계약관리로 가기` 링크를 항상 표시하도록 수정했습니다.
+- 버튼 위에 합의 조건을 바탕으로 계약서를 작성해 계약을 마무리하라는 후속 절차 안내를 명시했습니다.
+- 서버가 제공하는 `viewerRole`을 기준으로 클라이언트는 `/client/contracts`, 프리랜서는 `/freelancer/contracts`로 바로 이동합니다.
+- 채팅방이 생성된 경우 기존 `채팅으로 이어가기` 버튼을 함께 유지하고, 생성 전 안내 문구도 유지했습니다.
+- 검증: 관련 Jest 1 suite/4 tests, 변경 파일 ESLint, 전체 TypeScript, 프로덕션 빌드, `git diff --check` 통과.
+- 실제 로그인 세션 기반 브라우저 확인: 테스트 계정이 없어 미검증.
+
 ## 2026-08-18 — 세션 만료 재로그인 시 보안 민감 경로 복귀 차단
 
 - 배경: 사용자가 "세션 만료 시 로그인 창 갔다가 원래 창으로 돌아오는데, 보안이 중요한 페이지는 거기로 가면 안 될 것 같다"고 지적. 실제 코드 확인 결과 [AuthSessionGuard.tsx](../src/features/auth/components/AuthSessionGuard.tsx), [RoleGuard.tsx](../src/features/auth/components/RoleGuard.tsx)가 `returnUrl` 쿼리에 현재 경로를 그대로 담아 `/login`으로 보내고, [login/page.tsx](../src/app/login/page.tsx)가 검증 없이 `router.push(returnUrl)`로 그대로 복귀시키는 구조였음(소셜 로그인 흐름의 [useSocialLoginStart.ts](../src/features/auth/hooks/useSocialLoginStart.ts)·[SocialCallbackContent.tsx](../src/features/auth/components/SocialCallbackContent.tsx)도 동일한 패턴)
