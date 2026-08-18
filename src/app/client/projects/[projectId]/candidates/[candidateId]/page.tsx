@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 
 import { CandidateProfile } from "@/features/matching/components/CandidateProfile";
-import { getServerCandidateProfile } from "@/features/matching/services/serverCandidateProfile";
 
 interface CandidateProfilePageProps {
   params: Promise<{ projectId: string; candidateId: string }>;
@@ -19,13 +18,5 @@ export default async function CandidateProfilePage({ params }: CandidateProfileP
   )
     notFound();
 
-  const initialProfile = await getServerCandidateProfile(parsedCandidateId);
-
-  return (
-    <CandidateProfile
-      projectId={parsedProjectId}
-      candidateId={parsedCandidateId}
-      initialProfile={initialProfile}
-    />
-  );
+  return <CandidateProfile projectId={parsedProjectId} candidateId={parsedCandidateId} />;
 }

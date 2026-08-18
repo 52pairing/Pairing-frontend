@@ -13,13 +13,12 @@ import {
 import type { ProjectMetaOption } from "@/features/client/projects/types/preReview";
 import { getCandidateProfile } from "@/features/matching/services/matching";
 import type { CandidateProfileResponse, PayUnit } from "@/features/matching/types/matching";
+import { Spinner } from "@/features/common/components/Loading";
 import { ApiException } from "@/lib/api";
 
 interface CandidateProfileProps {
   projectId: number;
   candidateId: number;
-  /** 서버 컴포넌트에서 미리 조회한 값(있으면 클라이언트 재조회 생략, 없으면 기존처럼 클라이언트에서 조회) */
-  initialProfile?: CandidateProfileResponse | null;
 }
 
 const PAY_UNIT_LABEL: Record<PayUnit, string> = {
@@ -59,41 +58,34 @@ interface MetaLabels {
   skillLevel: Record<string, string>;
 }
 
-export function CandidateProfile({
-  projectId,
-  candidateId,
-  initialProfile = null,
-}: CandidateProfileProps) {
-  const [candidate, setCandidate] = useState<CandidateProfileResponse | null>(initialProfile);
-  const [labels, setLabels] = useState<MetaLabels | null>(null);
+// 라벨이 아직 안 왔을 때도 화면을 그릴 수 있도록 빈 맵으로 시작한다.
+// (표시부는 `labels.X[code] ?? code`로 원본 코드를 대체 표시하는 패턴을 이미 쓰고 있음)
+const EMPTY_LABELS: MetaLabels = {
+  jobCategory: {},
+  jobRole: {},
+  skill: {},
+  workStyle: {},
+  workForm: {},
+  periodUnit: {},
+  skillLevel: {},
+};
+
+export function CandidateProfile({ projectId, candidateId }: CandidateProfileProps) {
+  const [candidate, setCandidate] = useState<CandidateProfileResponse | null>(null);
+  const [labels, setLabels] = useState<MetaLabels>(EMPTY_LABELS);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
+
     const loadProfile = async () => {
       setIsLoading(true);
       setErrorMessage("");
       try {
-        // 서버에서 이미 가져온 값이 있으면 재조회를 생략하고, 실패했을 때만(null) 클라이언트에서 조회한다.
-        const [profile, jobCategories, jobRoles, skills, workConditions] = await Promise.all([
-          initialProfile ? Promise.resolve(initialProfile) : getCandidateProfile(candidateId),
-          getProjectJobCategories(),
-          getProjectJobRoles(),
-          getProjectSkills(),
-          getProjectWorkConditions(),
-        ]);
+        const profile = await getCandidateProfile(candidateId);
         if (cancelled) return;
         setCandidate(profile);
-        setLabels({
-          jobCategory: toLabelMap(jobCategories),
-          jobRole: toLabelMap(jobRoles),
-          skill: toLabelMap(skills),
-          workStyle: toLabelMap(workConditions.workStyles),
-          workForm: toLabelMap(workConditions.workForms),
-          periodUnit: toLabelMap(workConditions.periodUnits),
-          skillLevel: toLabelMap(workConditions.skillLevels ?? []),
-        });
       } catch (error) {
         if (cancelled) return;
         setErrorMessage(
@@ -104,14 +96,38 @@ export function CandidateProfile({
       }
     };
 
-    Promise.resolve().then(() => {
-      if (!cancelled) void loadProfile();
-    });
+    // 직군·직무·스킬·근무조건 라벨은 프로필 표시를 막지 않고 별도로 채워 넣는다.
+    // 실패해도 화면은 코드값(예: "IT")으로 대체 표시되므로 조용히 무시한다.
+    const loadLabels = async () => {
+      try {
+        const [jobCategories, jobRoles, skills, workConditions] = await Promise.all([
+          getProjectJobCategories(),
+          getProjectJobRoles(),
+          getProjectSkills(),
+          getProjectWorkConditions(),
+        ]);
+        if (cancelled) return;
+        setLabels({
+          jobCategory: toLabelMap(jobCategories),
+          jobRole: toLabelMap(jobRoles),
+          skill: toLabelMap(skills),
+          workStyle: toLabelMap(workConditions.workStyles),
+          workForm: toLabelMap(workConditions.workForms),
+          periodUnit: toLabelMap(workConditions.periodUnits),
+          skillLevel: toLabelMap(workConditions.skillLevels ?? []),
+        });
+      } catch {
+        // 라벨은 표시부의 `?? code` 폴백으로 대체되므로 별도 에러 처리 없음.
+      }
+    };
+
+    void loadProfile();
+    void loadLabels();
 
     return () => {
       cancelled = true;
     };
-  }, [candidateId, initialProfile]);
+  }, [candidateId]);
 
   return (
     <main className="min-h-screen bg-surface-subtle px-4 py-6 text-theme-primary sm:px-5">
@@ -125,13 +141,10 @@ export function CandidateProfile({
 
         {isLoading ? (
           <div className="mt-5 flex min-h-[280px] flex-col items-center justify-center gap-3 rounded-[14px] border border-theme bg-surface text-[13px] font-semibold text-theme-secondary">
-            <span
-              className="h-5 w-5 animate-spin rounded-full border-2 border-brand border-t-transparent"
-              aria-hidden="true"
-            />
-            프로필을 불러오고 있습니다.
+            <Spinner size="md" label="프로필을 불러오고 있습니다." className="text-brand" />
+            <span aria-hidden="true">프로필을 불러오고 있습니다.</span>
           </div>
-        ) : candidate && labels ? (
+        ) : candidate ? (
           <CandidateProfileView candidate={candidate} labels={labels} />
         ) : (
           <div className="mt-5 flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-[14px] border border-theme bg-surface px-5 text-center text-[13px] text-theme-secondary">
