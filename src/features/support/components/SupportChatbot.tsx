@@ -208,7 +208,7 @@ export function SupportChatbot({ initialUser = null }: SupportChatbotProps) {
 
   return (
     <>
-      <Header role="guest" initialUser={initialUser} />
+      <Header role="guest" initialUser={initialUser} showSkeletonWhileResolving />
       <main className="flex h-[calc(100dvh-60px)] flex-none overflow-hidden bg-background px-5 py-7 text-theme-primary sm:px-8 sm:py-9">
         <div className="mx-auto flex min-h-0 w-full max-w-[900px] flex-1 flex-col">
           <Link

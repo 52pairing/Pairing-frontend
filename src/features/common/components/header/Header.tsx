@@ -15,21 +15,30 @@ interface HeaderProps {
   role: HeaderRole;
   // 서버에서 미리 조회한 로그인 사용자. 넘기면 첫 렌더부터 올바른 헤더가 그려집니다.
   initialUser?: CurrentUserResponse | null;
+  // 서버가 로그인 여부를 확인하지 못한 SSG 페이지(예: 고객지원)에서 켠다.
+  // 조회가 끝나기 전엔 게스트/로그인 어느 쪽도 단정하지 않고 스켈레톤을 보여줘,
+  // "게스트 헤더가 떴다가 로그인 헤더로 교체되는" 깜빡임을 없앤다.
+  showSkeletonWhileResolving?: boolean;
 }
 
 // 역할에 맞는 Header를 선택해서 보여주는 진입점
-export function Header({ role = "guest", initialUser = null }: HeaderProps) {
+export function Header({
+  role = "guest",
+  initialUser = null,
+  showSkeletonWhileResolving = false,
+}: HeaderProps) {
   const { user, isLoading } = useCurrentUserState(initialUser);
   const noticeCount = useUnreadNotificationCount(user?.accountId);
   const chatCount = useUnreadChatCount(user?.accountId);
 
-  // 서버가 사용자 정보를 못 넘긴 정적(SSG) 페이지의 하드 진입처럼, 아직 로그인 여부를
-  // 모르는 동안엔 게스트/로그인 어느 쪽도 단정하지 않고 스켈레톤을 보여준다.
+  // 아직 로그인 여부를 모르는 동안엔 게스트/로그인 어느 쪽도 단정하지 않고 스켈레톤을 보여준다.
   // (SSR 페이지는 initialUser 덕에 isLoading=false라 이 분기를 타지 않는다.)
-  // 단, role="guest"로 명시된 페이지(비로그인도 접근 가능한 공개 페이지)는 대부분
-  // 실제로 비로그인 방문이므로, 그 다수를 위해 스켈레톤 없이 바로 게스트 헤더를 보여주고
-  // 세션이 실제로 확인되면(드문 액세스 토큰 만료 케이스) 그 자리에서 자연스럽게 교체한다.
-  if (isLoading && !user && role !== "guest") return <HeaderSkeleton />;
+  // - client/freelancer 레이아웃: 로그인 전용이므로 조회 중엔 스켈레톤.
+  // - guest 페이지: 서버가 로그인 여부를 확인한 SSR 페이지(홈/채팅)는 대부분 실제 비로그인
+  //   방문이라 스켈레톤 없이 바로 게스트 헤더를 보여준다. 반면 서버가 확인 못 한 SSG 페이지
+  //   (고객지원)는 showSkeletonWhileResolving로 켜서, 게스트→로그인 교체 깜빡임을 없앤다.
+  if (isLoading && !user && (role !== "guest" || showSkeletonWhileResolving))
+    return <HeaderSkeleton />;
 
   const currentRole = user?.role.toLowerCase() ?? role;
 

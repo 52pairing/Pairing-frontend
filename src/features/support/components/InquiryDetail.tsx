@@ -77,7 +77,7 @@ export function InquiryDetail({ initialUser = null }: InquiryDetailProps) {
 
   return (
     <>
-      <Header role="guest" initialUser={initialUser} />
+      <Header role="guest" initialUser={initialUser} showSkeletonWhileResolving />
       <main className="flex-1 bg-background px-5 pb-20 pt-10 text-theme-primary sm:px-8 sm:pt-12">
         <div className="mx-auto w-full max-w-[780px]">
           <div className="flex items-center justify-between gap-4">

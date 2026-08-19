@@ -45,7 +45,7 @@ export function Support({ initialUser = null }: SupportProps) {
 
   return (
     <>
-      <Header role="guest" initialUser={initialUser} />
+      <Header role="guest" initialUser={initialUser} showSkeletonWhileResolving />
       <main className="flex-1 bg-background px-5 pb-24 pt-12 text-theme-primary sm:px-8 sm:pt-16">
         <div className="mx-auto w-full max-w-[750px]">
           <h1 className="text-[28px] font-extrabold tracking-[-0.04em]">

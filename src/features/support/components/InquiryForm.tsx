@@ -151,7 +151,7 @@ export function InquiryForm({ initialUser = null }: InquiryFormProps) {
 
   return (
     <>
-      <Header role="guest" initialUser={initialUser} />
+      <Header role="guest" initialUser={initialUser} showSkeletonWhileResolving />
       <main className="flex-1 bg-background px-5 pb-20 pt-8 text-theme-primary sm:px-8 sm:pt-10">
         <div className="mx-auto w-full max-w-[810px]">
           <Link

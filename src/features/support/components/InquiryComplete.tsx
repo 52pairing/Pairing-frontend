@@ -11,7 +11,7 @@ interface InquiryCompleteProps {
 export function InquiryComplete({ initialUser = null }: InquiryCompleteProps) {
   return (
     <>
-      <Header role="guest" initialUser={initialUser} />
+      <Header role="guest" initialUser={initialUser} showSkeletonWhileResolving />
       <main className="flex flex-1 bg-background px-5 py-10 text-theme-primary sm:px-8 sm:py-14">
         <section className="mx-auto flex min-h-[380px] w-full max-w-[640px] flex-col items-center justify-center px-6 py-10 text-center sm:min-h-[420px]">
           <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-success-surface text-theme-success">
