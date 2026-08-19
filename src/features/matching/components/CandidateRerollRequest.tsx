@@ -308,7 +308,7 @@ export function CandidateRerollRequest({
     </main>
   );
 }
-function CandidateCountSelector({
+export function CandidateCountSelector({
   label,
   count,
   maximum,
@@ -333,8 +333,10 @@ function CandidateCountSelector({
         <strong className="w-5 text-center text-[13px]">{count}</strong>
         <button
           type="button"
+          aria-label={`${label} 추천 인원 추가`}
+          disabled={count >= maximum}
           onClick={() => onChange(Math.min(maximum, count + 1))}
-          className="h-8 w-8 rounded-[7px] border border-theme bg-surface text-[16px]"
+          className="h-8 w-8 rounded-[7px] border border-theme bg-surface text-[16px] disabled:cursor-not-allowed disabled:opacity-40"
         >
           +
         </button>
