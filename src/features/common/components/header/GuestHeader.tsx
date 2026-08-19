@@ -2,7 +2,6 @@ import Link from "next/link";
 import { HeaderShell } from "./HeaderShell";
 
 const guestNavItems = [
-  { label: "회사 소개", href: "/about" },
   { label: "클라이언트 등록", href: "/signup/client" },
   { label: "프리랜서 등록", href: "/signup/freelancer" },
 ];
