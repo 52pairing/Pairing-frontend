@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { ActionWarningModal } from "@/features/common/components/ActionWarningModal";
 import { createReview } from "@/features/review/services/reviews";
 import { ApiException } from "@/lib/api";
 
@@ -23,10 +24,12 @@ export function FreelancerReviewForm() {
   const [serviceReview, setServiceReview] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const canSubmit = Number.isInteger(contractId) && contractId > 0 && freelancerRating > 0 && serviceRating > 0 && !submitting;
 
-  const submit = async () => {
-    if (!canSubmit || !window.confirm("리뷰는 등록 후 수정하거나 삭제할 수 없습니다. 등록하시겠습니까?")) return;
+  const confirmSubmit = async () => {
+    setConfirmOpen(false);
+    if (!canSubmit) return;
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -76,7 +79,7 @@ export function FreelancerReviewForm() {
 
         <form
           className="mt-6 space-y-4"
-          onSubmit={(event) => { event.preventDefault(); void submit(); }}
+          onSubmit={(event) => { event.preventDefault(); if (canSubmit) setConfirmOpen(true); }}
         >
           <section className="rounded-xl border border-theme bg-surface px-4 py-6 sm:px-7 sm:py-7">
             <h2 className="text-[14px] font-bold">상대 평가</h2>
@@ -198,6 +201,19 @@ export function FreelancerReviewForm() {
           </button>
         </form>
       </div>
+
+      <ActionWarningModal
+        open={confirmOpen}
+        title="리뷰를 등록하시겠어요?"
+        description="계약 상대와 페어링 서비스 이용 경험에 대한 평가가 등록됩니다."
+        warningItems={[
+          "작성한 평점과 리뷰는 등록 후 수정하거나 삭제할 수 없습니다.",
+          "회원가입 시 동의한 내용에 따라 리뷰는 서비스 메인 페이지와 홍보 콘텐츠에 활용될 수 있습니다.",
+        ]}
+        confirmText="리뷰 등록"
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => { void confirmSubmit(); }}
+      />
     </main>
   );
 }

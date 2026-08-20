@@ -1,5 +1,15 @@
 # WORKLOG
 
+## 2026-08-20 — 리뷰 작성 네이티브 confirm을 앱 확인 모달로 교체
+
+- 리뷰 작성 폼([FreelancerReviewForm.tsx](../src/features/client/reviews/components/FreelancerReviewForm.tsx))의 "평가 등록하기" 클릭 시 뜨던 브라우저 네이티브 `window.confirm`(alert 창)을 제거했습니다.
+- 대신 공용 [ActionWarningModal](../src/features/common/components/ActionWarningModal.tsx)로 교체해, 앱 디자인과 일관된 확인 모달로 등록 여부를 확인하도록 변경했습니다(협상 포기 모달과 동일 패턴).
+- 제출 로직을 "모달 열기 → 확정 시 `createReview` 실행" 2단계로 분리(`confirmOpen` 상태, `confirmSubmit`). 취소하면 등록되지 않습니다.
+- 이 폼은 클라이언트·프리랜서 리뷰 작성에 공용이라 양쪽 경로 모두 반영됩니다.
+- API 변경: 없음.
+- 검증: `tsc --noEmit` 에러 0, 변경 파일 ESLint 에러 0. 이 컴포넌트를 참조하는 기존 테스트 없음.
+- 실제 로그인 세션 기반 브라우저 확인: 미실행(테스트 계정 없음, no localhost verify 규칙).
+
 ## 2026-08-19 — 비로그인 헤더 회사소개 메뉴 제거
 
 - 비로그인 공통 헤더의 `회사 소개` 메뉴와 존재하지 않는 `/about` 경로 링크를 제거했습니다.
